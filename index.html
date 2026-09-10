@@ -225,25 +225,15 @@
   </div>
 
   <div class="grid">
-    <div class="tile">
+    <div class="tile span2">
       <div class="h"><span>Fear &amp; Greed</span></div>
       <div class="v" id="s-fng">–</div>
       <div class="note" id="s-fng-note">market-wide crypto</div>
     </div>
-    <div class="tile">
+    <div class="tile span2">
       <div class="h"><span>Community sentiment</span></div>
       <div class="v" id="s-vote">–</div>
       <div class="note">bullish votes (CoinGecko)</div>
-    </div>
-    <div class="tile">
-      <div class="h"><span>Followers</span></div>
-      <div class="v" id="s-tw">–</div>
-      <div class="note">X / Twitter</div>
-    </div>
-    <div class="tile">
-      <div class="h"><span>Telegram</span></div>
-      <div class="v" id="s-tg">–</div>
-      <div class="note">channel members</div>
     </div>
   </div>
 
@@ -318,7 +308,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.3.0";
+  const APP_VERSION = "v1.3.1";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   async function getJSON(url){
@@ -583,11 +573,6 @@
       const d = await getJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
       const up = num(pick(d,["sentiment_votes_up_percentage"]));
       if(isFinite(up)) $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
-      const cd = d.community_data || {};
-      const tw = num(pick(cd,["twitter_followers"]));
-      const tg = num(pick(cd,["telegram_channel_user_count"]));
-      if(isFinite(tw)) $("s-tw").textContent = compact(tw);
-      if(isFinite(tg)) $("s-tg").textContent = compact(tg);
     }catch(e){ /* leave as – */ }
   }
 
