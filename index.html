@@ -175,6 +175,7 @@
     <div class="tile">
       <div class="h"><span>Price</span></div>
       <div class="v" id="price">–</div>
+      <div class="note" id="price-chg">24h – · 7d –</div>
       <div class="note" id="mcap">market cap –</div>
     </div>
 
@@ -194,6 +195,29 @@
       <div class="h"><span>Difficulty</span></div>
       <div class="v" id="difficulty">–</div>
       <div class="note">network difficulty</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="tile">
+      <div class="h"><span>24h volume</span></div>
+      <div class="v" id="m-vol">–</div>
+      <div class="note">traded last 24h</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Market cap rank</span></div>
+      <div class="v" id="m-rank">–</div>
+      <div class="note">by market cap</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>All-time high</span></div>
+      <div class="v" id="m-ath">–</div>
+      <div class="note" id="m-ath-note">from ATH</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Price in BTC</span></div>
+      <div class="v" id="m-btc">–</div>
+      <div class="note">vs Bitcoin</div>
     </div>
   </div>
 
@@ -267,7 +291,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.1.0";
+  const APP_VERSION = "v1.2.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   async function getJSON(url){
@@ -499,15 +523,33 @@
     }).join("");
   }
 
+  function renderMarket(byId){
+    const k = byId["kaspa"]; if(!k) return;
+    if(isFinite(k.total_volume)) $("m-vol").textContent = "$"+compact(k.total_volume);
+    if(k.market_cap_rank!=null) $("m-rank").textContent = "#"+k.market_cap_rank;
+    if(isFinite(k.ath)){
+      $("m-ath").textContent = "$"+(+k.ath).toFixed(4);
+      if(isFinite(k.ath_change_percentage)) $("m-ath-note").textContent = (+k.ath_change_percentage).toFixed(1)+"% from ATH";
+    }
+    const btc = byId["bitcoin"];
+    if(btc && isFinite(btc.current_price) && isFinite(k.current_price) && btc.current_price>0){
+      $("m-btc").textContent = "\u20bf"+(k.current_price/btc.current_price).toFixed(8);
+    }
+    const c24 = (k.price_change_percentage_24h_in_currency!=null)?k.price_change_percentage_24h_in_currency:k.price_change_percentage_24h;
+    const c7  = k.price_change_percentage_7d_in_currency;
+    $("price-chg").innerHTML = "24h "+fmtPct(c24)+" \u00b7 7d "+fmtPct(c7);
+  }
+
   async function loadPeers(){
     try{
       const url = CG+"/coins/markets?vs_currency=usd&ids="+ALL_PEERS.join(",")+
-                  "&price_change_percentage=30d,1y&order=market_cap_desc&per_page=50&page=1";
+                  "&price_change_percentage=24h,7d,30d,1y&order=market_cap_desc&per_page=50&page=1";
       const d = await getJSON(url);
       if(!Array.isArray(d) || !d.length) throw new Error("empty");
       const byId={}; d.forEach(c=>{ byId[c.id]=c; });
       renderPeerTable("peers-pow", POW, byId);
       renderPeerTable("peers-l1", L1, byId);
+      renderMarket(byId);
     }catch(e){
       $("peers-pow").innerHTML = peerErr();
       $("peers-l1").innerHTML = peerErr();
