@@ -37,3 +37,4 @@ jobs:
             git commit -m "chore: snapshot $(date -u +%FT%TZ) [skip ci]"
             git push
           fi
+
