@@ -198,11 +198,11 @@
   <!-- KRC-20 -->
   <section class="panel">
     <h2>KRC-20 tokens</h2>
-    <div class="cap">Top tokens on the Kasplex layer, ranked by holder count — the emerging token ecosystem after Toccata.</div>
+    <div class="cap">Top tokens on the Kasplex layer, ranked by mint progress — the emerging token ecosystem after Toccata.</div>
     <div id="krc20-wrap">
       <table>
-        <thead><tr><th>Token</th><th>Holders</th><th>Mints</th><th>Transfers</th><th>Minted</th></tr></thead>
-        <tbody id="krc20"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
+        <thead><tr><th>Token</th><th>Minted</th><th>Max supply</th><th>State</th></tr></thead>
+        <tbody id="krc20"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -246,7 +246,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.0.0";
+  const APP_VERSION = "v1.0.1";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   async function getJSON(url){
@@ -417,28 +417,33 @@
       const d = await getJSON(KASPLEX+"/v1/krc20/tokenlist");
       let list = d.result || d.tokens || [];
       if(!Array.isArray(list) || !list.length) throw new Error("empty");
-      list = list.map(t=>({
-        tick:t.tick||t.ticker||"?",
-        holders:num(pick(t,["holderTotal","holdersTotal","holder_total"])),
-        mints:num(pick(t,["mintTotal","mint_total"])),
-        transfers:num(pick(t,["transferTotal","transfer_total"])),
-        minted:num(pick(t,["minted"])),
-        max:num(pick(t,["max"]))
-      }))
-      .filter(t=>isFinite(t.holders))
-      .sort((a,b)=>b.holders-a.holders)
-      .slice(0,10);
+      list = list.map(t=>{
+        const dec = num(pick(t,["dec"]));
+        const scale = Math.pow(10, isFinite(dec)?dec:0);
+        const minted = num(pick(t,["minted"]));
+        const max = num(pick(t,["max"]));
+        return {
+          tick: t.tick || t.ticker || "?",
+          state: (pick(t,["state"]) || "").toString(),
+          maxh: isFinite(max) ? max/scale : NaN,
+          pct: (isFinite(minted)&&isFinite(max)&&max>0) ? Math.min(100, minted/max*100) : null
+        };
+      })
+      .filter(t=>t.tick && t.tick!=="?")
+      .sort((a,b)=>(b.pct==null?-1:b.pct)-(a.pct==null?-1:a.pct))
+      .slice(0,12);
 
       body.innerHTML = list.map(t=>{
-        const pct = (isFinite(t.minted)&&isFinite(t.max)&&t.max>0)? Math.min(100,t.minted/t.max*100):null;
-        const bar = pct!=null ? '<span class="mini"><i style="width:'+pct.toFixed(0)+'%"></i></span>' : "–";
-        return '<tr><td class="tick">'+esc(t.tick)+'</td><td>'+compact(t.holders)+
-               '</td><td>'+(isFinite(t.mints)?compact(t.mints):"–")+
-               '</td><td>'+(isFinite(t.transfers)?compact(t.transfers):"–")+
-               '</td><td>'+bar+'</td></tr>';
+        const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
+        const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
+        const st = t.state ? '<span style="color:var(--muted)">'+esc(t.state)+'</span>' : "–";
+        return '<tr><td class="tick">'+esc(t.tick)+'</td>'+
+               '<td>'+bar+pctTxt+'</td>'+
+               '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
+               '<td>'+st+'</td></tr>';
       }).join("");
     }catch(e){
-      body.innerHTML='<tr><td colspan="5" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
+      body.innerHTML='<tr><td colspan="4" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
     }
   }
   function esc(s){ return String(s).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
