@@ -45,6 +45,19 @@ try {
   rec.difficulty = num(pick(d, ["difficulty"]));
 } catch (e) { console.warn("difficulty:", e.message); }
 
+// Peer prices (CoinGecko) for relative-performance history. Optional: if this
+// fails (e.g. CoinGecko rate-limits the Action IP), we simply skip peers this hour.
+try {
+  const CG = "https://api.coingecko.com/api/v3";
+  const PEER_IDS = ["kaspa","bitcoin","litecoin","monero","dogecoin","solana","avalanche-2","near","sui","aptos"];
+  const d = await j(CG + "/coins/markets?vs_currency=usd&ids=" + PEER_IDS.join(",") + "&per_page=50&page=1");
+  if (Array.isArray(d) && d.length) {
+    const p = {};
+    d.forEach(c => { if (c && isFinite(c.current_price)) p[c.id] = c.current_price; });
+    if (Object.keys(p).length) rec.peers = p;
+  }
+} catch (e) { console.warn("peers:", e.message); }
+
 if (isFinite(rec.price) && isFinite(rec.supply)) rec.marketcap = rec.price * rec.supply;
 
 // normalise NaN -> null so the JSON stays clean
