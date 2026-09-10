@@ -77,6 +77,9 @@
   .bar{height:7px;border-radius:99px;background:var(--bg-2);margin-top:12px;overflow:hidden;border:1px solid var(--line)}
   .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--teal-dim),var(--teal));width:0;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
   .spark{margin-top:12px;width:100%;height:34px;display:block}
+  .rel-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .rel-legend span{display:inline-flex;align-items:center;gap:6px}
+  .rel-legend i{width:12px;height:3px;border-radius:2px;display:inline-block}
   .up{color:var(--teal)} .down{color:var(--amber)}
 
   /* KRC-20 */
@@ -221,6 +224,29 @@
     </div>
   </div>
 
+  <div class="grid">
+    <div class="tile">
+      <div class="h"><span>Fear &amp; Greed</span></div>
+      <div class="v" id="s-fng">–</div>
+      <div class="note" id="s-fng-note">market-wide crypto</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Community sentiment</span></div>
+      <div class="v" id="s-vote">–</div>
+      <div class="note">bullish votes (CoinGecko)</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Followers</span></div>
+      <div class="v" id="s-tw">–</div>
+      <div class="note">X / Twitter</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Telegram</span></div>
+      <div class="v" id="s-tg">–</div>
+      <div class="note">channel members</div>
+    </div>
+  </div>
+
   <!-- KRC-20 -->
   <section class="panel">
     <h2>KRC-20 tokens</h2>
@@ -270,6 +296,7 @@
       <figure class="chart"><figcaption>Market cap <span id="c-mcap">–</span></figcaption><svg id="chart-mcap" viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true"></svg></figure>
       <figure class="chart"><figcaption>Hashrate <span id="c-hash">–</span></figcaption><svg id="chart-hash" viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true"></svg></figure>
       <figure class="chart"><figcaption>Difficulty <span id="c-diff">–</span></figcaption><svg id="chart-diff" viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true"></svg></figure>
+      <figure class="chart" style="grid-column:1/-1"><figcaption>Relative performance · indexed to 100</figcaption><svg id="chart-rel" viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true"></svg><div class="rel-legend" id="rel-legend"></div></figure>
     </div>
     <div class="cap" id="hist-empty" style="display:none;margin-top:12px"></div>
   </section>
@@ -291,7 +318,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.2.0";
+  const APP_VERSION = "v1.3.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   async function getJSON(url){
@@ -540,6 +567,30 @@
     $("price-chg").innerHTML = "24h "+fmtPct(c24)+" \u00b7 7d "+fmtPct(c7);
   }
 
+  // ---- sentiment & community ----
+  async function loadSentiment(){
+    // Fear & Greed (alternative.me) — market-wide crypto sentiment
+    try{
+      const d = await getJSON("https://api.alternative.me/fng/?limit=1");
+      const item = d && d.data && d.data[0];
+      if(item){
+        $("s-fng").textContent = item.value;
+        if(item.value_classification) $("s-fng-note").textContent = item.value_classification + " · market-wide";
+      }
+    }catch(e){ /* leave as – */ }
+    // CoinGecko community (Kaspa-specific): bullish votes + reach
+    try{
+      const d = await getJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
+      const up = num(pick(d,["sentiment_votes_up_percentage"]));
+      if(isFinite(up)) $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
+      const cd = d.community_data || {};
+      const tw = num(pick(cd,["twitter_followers"]));
+      const tg = num(pick(cd,["telegram_channel_user_count"]));
+      if(isFinite(tw)) $("s-tw").textContent = compact(tw);
+      if(isFinite(tg)) $("s-tg").textContent = compact(tg);
+    }catch(e){ /* leave as – */ }
+  }
+
   async function loadPeers(){
     try{
       const url = CG+"/coins/markets?vs_currency=usd&ids="+ALL_PEERS.join(",")+
@@ -572,6 +623,45 @@
   // ---- history (from data/history.json, written hourly by the GitHub Action) ----
   let currentRange = 7;
   let historyCache = null;
+
+  // ---- relative-performance chart (peers, normalized to 100) ----
+  const HIST_PEERS = [
+    {id:"kaspa",   label:"KAS", color:"#49eacb", w:2},
+    {id:"bitcoin", label:"BTC", color:"#f0b429", w:1.4},
+    {id:"solana",  label:"SOL", color:"#b48ce8", w:1.4},
+    {id:"monero",  label:"XMR", color:"#ff8a5c", w:1.4}
+  ];
+  function renderRelLegend(series){
+    const el=$("rel-legend"); if(!el) return;
+    el.innerHTML = series.map(s=>'<span><i style="background:'+s.color+'"></i>'+esc(s.label)+'</span>').join("");
+  }
+  function drawMultiChart(svgId, series){
+    const svg=$(svgId); if(!svg) return;
+    const valid = (series||[]).filter(s=>s.pts && s.pts.length>=2);
+    if(!valid.length){ svg.innerHTML=""; renderRelLegend([]); return; }
+    const norm = valid.map(s=>{
+      const base = s.pts[0].v || 1;
+      return {color:s.color, w:s.w, label:s.label, n:s.pts.map(p=>({t:p.t, v:p.v/base*100}))};
+    });
+    const allT=[], allV=[];
+    norm.forEach(s=>s.n.forEach(p=>{ allT.push(p.t); allV.push(p.v); }));
+    const W=300,H=110,pad=6;
+    const xmin=Math.min(...allT), xmax=Math.max(...allT), xr=(xmax-xmin)||1;
+    const ymin=Math.min(...allV), ymax=Math.max(...allV), yr=(ymax-ymin)||1;
+    const X=t=>pad+((t-xmin)/xr)*(W-2*pad);
+    const Y=v=>H-pad-((v-ymin)/yr)*(H-2*pad);
+    let out="";
+    if(ymin<=100 && ymax>=100){
+      const y=Y(100).toFixed(1);
+      out+='<line x1="'+pad+'" y1="'+y+'" x2="'+(W-pad)+'" y2="'+y+'" stroke="#183129" stroke-width="1" stroke-dasharray="3 3"/>';
+    }
+    norm.forEach(s=>{
+      const d="M"+s.n.map(p=>X(p.t).toFixed(1)+","+Y(p.v).toFixed(1)).join(" L");
+      out+='<path d="'+d+'" fill="none" stroke="'+s.color+'" stroke-width="'+s.w+'" stroke-linejoin="round" stroke-linecap="round"/>';
+    });
+    svg.innerHTML=out;
+    renderRelLegend(norm);
+  }
 
   function drawChart(svgId, series, valId, fmt){
     const svg=$(svgId);
@@ -615,6 +705,11 @@
     drawChart("chart-mcap",  mcap,  "c-mcap",  v=>"$"+compact(v));
     drawChart("chart-hash",  hash,  "c-hash",  v=>fmtHash(v));
     drawChart("chart-diff",  diff,  "c-diff",  v=>compact(v));
+    const rel = HIST_PEERS.map(p=>({
+      color:p.color, w:p.w, label:p.label,
+      pts: win.filter(r=>r.peers && isFinite(r.peers[p.id])).map(r=>({t:r.t, v:+r.peers[p.id]}))
+    }));
+    drawMultiChart("chart-rel", rel);
   }
 
   async function loadHistory(){
@@ -635,11 +730,13 @@
   refresh();
   loadHistory();
   loadPeers();
+  loadSentiment();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadPeers, 120000);
+  setInterval(loadSentiment, 5*60000);
   setInterval(renderHalving, 1000);
-  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); } });
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); loadSentiment(); } });
 })();
 </script>
 </body>
