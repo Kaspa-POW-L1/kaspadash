@@ -125,3 +125,53 @@ try {
     console.log("tokens-daily fresh — skipping crawl");
   }
 } catch (e) { console.warn("tokens-daily:", e.message); }
+
+// Fear & Greed history (crypto + stock market)
+// alternative.me gives up to 30 days of crypto F&G for free.
+// CNN stock F&G has no official API; we scrape the public JSON endpoint.
+try {
+  const FNG = "data/fng-history.json";
+  let fngHist = [];
+  try { fngHist = JSON.parse(await readFile(FNG, "utf8")); if(!Array.isArray(fngHist)) fngHist=[]; } catch {}
+
+  // crypto F&G — last 30 days from alternative.me
+  const cr = await j("https://api.alternative.me/fng/?limit=30&format=json");
+  const cryptoPoints = (cr.data||[]).map(d=>({
+    t: Number(d.timestamp)*1000,
+    crypto: Number(d.value),
+    label: d.value_classification
+  })).filter(d=>isFinite(d.t)&&isFinite(d.crypto));
+
+  // stock F&G — CNN Fear & Greed (unofficial public JSON)
+  let stockVal = null;
+  try {
+    const s = await j("https://production.dataviz.cnn.io/index/fearandgreed/graphdata");
+    stockVal = s && s.fear_and_greed && isFinite(s.fear_and_greed.score)
+      ? Math.round(s.fear_and_greed.score) : null;
+  } catch(e2) { console.warn("stock-fng:", e2.message); }
+
+  // merge: map crypto points by date, add today's stock value
+  const byDay = {};
+  cryptoPoints.forEach(p=>{
+    const day = new Date(p.t).toISOString().slice(0,10);
+    byDay[day] = { t: p.t, crypto: p.crypto, label: p.label };
+  });
+  if(stockVal!=null){
+    const today = new Date().toISOString().slice(0,10);
+    if(byDay[today]) byDay[today].stock = stockVal;
+    else byDay[today] = { t: Date.now(), stock: stockVal };
+  }
+
+  // merge with existing history (keep 90 days)
+  const cut = Date.now() - 90*864e5;
+  const newPoints = Object.values(byDay).filter(p=>p.t>=cut);
+  const existingDays = new Set(fngHist.map(p=>new Date(p.t).toISOString().slice(0,10)));
+  newPoints.forEach(p=>{
+    const day = new Date(p.t).toISOString().slice(0,10);
+    if(!existingDays.has(day)) fngHist.push(p);
+    else { const i=fngHist.findIndex(x=>new Date(x.t).toISOString().slice(0,10)===day); if(i>=0) fngHist[i]={...fngHist[i],...p}; }
+  });
+  fngHist = fngHist.filter(p=>p.t>=cut).sort((a,b)=>a.t-b.t);
+  await writeFile(FNG, JSON.stringify(fngHist));
+  console.log("fng-history ok | points:", fngHist.length, "| stock:", stockVal??'n/a');
+} catch(e) { console.warn("fng-history:", e.message); }
