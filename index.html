@@ -77,7 +77,8 @@
   .bar{height:7px;border-radius:99px;background:var(--bg-2);margin-top:12px;overflow:hidden;border:1px solid var(--line)}
   .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--teal-dim),var(--teal));width:0;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
   .spark{margin-top:12px;width:100%;height:34px;display:block}
-  .rel-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  th.sortable:hover{color:var(--text);cursor:pointer}
+  th.sortable{user-select:none}
   .rel-legend span{display:inline-flex;align-items:center;gap:6px}
   .rel-legend i{width:12px;height:3px;border-radius:2px;display:inline-block}
   .up{color:var(--teal)} .down{color:var(--amber)}
@@ -278,11 +279,16 @@
 
   <!-- KRC-20 -->
   <section class="panel">
-    <h2>KRC-20 tokens</h2>
+    <h2>KRC-20 tokens <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Tokens built on top of Kaspa using the KRC-20 standard — similar to ERC-20 on Ethereum. Anyone can deploy a token. Most are community/meme projects; none have guaranteed value. Click a column header to sort.</span></span></h2>
     <div class="cap">Top tokens on the Kasplex layer, ranked by mint progress — the emerging token ecosystem after Toccata.</div>
     <div id="krc20-wrap">
-      <table>
-        <thead><tr><th>Token</th><th>Minted</th><th>Max supply</th><th>State</th></tr></thead>
+      <table id="krc20-table">
+        <thead><tr>
+          <th class="sortable" data-col="tick" style="cursor:pointer">Token <span id="sort-tick"></span></th>
+          <th class="sortable" data-col="pct" style="cursor:pointer;text-align:right">Minted <span id="sort-pct">▼</span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">% of the maximum supply that has been minted so far. 100% = fully minted, emission complete.</span></span></th>
+          <th style="text-align:right">Max supply <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The maximum number of tokens that will ever exist for this KRC-20 token.</span></span></th>
+          <th class="sortable" data-col="state" style="cursor:pointer;text-align:right">State <span id="sort-state"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">"finished" = fully minted, no new tokens possible. "deployed" = still being minted — new tokens are being created.</span></span></th>
+        </tr></thead>
         <tbody id="krc20"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
       </table>
     </div>
@@ -306,19 +312,29 @@
 
   <!-- PEERS -->
   <section class="panel" id="peers-pow-panel" style="margin-top:16px">
-    <h2>Proof-of-Work peers</h2>
+    <h2>Proof-of-Work peers <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Proof-of-Work coins use real computing power (miners) to secure the network — like Bitcoin. Kaspa is PoW but much faster, with a BlockDAG instead of a linear chain.</span></span></h2>
     <div class="cap">Kaspa versus other proof-of-work coins. Kaspa's row is highlighted.</div>
     <table>
-      <thead><tr><th>Coin</th><th>Market cap</th><th>30d</th><th>1y</th></tr></thead>
+      <thead><tr>
+        <th>Coin</th>
+        <th>Market cap <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value of all coins in circulation (price × supply). Larger = more established.</span></span></th>
+        <th>30d <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 30 days. Green = up, amber = down.</span></span></th>
+        <th>1y <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 12 months. Shows longer-term trend vs peers.</span></span></th>
+      </tr></thead>
       <tbody id="peers-pow"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
     </table>
   </section>
 
   <section class="panel" id="peers-l1-panel" style="margin-top:16px">
-    <h2>Layer-1 peers</h2>
+    <h2>Layer-1 peers <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Layer-1 networks are base blockchains that process transactions directly. Kaspa competes here as a fast, scalable L1 — but is unique in being PoW while most others use Proof-of-Stake.</span></span></h2>
     <div class="cap">Kaspa versus other fast layer-1 networks. Kaspa's row is highlighted.</div>
     <table>
-      <thead><tr><th>Coin</th><th>Market cap</th><th>30d</th><th>1y</th></tr></thead>
+      <thead><tr>
+        <th>Coin</th>
+        <th>Market cap <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value of all coins in circulation (price × supply). Larger = more established.</span></span></th>
+        <th>30d <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 30 days. Green = up, amber = down.</span></span></th>
+        <th>1y <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 12 months. Shows longer-term trend vs peers.</span></span></th>
+      </tr></thead>
       <tbody id="peers-l1"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
     </table>
   </section>
@@ -363,7 +379,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.6.0";
+  const APP_VERSION = "v1.7.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   // mobile tap-toggle for tooltips
@@ -565,13 +581,50 @@
     if(isFinite(p)&&isFinite(c)) $("mcap").textContent = "market cap $"+compact(p*c);
   }
 
+  // ---- KRC-20 with sorting ----
+  let krc20Data = [];
+  let krc20Sort = {col:"pct", dir:-1}; // default: minted % desc
+
+  function renderKrc20Table(){
+    const body=$("krc20"); if(!body||!krc20Data.length) return;
+    const {col,dir} = krc20Sort;
+    const sorted = [...krc20Data].sort((a,b)=>{
+      if(col==="tick") return dir*(a.tick.localeCompare(b.tick));
+      if(col==="pct")  return dir*((b.pct??-1)-(a.pct??-1));
+      if(col==="state") return dir*(a.state.localeCompare(b.state));
+      return 0;
+    });
+    // update sort indicators
+    ["tick","pct","state"].forEach(c=>{
+      const el=$("sort-"+c); if(!el) return;
+      el.textContent = col===c ? (dir<0?"▼":"▲") : "";
+    });
+    // split deployed vs finished for clarity
+    const deployed = sorted.filter(t=>t.state==="deployed");
+    const finished = sorted.filter(t=>t.state!=="deployed");
+    const rows = (list, label) => {
+      if(!list.length) return "";
+      const header = '<tr><td colspan="4" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
+      return header + list.map(t=>{
+        const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
+        const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
+        const stColor = t.state==="deployed" ? "var(--teal-dim)" : "var(--muted)";
+        return '<tr><td class="tick">'+esc(t.tick)+'</td>'+
+               '<td>'+bar+pctTxt+'</td>'+
+               '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
+               '<td><span style="color:'+stColor+'">'+esc(t.state)+'</span></td></tr>';
+      }).join("");
+    };
+    body.innerHTML = rows(deployed, "STILL MINTING") + rows(finished, "FULLY MINTED");
+  }
+
   async function loadKrc20(){
     const body=$("krc20");
     try{
       const d = await getJSON(KASPLEX+"/v1/krc20/tokenlist");
       let list = d.result || d.tokens || [];
       if(!Array.isArray(list) || !list.length) throw new Error("empty");
-      list = list.map(t=>{
+      krc20Data = list.map(t=>{
         const dec = num(pick(t,["dec"]));
         const scale = Math.pow(10, isFinite(dec)?dec:0);
         const minted = num(pick(t,["minted"]));
@@ -582,20 +635,17 @@
           maxh: isFinite(max) ? max/scale : NaN,
           pct: (isFinite(minted)&&isFinite(max)&&max>0) ? Math.min(100, minted/max*100) : null
         };
-      })
-      .filter(t=>t.tick && t.tick!=="?")
-      .sort((a,b)=>(b.pct==null?-1:b.pct)-(a.pct==null?-1:a.pct))
-      .slice(0,12);
-
-      body.innerHTML = list.map(t=>{
-        const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
-        const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
-        const st = t.state ? '<span style="color:var(--muted)">'+esc(t.state)+'</span>' : "–";
-        return '<tr><td class="tick">'+esc(t.tick)+'</td>'+
-               '<td>'+bar+pctTxt+'</td>'+
-               '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
-               '<td>'+st+'</td></tr>';
-      }).join("");
+      }).filter(t=>t.tick && t.tick!=="?").slice(0,24);
+      renderKrc20Table();
+      // sortable column headers
+      document.querySelectorAll("#krc20-table th.sortable").forEach(th=>{
+        th.onclick = ()=>{
+          const c = th.dataset.col;
+          if(krc20Sort.col===c) krc20Sort.dir *= -1;
+          else { krc20Sort.col=c; krc20Sort.dir=-1; }
+          renderKrc20Table();
+        };
+      });
     }catch(e){
       body.innerHTML='<tr><td colspan="4" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
     }
