@@ -275,10 +275,15 @@
       <div class="v" id="s-fng-stock">–</div>
       <div class="note" id="s-fng-stock-note">stock market · CNN</div>
     </div>
-    <div class="tile span2">
+    <div class="tile">
       <div class="h"><span>Community sentiment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The percentage of CoinGecko users who voted "bullish" on Kaspa. A rough proxy for community mood — above 60% is generally positive sentiment.</span></span></div>
       <div class="v" id="s-vote">–</div>
       <div class="note">bullish votes (CoinGecko)</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Dashboard views</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total pageviews of this dashboard tracked by GoatCounter — a privacy-friendly, cookie-free analytics tool. Each page load counts as one view.</span></span></div>
+      <div class="v" id="gc-views">–</div>
+      <div class="note" id="gc-note">total · <a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener" style="color:var(--teal-dim)">stats →</a></div>
     </div>
   </div>
 
@@ -385,7 +390,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.8.0";
+  const APP_VERSION = "v2.0.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   // mobile tap-toggle for tooltips
@@ -760,6 +765,17 @@
     }
   }
 
+  // ---- GoatCounter dashboard views ----
+  async function loadViews(){
+    try{
+      const d = await getJSON("https://zandkorrel.goatcounter.com/counter//visits.json");
+      if(d && isFinite(d.count)){
+        $("gc-views").textContent = compact(d.count);
+        $("gc-note").innerHTML = 'total pageviews · <a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener" style="color:var(--teal-dim)">stats →</a>';
+      }
+    }catch(e){ /* leave as – */ }
+  }
+
   // ---- sentiment & community ----
   async function loadSentiment(){
     // Crypto Fear & Greed (alternative.me)
@@ -962,14 +978,17 @@
   loadPeers();
   loadSentiment();
   loadTokenGrowth();
+  loadViews();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadPeers, 120000);
   setInterval(loadSentiment, 5*60000);
   setInterval(loadTokenGrowth, 30*60000);
+  setInterval(loadViews, 5*60000);
   setInterval(renderHalving, 1000);
   document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); loadSentiment(); loadTokenGrowth(); } });
 })();
 </script>
+<script data-goatcounter="https://zandkorrel.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
