@@ -122,6 +122,22 @@
     background:rgba(8,19,15,.72);border:1px solid var(--line);border-radius:99px;
     padding:3px 9px;backdrop-filter:blur(3px)}
 
+  /* tooltips */
+  .tip-wrap{position:relative;display:inline-flex;align-items:center}
+  .tip-icon{display:inline-flex;align-items:center;justify-content:center;
+    width:15px;height:15px;border-radius:50%;border:1px solid var(--line);
+    color:var(--muted);font-size:10px;font-family:var(--sans);font-weight:600;
+    cursor:pointer;margin-left:6px;flex:0 0 auto;user-select:none;
+    transition:border-color .15s,color .15s}
+  .tip-icon:hover,.tip-icon.open{border-color:var(--teal-dim);color:var(--teal)}
+  .tip-box{position:absolute;left:0;top:calc(100% + 6px);z-index:100;
+    background:var(--bg-2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-size:12px;line-height:1.55;color:var(--text);
+    width:220px;pointer-events:none;opacity:0;transform:translateY(-4px);
+    transition:opacity .15s,transform .15s;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .tip-wrap:hover .tip-box,.tip-wrap.open .tip-box{opacity:1;transform:none;pointer-events:auto}
+  @media(max-width:480px){.tip-box{width:180px}}
+
   @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:480px){ .grid{grid-template-columns:1fr} .span2{grid-column:span 1} .hero-stats{gap:18px} }
   @media(prefers-reduced-motion:reduce){ .dot,.blk,.bar>i{animation:none;transition:none} }
@@ -152,8 +168,8 @@
     <p class="sub">Kaspa confirms many blocks in parallel rather than in a single chain. Each square below is a block the network just produced.</p>
     <div class="blocks" id="blocks" aria-hidden="true"></div>
     <div class="hero-stats">
-      <div><span class="k" id="tips">–</span><span class="t">DAG tips now</span></div>
-      <div><span class="k" id="daa">–</span><span class="t">DAA score</span></div>
+      <div><span class="k" id="tips">–</span><span class="t">DAG tips now <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The number of "tip" blocks at the front of the BlockDAG — blocks that haven't been built on yet. In Kaspa's parallel structure, multiple tips coexist and all get included.</span></span></span></div>
+      <div><span class="k" id="daa">–</span><span class="t">DAA score <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">DAA = Difficulty Adjustment Algorithm score. Kaspa's internal clock — it counts accepted blocks and is used instead of timestamps for ordering. Think of it as Kaspa's block height equivalent.</span></span></span></div>
       <div><span class="k" id="blockcount">–</span><span class="t">total blocks</span></div>
       <div><span class="k" id="nodes">PoW</span><span class="t">consensus</span></div>
     </div>
@@ -162,40 +178,40 @@
   <!-- METRICS -->
   <div class="grid">
     <div class="tile span2">
-      <div class="h"><span>Circulating supply</span><span id="minted-pct" class="skeleton">–</span></div>
+      <div class="h"><span>Circulating supply</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The amount of KAS currently in circulation out of the maximum ~28.7 billion ever. Kaspa had a fair launch — no premine, no founder allocation.</span></span><span id="minted-pct" class="skeleton">–</span></div>
       <div class="v" id="supply">–</div>
       <div class="bar"><i id="supply-bar"></i></div>
       <div class="note" id="supply-note">of max ~28.7B KAS · fair launch, no premine</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Hashrate</span></div>
+      <div class="h"><span>Hashrate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total computing power miners are spending on Kaspa right now (in PH/s = petahashes per second). Higher = more secure network, harder to attack.</span></span></div>
       <div class="v" id="hashrate">–</div>
       <svg class="spark" id="hash-spark" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
       <div class="note">live session (since page opened)</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Price</span></div>
+      <div class="h"><span>Price</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Current KAS price in USD with 24h and 7d change. Green = up, amber = down vs the previous period.</span></span></div>
       <div class="v" id="price">–</div>
       <div class="note" id="price-chg">24h – · 7d –</div>
       <div class="note" id="mcap">market cap –</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Block reward</span></div>
+      <div class="h"><span>Block reward</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How many new KAS a miner earns per block found. Kaspa uses a "chromatic halving" — the reward drops smoothly every month instead of a sudden halving like Bitcoin.</span></span></div>
       <div class="v" id="reward">–</div>
       <div class="note">drops monthly (chromatic halving)</div>
     </div>
 
     <div class="tile span2">
-      <div class="h"><span>Next reward reduction</span></div>
+      <div class="h"><span>Next reward reduction</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Countdown to the next monthly emission reduction. Unlike Bitcoin's 4-year halving, Kaspa reduces the block reward by ~1/12th root of 2 every month — a smooth, predictable decrease.</span></span></div>
       <div class="v" id="halving">–</div>
       <div class="note" id="halving-note">emission halves ~1/2^(1/12) per month</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Difficulty</span></div>
+      <div class="h"><span>Difficulty</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How hard it is for miners to find a valid block. The network adjusts this automatically to keep ~10 blocks per second regardless of how much mining power is active. Rising difficulty = more miners joining.</span></span></div>
       <div class="v" id="difficulty">–</div>
       <div class="note">network difficulty</div>
     </div>
@@ -203,22 +219,22 @@
 
   <div class="grid">
     <div class="tile">
-      <div class="h"><span>24h volume</span></div>
+      <div class="h"><span>24h volume</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total USD value of KAS traded across all exchanges in the last 24 hours. The % of market cap shows how "active" the market is — higher % means more turnover relative to the coin's size.</span></span></div>
       <div class="v" id="m-vol">–</div>
       <div class="note">traded last 24h</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Market cap rank</span></div>
+      <div class="h"><span>Market cap rank</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Kaspa's position in the global crypto market ranked by market capitalisation (price × supply). Lower number = larger market.</span></span></div>
       <div class="v" id="m-rank">–</div>
       <div class="note">by market cap</div>
     </div>
     <div class="tile">
-      <div class="h"><span>All-time high</span></div>
+      <div class="h"><span>All-time high</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The highest price KAS has ever reached. The percentage below shows how far the current price is from that peak — a large negative % means significant room to recover (or it may never return).</span></span></div>
       <div class="v" id="m-ath">–</div>
       <div class="note" id="m-ath-note">from ATH</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Price in BTC</span></div>
+      <div class="h"><span>Price in BTC</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much Bitcoin one KAS costs. Rising = KAS outperforms BTC; falling = KAS underperforms. Useful because BTC is the reference currency most crypto traders benchmark against.</span></span></div>
       <div class="v" id="m-btc">–</div>
       <div class="note">vs Bitcoin</div>
     </div>
@@ -226,22 +242,22 @@
 
   <div class="grid">
     <div class="tile">
-      <div class="h"><span>Transactions per second</span></div>
+      <div class="h"><span>Transactions per second</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How many transactions the network is processing right now. Kaspa's BlockDAG allows many blocks in parallel, so TPS can be high without sacrificing decentralisation. Fills after 60 seconds.</span></span></div>
       <div class="v" id="m-tps">–</div>
       <div class="note">live session average</div>
     </div>
     <div class="tile">
-      <div class="h"><span>All-time transactions</span></div>
+      <div class="h"><span>All-time transactions</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total number of transactions ever confirmed on the Kaspa network since launch. A growing number shows real usage — not just speculation. Fills after 60 seconds.</span></span></div>
       <div class="v" id="m-txall">–</div>
       <div class="note">total ever confirmed</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Emission today</span></div>
+      <div class="h"><span>Emission today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">New KAS created today via block rewards (10 blocks/sec × 86,400 sec × reward). The annual inflation % shows how much the supply grows per year — it shrinks each month as the reward decreases.</span></span></div>
       <div class="v" id="m-emit">–</div>
       <div class="note" id="m-emit-note">new KAS per day · inflation –</div>
     </div>
     <div class="tile">
-      <div class="h"><span>52-week range</span></div>
+      <div class="h"><span>52-week range</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The lowest and highest price KAS reached in the last 24 hours. Gives context for where the current price sits relative to today's trading range.</span></span></div>
       <div class="v" id="m-52lo">–</div>
       <div class="note" id="m-52hi">high –</div>
     </div>
@@ -249,12 +265,12 @@
 
   <div class="grid">
     <div class="tile span2">
-      <div class="h"><span>Fear &amp; Greed</span></div>
+      <div class="h"><span>Fear &amp; Greed</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A 0–100 score for the overall crypto market mood. 0–24: Extreme Fear (great buying opportunity historically). 25–49: Fear. 50–74: Greed. 75–100: Extreme Greed (market may be overheated). Not Kaspa-specific.</span></span></div>
       <div class="v" id="s-fng">–</div>
       <div class="note" id="s-fng-note">market-wide crypto</div>
     </div>
     <div class="tile span2">
-      <div class="h"><span>Community sentiment</span></div>
+      <div class="h"><span>Community sentiment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The percentage of CoinGecko users who voted "bullish" on Kaspa. A rough proxy for community mood — above 60% is generally positive sentiment.</span></span></div>
       <div class="v" id="s-vote">–</div>
       <div class="note">bullish votes (CoinGecko)</div>
     </div>
@@ -347,8 +363,22 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.5.0";
+  const APP_VERSION = "v1.6.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
+
+  // mobile tap-toggle for tooltips
+  document.addEventListener("click", e=>{
+    const icon = e.target.closest(".tip-icon");
+    if(icon){
+      e.stopPropagation();
+      const wrap = icon.closest(".tip-wrap");
+      const wasOpen = wrap.classList.contains("open");
+      document.querySelectorAll(".tip-wrap.open").forEach(w=>w.classList.remove("open"));
+      if(!wasOpen) wrap.classList.add("open");
+      return;
+    }
+    document.querySelectorAll(".tip-wrap.open").forEach(w=>w.classList.remove("open"));
+  });
 
   async function getJSON(url){
     const ctl = new AbortController();
