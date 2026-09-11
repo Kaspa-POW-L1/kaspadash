@@ -225,6 +225,29 @@
   </div>
 
   <div class="grid">
+    <div class="tile">
+      <div class="h"><span>Transactions per second</span></div>
+      <div class="v" id="m-tps">–</div>
+      <div class="note">live session average</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>All-time transactions</span></div>
+      <div class="v" id="m-txall">–</div>
+      <div class="note">total ever confirmed</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Emission today</span></div>
+      <div class="v" id="m-emit">–</div>
+      <div class="note" id="m-emit-note">new KAS per day · inflation –</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>52-week range</span></div>
+      <div class="v" id="m-52lo">–</div>
+      <div class="note" id="m-52hi">high –</div>
+    </div>
+  </div>
+
+  <div class="grid">
     <div class="tile span2">
       <div class="h"><span>Fear &amp; Greed</span></div>
       <div class="v" id="s-fng">–</div>
@@ -324,7 +347,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.4.0";
+  const APP_VERSION = "v1.5.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   async function getJSON(url){
@@ -396,6 +419,8 @@
   // ---- state for BPS derivation ----
   let lastCount=null, lastTime=null;
 
+  let lastTxCount=null, lastTxTime=null;
+
   async function loadNetwork(){
     try{
       const dag = await getJSON(KAS+"/info/blockdag");
@@ -403,10 +428,12 @@
       const daa  = num(pick(dag,["virtualDaaScore","daaScore"]));
       const bc   = num(pick(dag,["blockCount"]));
       const diff = num(pick(dag,["difficulty"]));
+      const txc  = num(pick(dag,["transactionCount","txCount"]));
       if(isFinite(tips)) $("tips").textContent = tips;
       if(isFinite(daa))  $("daa").textContent  = compact(daa);
       if(isFinite(bc))   $("blockcount").textContent = compact(bc);
       if(isFinite(diff)) $("difficulty").textContent = compact(diff);
+      if(isFinite(txc))  $("m-txall").textContent = compact(txc);
 
       const now = Date.now();
       if(lastCount!=null && isFinite(bc) && bc>lastCount){
@@ -416,6 +443,13 @@
         $("bps").textContent = "≈10"; pace(10);
       }
       if(isFinite(bc)){ lastCount=bc; lastTime=now; }
+
+      // TPS from transaction count delta
+      if(lastTxCount!=null && isFinite(txc) && txc>lastTxCount){
+        const tps = (txc-lastTxCount)/((now-lastTxTime)/1000);
+        if(tps>0 && tps<10000) $("m-tps").textContent = tps.toFixed(1);
+      }
+      if(isFinite(txc)){ lastTxCount=txc; lastTxTime=now; }
     }catch(e){ setErr("bps"); setErr("tips"); setErr("daa"); setErr("difficulty"); }
   }
 
@@ -454,7 +488,19 @@
     try{
       const d = await getJSON(KAS+"/info/blockreward?stringOnly=false");
       const r = num(pick(d,["blockreward","blockReward"]));
-      if(isFinite(r)) $("reward").innerHTML = r.toFixed(2)+' <small>KAS</small>'; else setErr("reward");
+      if(isFinite(r)){
+        $("reward").innerHTML = r.toFixed(2)+' <small>KAS</small>';
+        // emission: 10 blocks/sec × 86400 sec/day × reward
+        const perDay = 10 * 86400 * r;
+        $("m-emit").innerHTML = compact(Math.round(perDay))+' <small>KAS</small>';
+        // annual inflation vs circulating supply
+        const circ = window.__circ;
+        if(isFinite(circ) && circ>0){
+          const annual = perDay * 365;
+          const pct = (annual/circ*100).toFixed(2);
+          $("m-emit-note").textContent = "new KAS per day · "+pct+"% annual inflation";
+        }
+      } else setErr("reward");
     }catch(e){ setErr("reward"); }
   }
 
@@ -571,6 +617,18 @@
     const c24 = (k.price_change_percentage_24h_in_currency!=null)?k.price_change_percentage_24h_in_currency:k.price_change_percentage_24h;
     const c7  = k.price_change_percentage_7d_in_currency;
     $("price-chg").innerHTML = "24h "+fmtPct(c24)+" \u00b7 7d "+fmtPct(c7);
+    // 52-week range
+    const lo = num(pick(k,["low_52w","low_24h"]));
+    const hi = num(pick(k,["high_52w","high_24h"]));
+    // CoinGecko /markets gives 24h high/low; we label it clearly
+    if(isFinite(lo)) $("m-52lo").innerHTML = "$"+lo.toFixed(4)+' <small>24h low</small>';
+    if(isFinite(hi)) $("m-52hi").textContent = "high $"+hi.toFixed(4);
+    // volume / market cap ratio
+    if(isFinite(k.total_volume) && isFinite(k.market_cap) && k.market_cap>0){
+      const ratio = (k.total_volume/k.market_cap*100).toFixed(2);
+      const note = $("m-vol").nextElementSibling;
+      if(note) note.textContent = "traded last 24h · "+ratio+"% of mcap";
+    }
   }
 
   // ---- KRC-20 token growth (bars) ----
