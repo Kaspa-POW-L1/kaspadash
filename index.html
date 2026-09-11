@@ -249,6 +249,22 @@
     </div>
   </section>
 
+  <!-- KRC-20 GROWTH -->
+  <section class="panel" id="tokgrowth" style="margin-top:16px">
+    <div class="hist-head">
+      <div>
+        <h2>KRC-20 growth</h2>
+        <div class="cap">New tokens deployed per day (last 30). Total ever deployed: <span id="tok-total">–</span>.</div>
+      </div>
+      <div style="display:flex;gap:22px">
+        <div style="text-align:right"><div style="font-family:var(--mono);font-size:20px" id="tok-7d">–</div><div class="cap">last 7d</div></div>
+        <div style="text-align:right"><div style="font-family:var(--mono);font-size:20px" id="tok-30d">–</div><div class="cap">last 30d</div></div>
+      </div>
+    </div>
+    <svg id="chart-tok" viewBox="0 0 300 90" preserveAspectRatio="none" style="width:100%;height:90px;display:block"></svg>
+    <div class="cap" id="tok-empty" style="display:none;margin-top:10px"></div>
+  </section>
+
   <!-- PEERS -->
   <section class="panel" id="peers-pow-panel" style="margin-top:16px">
     <h2>Proof-of-Work peers</h2>
@@ -308,7 +324,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.3.1";
+  const APP_VERSION = "v1.4.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   async function getJSON(url){
@@ -557,6 +573,49 @@
     $("price-chg").innerHTML = "24h "+fmtPct(c24)+" \u00b7 7d "+fmtPct(c7);
   }
 
+  // ---- KRC-20 token growth (bars) ----
+  function drawBars(svgId, pairs){
+    const svg=$(svgId); if(!svg) return;
+    if(!pairs || !pairs.length){ svg.innerHTML=""; return; }
+    const W=300,H=90,pad=4,n=pairs.length;
+    const max=Math.max.apply(null, pairs.map(p=>p.v).concat([1]));
+    const bw=(W-2*pad)/n;
+    svg.innerHTML = pairs.map((p,i)=>{
+      const h=(p.v/max)*(H-2*pad);
+      const x=pad+i*bw;
+      const y=H-pad-h;
+      return '<rect x="'+(x+bw*0.12).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw*0.76).toFixed(1)+
+             '" height="'+Math.max(h,0.5).toFixed(1)+'" rx="1" fill="#49eacb" opacity="0.85"><title>'+
+             esc(p.label)+': '+p.v+'</title></rect>';
+    }).join("");
+  }
+
+  async function loadTokenGrowth(){
+    try{
+      const d = await getJSON("./data/tokens-daily.json?t="+Date.now());
+      if(d && isFinite(d.total)) $("tok-total").textContent = compact(d.total);
+      const daily = (d && d.daily) ? d.daily : {};
+      if(!Object.keys(daily).length){
+        $("tok-empty").style.display="block";
+        $("tok-empty").textContent="Per-day token history appears after the collector's first daily crawl.";
+        return;
+      }
+      $("tok-empty").style.display="none";
+      const today=Date.now(), series=[];
+      for(let i=29;i>=0;i--){
+        const dt=new Date(today-i*864e5).toISOString().slice(0,10);
+        series.push({label:dt, v: daily[dt]||0});
+      }
+      drawBars("chart-tok", series);
+      const sum=k=>series.slice(-k).reduce((a,b)=>a+b.v,0);
+      $("tok-7d").textContent = "+"+sum(7);
+      $("tok-30d").textContent = "+"+sum(30);
+    }catch(e){
+      $("tok-empty").style.display="block";
+      $("tok-empty").textContent="Token growth data is not available yet — it appears after the collector runs.";
+    }
+  }
+
   // ---- sentiment & community ----
   async function loadSentiment(){
     // Fear & Greed (alternative.me) — market-wide crypto sentiment
@@ -716,12 +775,14 @@
   loadHistory();
   loadPeers();
   loadSentiment();
+  loadTokenGrowth();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadPeers, 120000);
   setInterval(loadSentiment, 5*60000);
+  setInterval(loadTokenGrowth, 30*60000);
   setInterval(renderHalving, 1000);
-  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); loadSentiment(); } });
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); loadSentiment(); loadTokenGrowth(); } });
 })();
 </script>
 </body>
