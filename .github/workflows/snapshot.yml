@@ -24,6 +24,8 @@ jobs:
           node-version: "22"
 
       - name: Take snapshot
+        env:
+          OANOR_KEY: ${{ secrets.OANOR_KEY }}
         run: node scripts/snapshot.mjs
 
       - name: Commit if changed
