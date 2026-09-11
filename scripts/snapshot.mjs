@@ -84,3 +84,44 @@ if (hist.length > HARD_CAP) hist = hist.slice(hist.length - HARD_CAP);
 await mkdir("data", { recursive: true });
 await writeFile(OUT, JSON.stringify(hist));
 console.log("snapshot ok", new Date(rec.t).toISOString(), "| rows:", hist.length);
+
+// KRC-20 token growth: crawl the full token list (paginated) and bucket by
+// deploy date (mtsAdd). One crawl yields the entire per-day history, so we only
+// recompute about once a day to keep hourly runs cheap.
+try {
+  const TOK = "data/tokens-daily.json";
+  let existing = null;
+  try { existing = JSON.parse(await readFile(TOK, "utf8")); } catch { /* first run */ }
+  const stale = !existing || !existing.updated || (Date.now() - existing.updated) > 20 * 3600e3;
+  if (stale) {
+    const LIST = "https://api.kasplex.org/v1/krc20/tokenlist";
+    const daily = {};
+    let total = 0, cursor = null, pages = 0;
+    while (pages < 300) {
+      const url = cursor ? LIST + "?next=" + encodeURIComponent(cursor) : LIST;
+      const d = await j(url);
+      const list = (d && d.result) || [];
+      if (!list.length) break;
+      for (const t of list) {
+        total++;
+        const ms = Number(t.mtsAdd);
+        if (isFinite(ms) && ms > 0) {
+          const day = new Date(ms).toISOString().slice(0, 10);
+          daily[day] = (daily[day] || 0) + 1;
+        }
+      }
+      pages++;
+      if (!d.next || d.next === cursor) break;
+      cursor = d.next;
+    }
+    if (total > 0) {
+      const cut = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10);
+      const trimmed = {};
+      Object.keys(daily).forEach(k => { if (k >= cut) trimmed[k] = daily[k]; });
+      await writeFile(TOK, JSON.stringify({ updated: Date.now(), total, daily: trimmed }));
+      console.log("tokens-daily ok | total:", total, "| pages:", pages);
+    }
+  } else {
+    console.log("tokens-daily fresh — skipping crawl");
+  }
+} catch (e) { console.warn("tokens-daily:", e.message); }
