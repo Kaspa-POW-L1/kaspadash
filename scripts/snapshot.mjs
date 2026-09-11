@@ -142,12 +142,17 @@ try {
     label: d.value_classification
   })).filter(d=>isFinite(d.t)&&isFinite(d.crypto));
 
-  // stock F&G — CNN Fear & Greed (unofficial public JSON)
+  // Stock F&G — oanor.com stockfeargreed-api (free tier, API key via OANOR_KEY secret)
   let stockVal = null;
   try {
-    const s = await j("https://production.dataviz.cnn.io/index/fearandgreed/graphdata");
-    stockVal = s && s.fear_and_greed && isFinite(s.fear_and_greed.score)
-      ? Math.round(s.fear_and_greed.score) : null;
+    const oanorKey = process.env.OANOR_KEY || "";
+    const headers = oanorKey ? { "x-oanor-key": oanorKey } : {};
+    const sr = await fetch("https://api.oanor.com/stockfeargreed-api/v1/index", { headers });
+    if(sr.ok){
+      const sj = await sr.json();
+      if(sj && sj.data && isFinite(sj.data.score))
+        stockVal = Math.round(sj.data.score);
+    } else { console.warn("stock-fng: HTTP", sr.status, "— add OANOR_KEY secret for free tier"); }
   } catch(e2) { console.warn("stock-fng:", e2.message); }
 
   // merge: map crypto points by date, add today's stock value
