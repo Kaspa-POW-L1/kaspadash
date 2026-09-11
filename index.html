@@ -265,10 +265,15 @@
   </div>
 
   <div class="grid">
-    <div class="tile span2">
-      <div class="h"><span>Fear &amp; Greed</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A 0–100 score for the overall crypto market mood. 0–24: Extreme Fear (great buying opportunity historically). 25–49: Fear. 50–74: Greed. 75–100: Extreme Greed (market may be overheated). Not Kaspa-specific.</span></span></div>
+    <div class="tile">
+      <div class="h"><span>Fear &amp; Greed · Crypto</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A 0–100 score for the overall crypto market mood. 0–24: Extreme Fear. 25–49: Fear. 50–74: Greed. 75–100: Extreme Greed (market may be overheated). Not Kaspa-specific.</span></span></div>
       <div class="v" id="s-fng">–</div>
       <div class="note" id="s-fng-note">market-wide crypto</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Fear &amp; Greed · Stocks</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">CNN's Fear & Greed Index for traditional stock markets (S&P 500). Useful to compare stock vs crypto sentiment — when both are in greed, risk appetite is high across all markets.</span></span></div>
+      <div class="v" id="s-fng-stock">–</div>
+      <div class="note" id="s-fng-stock-note">stock market · CNN</div>
     </div>
     <div class="tile span2">
       <div class="h"><span>Community sentiment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The percentage of CoinGecko users who voted "bullish" on Kaspa. A rough proxy for community mood — above 60% is generally positive sentiment.</span></span></div>
@@ -358,6 +363,7 @@
       <figure class="chart"><figcaption>Hashrate <span id="c-hash">–</span></figcaption><svg id="chart-hash" viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true"></svg></figure>
       <figure class="chart"><figcaption>Difficulty <span id="c-diff">–</span></figcaption><svg id="chart-diff" viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true"></svg></figure>
       <figure class="chart" style="grid-column:1/-1"><figcaption>Relative performance · indexed to 100</figcaption><svg id="chart-rel" viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true"></svg><div class="rel-legend" id="rel-legend"></div></figure>
+      <figure class="chart" style="grid-column:1/-1"><figcaption>Fear &amp; Greed · Crypto <span style="color:var(--teal)">━</span> vs Stocks <span style="color:var(--amber)">━</span> · 0 = extreme fear, 100 = extreme greed</figcaption><svg id="chart-fng" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden="true"></svg></figure>
     </div>
     <div class="cap" id="hist-empty" style="display:none;margin-top:12px"></div>
   </section>
@@ -379,7 +385,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v1.7.0";
+  const APP_VERSION = "v1.8.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   // mobile tap-toggle for tooltips
@@ -756,7 +762,7 @@
 
   // ---- sentiment & community ----
   async function loadSentiment(){
-    // Fear & Greed (alternative.me) — market-wide crypto sentiment
+    // Crypto Fear & Greed (alternative.me)
     try{
       const d = await getJSON("https://api.alternative.me/fng/?limit=1");
       const item = d && d.data && d.data[0];
@@ -765,7 +771,19 @@
         if(item.value_classification) $("s-fng-note").textContent = item.value_classification + " · market-wide";
       }
     }catch(e){ /* leave as – */ }
-    // CoinGecko community (Kaspa-specific): bullish votes + reach
+    // Stock Fear & Greed from fng-history.json (written by Action)
+    try{
+      const d = await getJSON("./data/fng-history.json?t="+Date.now());
+      if(Array.isArray(d) && d.length){
+        const latest = d[d.length-1];
+        if(latest.stock!=null && isFinite(latest.stock)){
+          $("s-fng-stock").textContent = latest.stock;
+          const lbl = latest.stock<=24?"Extreme Fear":latest.stock<=49?"Fear":latest.stock<=74?"Greed":"Extreme Greed";
+          $("s-fng-stock-note").textContent = lbl+" · stock market · CNN";
+        }
+      }
+    }catch(e){ /* not yet available */ }
+    // CoinGecko community (Kaspa-specific): bullish votes
     try{
       const d = await getJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
       const up = num(pick(d,["sentiment_votes_up_percentage"]));
@@ -892,14 +910,44 @@
       pts: win.filter(r=>r.peers && isFinite(r.peers[p.id])).map(r=>({t:r.t, v:+r.peers[p.id]}))
     }));
     drawMultiChart("chart-rel", rel);
+    renderFngChart();
   }
+
+  let fngCache = null;
 
   async function loadHistory(){
     try{
       const d = await getJSON("./data/history.json?t="+Date.now());
       historyCache = Array.isArray(d) ? d : [];
     }catch(e){ historyCache = null; }
+    // load F&G history
+    try{
+      const d = await getJSON("./data/fng-history.json?t="+Date.now());
+      fngCache = Array.isArray(d) ? d : null;
+    }catch(e){ fngCache = null; }
     renderHistory();
+  }
+
+  function renderFngChart(){
+    const svg=$("chart-fng"); if(!svg) return;
+    if(!fngCache || fngCache.length<2){ svg.innerHTML=""; return; }
+    const cutoff = Date.now() - currentRange*864e5;
+    const win = fngCache.filter(r=>r.t>=cutoff);
+    if(win.length<2){ svg.innerHTML=""; return; }
+    const W=300,H=80,pad=4;
+    const xmin=Math.min(...win.map(p=>p.t)), xmax=Math.max(...win.map(p=>p.t)), xr=(xmax-xmin)||1;
+    const X=t=>pad+((t-xmin)/xr)*(W-2*pad);
+    const Y=v=>H-pad-((v/100))*(H-2*pad);
+    // 50-line reference
+    const y50=Y(50).toFixed(1);
+    let out='<line x1="'+pad+'" y1="'+y50+'" x2="'+(W-pad)+'" y2="'+y50+'" stroke="#183129" stroke-width="1" stroke-dasharray="3 3"/>';
+    // crypto line
+    const cpts=win.filter(p=>isFinite(p.crypto)).map(p=>X(p.t).toFixed(1)+","+Y(p.crypto).toFixed(1));
+    if(cpts.length>=2) out+='<polyline points="'+cpts.join(" ")+'" fill="none" stroke="#49eacb" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>';
+    // stock line
+    const spts=win.filter(p=>isFinite(p.stock)).map(p=>X(p.t).toFixed(1)+","+Y(p.stock).toFixed(1));
+    if(spts.length>=2) out+='<polyline points="'+spts.join(" ")+'" fill="none" stroke="#f0b429" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>';
+    svg.innerHTML=out;
   }
 
   $("range").addEventListener("click", e=>{
