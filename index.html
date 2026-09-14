@@ -390,7 +390,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.0.0";
+  const APP_VERSION = "v2.0.1";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   // mobile tap-toggle for tooltips
@@ -768,9 +768,9 @@
   // ---- GoatCounter dashboard views ----
   async function loadViews(){
     try{
-      const d = await getJSON("https://zandkorrel.goatcounter.com/counter//visits.json");
-      if(d && isFinite(d.count)){
-        $("gc-views").textContent = compact(d.count);
+      const d = await getJSON("https://zandkorrel.goatcounter.com/counter//.json");
+      if(d && d.count!=null){
+        $("gc-views").textContent = d.count;
         $("gc-note").innerHTML = 'total pageviews · <a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener" style="color:var(--teal-dim)">stats →</a>';
       }
     }catch(e){ /* leave as – */ }
