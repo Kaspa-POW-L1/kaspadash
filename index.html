@@ -353,8 +353,9 @@
         <th>Market cap <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value of all coins in circulation (price × supply). Larger = more established.</span></span></th>
         <th>30d <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 30 days. Green = up, amber = down.</span></span></th>
         <th>1y <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 12 months. Shows longer-term trend vs peers.</span></span></th>
+        <th>V/MC <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">24h volume ÷ market cap. Shows how actively the coin is traded relative to its size. Higher = more liquid. Very high (>20%) may indicate speculation or wash trading.</span></span></th>
       </tr></thead>
-      <tbody id="peers-pow"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
+      <tbody id="peers-pow"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
     </table>
   </section>
 
@@ -367,8 +368,9 @@
         <th>Market cap <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value of all coins in circulation (price × supply). Larger = more established.</span></span></th>
         <th>30d <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 30 days. Green = up, amber = down.</span></span></th>
         <th>1y <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price change over the last 12 months. Shows longer-term trend vs peers.</span></span></th>
+        <th>V/MC <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">24h volume ÷ market cap. Shows how actively the coin is traded relative to its size. Higher = more liquid. Very high (>20%) may indicate speculation or wash trading.</span></span></th>
       </tr></thead>
-      <tbody id="peers-l1"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
+      <tbody id="peers-l1"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
     </table>
   </section>
 
@@ -454,7 +456,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.2.0";
+  const APP_VERSION = "v2.2.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -757,10 +759,18 @@
       const sym = (c.symbol||"").toUpperCase();
       const p30 = c.price_change_percentage_30d_in_currency;
       const p1y = c.price_change_percentage_1y_in_currency;
+      // V/MC ratio
+      let vmc = "–";
+      if(isFinite(c.total_volume) && isFinite(c.market_cap) && c.market_cap>0){
+        const r = c.total_volume/c.market_cap*100;
+        const col = r>20?"var(--amber)":r>5?"var(--teal)":"var(--muted)";
+        vmc = '<span style="color:'+col+'">'+r.toFixed(1)+'%</span>';
+      }
       return '<tr'+kas+'><td>'+esc(c.name||sym)+' <span style="color:var(--muted)">'+esc(sym)+'</span></td>'+
              '<td>$'+compact(c.market_cap)+'</td>'+
              '<td>'+fmtPct(p30)+'</td>'+
-             '<td>'+fmtPct(p1y)+'</td></tr>';
+             '<td>'+fmtPct(p1y)+'</td>'+
+             '<td>'+vmc+'</td></tr>';
     }).join("");
   }
 
