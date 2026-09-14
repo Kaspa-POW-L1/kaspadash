@@ -373,6 +373,37 @@
     <div class="cap" id="hist-empty" style="display:none;margin-top:12px"></div>
   </section>
 
+  <!-- FEEDBACK -->
+  <section class="panel" id="feedback-panel" style="margin-top:16px">
+    <h2>Suggestions &amp; feedback</h2>
+    <div class="cap">Have an idea for a new metric, spotted something wrong, or just want to say hi? Leave a message below — it goes straight to the builder.</div>
+    <form id="feedback-form" style="margin-top:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Your name <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <input name="name" type="text" placeholder="Anonymous" style="width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;box-sizing:border-box" />
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Type</label>
+          <select name="type" style="width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;box-sizing:border-box;cursor:pointer">
+            <option value="suggestion">💡 Suggestion</option>
+            <option value="bug">🐛 Something's wrong</option>
+            <option value="compliment">⭐ Compliment</option>
+            <option value="other">💬 Other</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Message <span style="color:var(--coral)">*</span></label>
+        <textarea name="message" required placeholder="What metric would you like to see? What could be improved?" rows="4" style="width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button type="submit" id="feedback-btn" style="background:var(--teal);color:#062018;border:none;border-radius:8px;padding:9px 20px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s">Send message</button>
+        <span id="feedback-status" style="font-size:13px;color:var(--muted)"></span>
+      </div>
+    </form>
+  </section>
+
   <footer>
     Live data from public APIs — <a href="https://api.kaspa.org" rel="noopener">api.kaspa.org</a> (network &amp; supply) and <a href="https://kasplex.org" rel="noopener">Kasplex</a> (KRC-20). No API key, refreshes every 60s. Charts show the current session only; the free API returns snapshots, not a time series.
     <div class="who">Not financial advice. Built as an open community tool.</div>
@@ -390,7 +421,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.0.3";
+  const APP_VERSION = "v2.1.0";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   // mobile tap-toggle for tooltips
@@ -973,6 +1004,40 @@
     for(const el of $("range").children) el.classList.toggle("on", el===b);
     renderHistory();
   });
+
+  // ---- feedback form (Formspree) ----
+  const feedbackForm = $("feedback-form");
+  if(feedbackForm){
+    feedbackForm.addEventListener("submit", async e=>{
+      e.preventDefault();
+      const btn=$("feedback-btn"), status=$("feedback-status");
+      btn.disabled=true; btn.style.opacity=".5";
+      status.textContent="Sending…"; status.style.color="var(--muted)";
+      try{
+        const data = new FormData(feedbackForm);
+        const r = await fetch("https://formspree.io/f/mrpgngeq",{
+          method:"POST", body:data, headers:{accept:"application/json"}
+        });
+        if(r.ok){
+          status.textContent="✓ Message sent — thanks!";
+          status.style.color="var(--teal)";
+          feedbackForm.reset();
+        } else {
+          throw new Error("HTTP "+r.status);
+        }
+      }catch(err){
+        status.textContent="Something went wrong — please try again.";
+        status.style.color="var(--coral)";
+      }finally{
+        btn.disabled=false; btn.style.opacity="1";
+      }
+    });
+    // focus style on inputs
+    feedbackForm.querySelectorAll("input,textarea,select").forEach(el=>{
+      el.addEventListener("focus",()=>el.style.borderColor="var(--teal-dim)");
+      el.addEventListener("blur",()=>el.style.borderColor="var(--line)");
+    });
+  }
 
   refresh();
   loadHistory();
