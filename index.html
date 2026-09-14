@@ -310,6 +310,21 @@
     </div>
   </div>
 
+  <div class="grid">
+    <div class="tile span2">
+      <div class="h"><span>Bitcoin dominance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bitcoin's share of the total crypto market cap. Falling dominance often means capital is rotating from BTC into altcoins (like KAS); rising dominance means money is concentrating back into Bitcoin.</span></span></div>
+      <div class="v" id="m-btcdom">–</div>
+      <div class="bar"><i id="btcdom-bar"></i></div>
+      <div class="note" id="m-btcdom-note">BTC share of total crypto market cap</div>
+    </div>
+
+    <div class="tile span2">
+      <div class="h"><span>Igra L2 · TVL</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value locked on Igra — Kaspa's EVM-compatible layer-2, public mainnet since March 2026. TVL is capital deposited into the chain's smart contracts, a proxy for real DeFi usage. Source: DefiLlama.</span></span></div>
+      <div class="v" id="m-igra">–</div>
+      <div class="note" id="m-igra-note">Kaspa L2 DeFi · via DefiLlama</div>
+    </div>
+  </div>
+
   <!-- KRC-20 -->
   <section class="panel">
     <h2>KRC-20 tokens <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Tokens built on top of Kaspa using the KRC-20 standard — similar to ERC-20 on Ethereum. Anyone can deploy a token. Most are community/meme projects; none have guaranteed value. Click a column header to sort.</span></span></h2>
@@ -456,7 +471,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.2.1";
+  const APP_VERSION = "v2.3.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -847,15 +862,56 @@
   }
 
   // ---- GoatCounter dashboard views ----
+  // Requires "Allow adding visitor counts on your website" enabled in GoatCounter
+  // site settings — otherwise the /counter/ endpoint returns 403 and the tile stays "–".
   function loadViews(){
-    // Use the page's actual path as registered by GoatCounter
-    const path = encodeURIComponent(window.location.pathname.replace(/\/$/, "") || "/");
-    fetch("https://zandkorrel.goatcounter.com/counter/" + path + ".json")
-      .then(r=>r.json())
-      .then(d=>{
-        if(d && d.count!=null) $("gc-views").textContent = d.count;
-      })
-      .catch(()=>{});
+    const base = "https://zandkorrel.goatcounter.com/counter/";
+    const grab = p => fetch(base + p + ".json").then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); });
+    const show = d => {
+      const raw = d && (d.count!=null ? d.count : d.count_unique);
+      if(raw==null) return;
+      const n = Number(String(raw).replace(/[^0-9.]/g,""));      // count is a comma-formatted string
+      $("gc-views").textContent = isFinite(n) ? compact(n) : String(raw);
+    };
+    // Site-wide total first; fall back to this page's exact path if TOTAL is unavailable.
+    grab("TOTAL")
+      .then(show)
+      .catch(()=> grab(encodeURIComponent(window.location.pathname || "/")).then(show))
+      .catch(()=>{ /* counter endpoint disabled or unreachable — leave as – */ });
+  }
+
+  // ---- Bitcoin dominance (CoinGecko /global) ----
+  async function loadGlobal(){
+    try{
+      const d = await getJSON(CG+"/global");
+      const mcp = d && d.data && d.data.market_cap_percentage;
+      const dom = mcp && num(pick(mcp,["btc"]));
+      if(isFinite(dom)){
+        $("m-btcdom").innerHTML = dom.toFixed(1)+'<small>%</small>';
+        const bar=$("btcdom-bar"); if(bar) bar.style.width = Math.min(100,dom).toFixed(1)+"%";
+        const eth = num(pick(mcp,["eth"]));
+        if(isFinite(eth)) $("m-btcdom-note").textContent = "BTC share of total market · ETH "+eth.toFixed(1)+"%";
+      } else setErr("m-btcdom");
+    }catch(e){ setErr("m-btcdom"); }
+  }
+
+  // ---- Kaspa L2 TVL: Igra (+ Kasplex for context), via DefiLlama ----
+  async function loadL2Tvl(){
+    try{
+      const d = await getJSON("https://api.llama.fi/v2/chains");
+      if(!Array.isArray(d)) throw new Error("bad");
+      const tvlOf = name => {
+        const c = d.find(x=>x && x.name && x.name.toLowerCase()===name);
+        return c ? num(pick(c,["tvl"])) : NaN;
+      };
+      const igra = tvlOf("igra"), kasplex = tvlOf("kasplex");
+      if(isFinite(igra)){
+        $("m-igra").textContent = "$"+compact(igra);
+        $("m-igra-note").textContent = isFinite(kasplex)
+          ? "Kaspa L2 · Kasplex $"+compact(kasplex)+" · via DefiLlama"
+          : "Kaspa L2 DeFi · via DefiLlama";
+      } else setErr("m-igra");
+    }catch(e){ setErr("m-igra"); }
   }
 
   // ---- sentiment & community ----
@@ -1099,14 +1155,18 @@
   loadSentiment();
   loadTokenGrowth();
   loadViews();
+  loadGlobal();
+  loadL2Tvl();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadPeers, 120000);
   setInterval(loadSentiment, 5*60000);
   setInterval(loadTokenGrowth, 30*60000);
   setInterval(loadViews, 5*60000);
+  setInterval(loadGlobal, 5*60000);
+  setInterval(loadL2Tvl, 10*60000);
   setInterval(renderHalving, 1000);
-  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); loadSentiment(); loadTokenGrowth(); } });
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); loadSentiment(); loadTokenGrowth(); loadGlobal(); loadL2Tvl(); } });
 })();
 </script>
 <script data-goatcounter="https://zandkorrel.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
