@@ -390,7 +390,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.0.1";
+  const APP_VERSION = "v2.0.2";
   { const v=$("version"); if(v) v.textContent = APP_VERSION; }
 
   // mobile tap-toggle for tooltips
@@ -766,14 +766,34 @@
   }
 
   // ---- GoatCounter dashboard views ----
-  async function loadViews(){
-    try{
-      const d = await getJSON("https://zandkorrel.goatcounter.com/counter//.json");
-      if(d && d.count!=null){
-        $("gc-views").textContent = d.count;
-        $("gc-note").innerHTML = 'total pageviews · <a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener" style="color:var(--teal-dim)">stats →</a>';
+  // Uses GoatCounter's own visit_count after count.js loads
+  function loadViews(){
+    const t = setInterval(()=>{
+      if(window.goatcounter && window.goatcounter.visit_count){
+        clearInterval(t);
+        window.goatcounter.visit_count({
+          append: false,
+          path: "/",
+          type: "json",
+          no_branding: true
+        });
+        // Fallback: fetch the JSON endpoint directly
+        fetch("https://zandkorrel.goatcounter.com/counter//.json")
+          .then(r=>r.json())
+          .then(d=>{
+            if(d && d.count!=null){
+              $("gc-views").textContent = d.count;
+            }
+          }).catch(()=>{});
       }
-    }catch(e){ /* leave as – */ }
+    }, 200);
+    // Timeout after 5s if count.js never loads
+    setTimeout(()=>clearInterval(t), 5000);
+    // Also try direct fetch immediately
+    fetch("https://zandkorrel.goatcounter.com/counter//.json")
+      .then(r=>r.json())
+      .then(d=>{ if(d && d.count!=null) $("gc-views").textContent = d.count; })
+      .catch(()=>{});
   }
 
   // ---- sentiment & community ----
