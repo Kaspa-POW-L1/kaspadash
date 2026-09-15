@@ -171,7 +171,7 @@
   .ecurve-wrap{position:relative;margin-top:12px}
   .ecurve-wrap svg{width:100%;height:80px;display:block}
   .ecurve-now{position:absolute;top:0;bottom:0;width:1px;background:var(--teal);opacity:.7;pointer-events:none}
-  .ecurve-label{position:absolute;top:2px;font-family:var(--mono);font-size:10px;color:var(--teal);white-space:nowrap}
+  .ecurve-label{position:absolute;top:2px;font-family:var(--mono);font-size:10px;color:var(--teal);white-space:nowrap;pointer-events:none}
 
   /* Live block feed */
   .block-feed{margin-top:12px;display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto}
@@ -528,7 +528,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.4.2";
+  const APP_VERSION = "v2.4.3";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1138,7 +1138,16 @@
     const nowX = X(0);
     const nowEl=$("ecurve-now"), lblEl=$("ecurve-lbl");
     if(nowEl){ nowEl.style.left=nowX.toFixed(1)+"px"; }
-    if(lblEl){ lblEl.style.left=(nowX+4).toFixed(1)+"px"; }
+    if(lblEl){
+      // position label to the right of the marker; if it would overflow
+      // the right edge (>85% of width), flip it to the left side instead
+      const pct = nowX / W;
+      if(pct > 0.85){
+        lblEl.style.left=""; lblEl.style.right=(W-nowX+4).toFixed(1)+"px";
+      } else {
+        lblEl.style.right=""; lblEl.style.left=(nowX+4).toFixed(1)+"px";
+      }
+    }
 
     // note
     const yearsLeft = (tmax/12).toFixed(0);
@@ -1180,12 +1189,18 @@
         if(r.status!=="fulfilled") return;
         const blk=r.value;
         const hash=newTips[i];
+        const vd  = blk.verboseData || {};
+        // use the canonical hash from verboseData if available — the tip hash
+        // and the canonical block hash can differ after DAG resolution, so
+        // dedup on both to avoid the same block appearing twice
+        const canonHash = vd.hash || hash;
+        if(feedSeen.has(canonHash)) return;
         feedSeen.add(hash);
+        feedSeen.add(canonHash);
         firstSuccess=true;
 
         // blueScore and timestamp are in the header, not verboseData
         const hdr = blk.header || {};
-        const vd  = blk.verboseData || {};
         const blue= num(pick(hdr,["blueScore","blue_score"]));
         let ts = num(pick(hdr,["timestamp","timeInMilliseconds"]));
         if(isFinite(ts) && ts < 2e12) ts *= 1000; // s → ms guard
@@ -1193,7 +1208,7 @@
         // tx count from transactions array (includes coinbase)
         const txArr = Array.isArray(blk.transactions) ? blk.transactions : [];
         const txc = txArr.length;
-        const displayHash = vd.hash || hash;
+        const displayHash = canonHash;
 
         const row=document.createElement("div");
         row.className="bf-row bf-new";
