@@ -513,9 +513,11 @@
         <th>Pair</th>
         <th class="exc-vol">24h volume</th>
         <th class="exc-pct">share</th>
+        <th class="exc-pct">V/MC <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Volume/Market cap ratio for this exchange: how much of Kaspa's total market cap is traded here in 24h. Higher = more active trading of KAS on this platform.</span></span></th>
       </tr></thead>
-      <tbody id="exc-body"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
+      <tbody id="exc-body"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
     </table>
+    <div class="note" id="exc-note" style="margin-top:8px"></div>
   </section>
 
   <!-- FEEDBACK POPUP -->
@@ -576,7 +578,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.5.6";
+  const APP_VERSION = "v2.5.8";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -972,7 +974,7 @@
 
   function renderMarket(byId){
     const k = byId["kaspa"]; if(!k) return;
-    if(isFinite(k.total_volume)) $("m-vol").textContent = "$"+compact(k.total_volume);
+    if(isFinite(k.total_volume)){ $("m-vol").textContent = "$"+compact(k.total_volume); window.__vol24h = k.total_volume; }
     if(k.market_cap_rank!=null) $("m-rank").textContent = "#"+k.market_cap_rank;
     if(isFinite(k.ath)){
       $("m-ath").textContent = "$"+(+k.ath).toFixed(4);
@@ -1349,6 +1351,7 @@
       // sum total volume for share calculation
       const totalVol = tickers.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
       const top = tickers.slice(0,8);
+      const mcap = window.__circ && window.__price ? window.__circ * window.__price : null;
       const body = $("exc-body");
       if(!body) return;
       body.innerHTML = top.map(t=>{
@@ -1357,12 +1360,30 @@
         const pair = esc((t.base||"")+"/"+(t.target||""));
         const volStr = isFinite(vol) ? "$"+compact(vol) : "–";
         const pct = isFinite(vol)&&totalVol>0 ? (vol/totalVol*100).toFixed(1)+"%" : "–";
+        const vmc = isFinite(vol)&&mcap&&mcap>0 ? (vol/mcap*100).toFixed(2)+"%" : "–";
         return '<tr><td>'+name+'</td><td><span class="exc-pair">'+pair+'</span></td>'+
-               '<td class="exc-vol">'+volStr+'</td><td class="exc-pct">'+pct+'</td></tr>';
+               '<td class="exc-vol">'+volStr+'</td><td class="exc-pct">'+pct+'</td>'+
+               '<td class="exc-pct">'+vmc+'</td></tr>';
       }).join("");
+
+      // subtitel: som top 8 vs totaal dashboard volume
+      const top8vol = top.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
+      const dashVol = window.__vol24h;
+      const note = $("exc-note");
+      if(note){
+        let txt = "Top 8 exchanges combined: $"+compact(top8vol);
+        if(isFinite(dashVol) && dashVol>0){
+          const coverage = (top8vol/dashVol*100).toFixed(0);
+          txt += " · "+coverage+"% of $"+compact(dashVol)+" total 24h volume shown above";
+          txt += " · difference may reflect wash trading filters or smaller exchanges";
+        } else {
+          txt += " · total 24h volume loading…";
+        }
+        note.textContent = txt;
+      }
     }catch(e){
       const body=$("exc-body");
-      if(body) body.innerHTML='<tr><td colspan="4" class="err">Exchange data unavailable.</td></tr>';
+      if(body) body.innerHTML='<tr><td colspan="5" class="err">Exchange data unavailable.</td></tr>';
     }
   }
 
