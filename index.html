@@ -129,7 +129,7 @@
     70% {box-shadow:0 4px 16px rgba(73,234,203,.4),0 0 0 10px rgba(73,234,203,0)}
     100%{box-shadow:0 4px 16px rgba(73,234,203,.4),0 0 0 0 rgba(73,234,203,0)}
   }
-  #fb-toggle{position:fixed;right:16px;bottom:20px;z-index:51;
+  #fb-toggle{position:fixed;right:16px;bottom:48px;z-index:51;
     display:flex;align-items:center;gap:8px;
     background:var(--teal);color:#062018;border:none;border-radius:99px;
     padding:11px 20px 11px 16px;font-family:var(--sans);font-size:15px;font-weight:700;
@@ -137,7 +137,7 @@
     transition:opacity .15s,transform .15s;
     animation:fb-pulse 2.8s ease-out infinite}
   #fb-toggle:hover{opacity:.9;transform:translateY(-2px);animation:none;box-shadow:0 6px 24px rgba(73,234,203,.55)}
-  #fb-popup{position:fixed;right:16px;bottom:80px;z-index:52;width:340px;
+  #fb-popup{position:fixed;right:16px;bottom:112px;z-index:52;width:340px;
     background:var(--surface);border:1px solid var(--line);border-radius:16px;
     box-shadow:0 12px 40px rgba(0,0,0,.6);
     opacity:0;pointer-events:none;transform:translateY(8px);
@@ -539,7 +539,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.4.8";
+  const APP_VERSION = "v2.4.9";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
