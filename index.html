@@ -124,13 +124,20 @@
     padding:3px 11px;backdrop-filter:blur(3px);white-space:nowrap}
 
   /* feedback button & popup */
-  #fb-toggle{position:fixed;right:10px;bottom:38px;z-index:51;
-    display:flex;align-items:center;gap:7px;
+  @keyframes fb-pulse{
+    0%  {box-shadow:0 4px 16px rgba(73,234,203,.4),0 0 0 0 rgba(73,234,203,.35)}
+    70% {box-shadow:0 4px 16px rgba(73,234,203,.4),0 0 0 10px rgba(73,234,203,0)}
+    100%{box-shadow:0 4px 16px rgba(73,234,203,.4),0 0 0 0 rgba(73,234,203,0)}
+  }
+  #fb-toggle{position:fixed;right:16px;bottom:20px;z-index:51;
+    display:flex;align-items:center;gap:8px;
     background:var(--teal);color:#062018;border:none;border-radius:99px;
-    padding:8px 16px 8px 12px;font-family:var(--sans);font-size:13px;font-weight:600;
-    cursor:pointer;box-shadow:0 4px 16px rgba(73,234,203,.3);transition:opacity .15s,transform .15s}
-  #fb-toggle:hover{opacity:.9;transform:translateY(-1px)}
-  #fb-popup{position:fixed;right:10px;bottom:90px;z-index:52;width:340px;
+    padding:11px 20px 11px 16px;font-family:var(--sans);font-size:15px;font-weight:700;
+    cursor:pointer;box-shadow:0 4px 16px rgba(73,234,203,.4);
+    transition:opacity .15s,transform .15s;
+    animation:fb-pulse 2.8s ease-out infinite}
+  #fb-toggle:hover{opacity:.9;transform:translateY(-2px);animation:none;box-shadow:0 6px 24px rgba(73,234,203,.55)}
+  #fb-popup{position:fixed;right:16px;bottom:80px;z-index:52;width:340px;
     background:var(--surface);border:1px solid var(--line);border-radius:16px;
     box-shadow:0 12px 40px rgba(0,0,0,.6);
     opacity:0;pointer-events:none;transform:translateY(8px);
@@ -146,7 +153,7 @@
     padding:8px 18px;font-family:var(--sans);font-size:13px;font-weight:600;
     cursor:pointer;transition:opacity .15s}
   .fb-submit:disabled{opacity:.5;cursor:default}
-  @media(max-width:380px){#fb-popup{right:6px;width:calc(100vw - 12px)}}
+  @media(max-width:380px){#fb-popup{right:6px;bottom:90px;width:calc(100vw - 12px)}}
   .tip-wrap{position:relative;display:inline-flex;align-items:center}
   .tip-icon{display:inline-flex;align-items:center;justify-content:center;
     width:15px;height:15px;border-radius:50%;border:1px solid var(--line);
@@ -476,7 +483,7 @@
 
   <!-- FEEDBACK POPUP -->
   <button id="fb-toggle" aria-label="Leave feedback" title="Suggestions & feedback">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
     <span>Feedback</span>
   </button>
 
@@ -532,7 +539,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.4.6";
+  const APP_VERSION = "v2.4.8";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -719,7 +726,8 @@
         const diffS = Math.abs(Date.now() - pmt) / 1000;
         const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         $("m-txall").textContent = d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+d.getDate()+" "+months[d.getMonth()];
-        setSig("m-txall", diffS, 0, 30, "lower-better");
+        // < 120s behind = healthy (green), 120-300s = lagging (amber), > 300s = stalled (red)
+        setSig("m-txall", diffS, 0, 120, "lower-better");
       }
 
       const now = Date.now();
