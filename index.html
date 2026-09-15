@@ -528,7 +528,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.4.1";
+  const APP_VERSION = "v2.4.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -589,7 +589,7 @@
   // separate timers (plus a burst on visibilitychange). Route them through here
   // so identical/near-identical calls share one response and a 429 backs off
   // instead of hammering the endpoint and silently blanking those tiles.
-  const CG_TTL = 60000;              // serve a cached CG response for 60s
+  const CG_TTL = 300000;             // serve a cached CG response for 5 min
   const cgCache = new Map();         // url -> { t, data }
   const cgPending = new Map();       // url -> in-flight promise
   let cgBlockUntil = 0;              // pause CG calls until this timestamp after a 429
@@ -1025,8 +1025,11 @@
       $("peers-pow").innerHTML = peerErr();
       $("peers-l1").innerHTML = peerErr();
     }
-    // ---- 2. /global — BTC dominance — wait 1.5 s before second request ----
-    await new Promise(r=>setTimeout(r, 1500));
+    // ---- 2. /global — BTC dominance — wait 3 s before second request ----
+    // Give the rate-limiter more breathing room; /global changes slowly so
+    // a longer gap is fine. cgJSON also caches it for CG_TTL (60s) after the
+    // first successful call, so subsequent loadAllCoinGecko() calls cost nothing.
+    await new Promise(r=>setTimeout(r, 3000));
     try{
       const d = await cgJSON(CG+"/global");
       const mcp = d && d.data && d.data.market_cap_percentage;
@@ -1148,8 +1151,9 @@
   // /blocks?limit=N requires a database-backed endpoint that api.kaspa.org
   // serves only with a lowHash parameter (and may 403 without one).
   // Instead we use tipHashes from /info/blockdag (already fetched every 60s)
-  // and look up each tip individually via /blocks/{hash}?includeTransactions=false.
-  // This works reliably on the public API and gives us real verboseData.
+  // and look up each tip individually via /blocks/{hash}?includeTransactions=true.
+  // blueScore and timestamp live in blk.header (not verboseData).
+  // tx count = blk.transactions.length (includes coinbase).
   const FEED_LIMIT = 10;
   const feedSeen = new Set();
 
@@ -1166,7 +1170,7 @@
       if(!newTips.length) return;
 
       const results = await Promise.allSettled(
-        newTips.map(h=>getJSON(KAS+"/blocks/"+h+"?includeTransactions=false"))
+        newTips.map(h=>getJSON(KAS+"/blocks/"+h+"?includeTransactions=true"))
       );
 
       // remove skeleton on first success
@@ -1179,20 +1183,24 @@
         feedSeen.add(hash);
         firstSuccess=true;
 
-        const vd  = blk.verboseData || blk;
-        const blue= num(pick(vd,["blueScore","blue_score"]));
-        const txc = num(pick(vd,["transactionCount","txCount"]));
-        // timestamp can be in ms or seconds — normalise
-        let ts = num(pick(vd,["timestamp","blockTime"]));
-        if(isFinite(ts) && ts < 2e12) ts *= 1000; // convert s → ms
+        // blueScore and timestamp are in the header, not verboseData
+        const hdr = blk.header || {};
+        const vd  = blk.verboseData || {};
+        const blue= num(pick(hdr,["blueScore","blue_score"]));
+        let ts = num(pick(hdr,["timestamp","timeInMilliseconds"]));
+        if(isFinite(ts) && ts < 2e12) ts *= 1000; // s → ms guard
         const age = isFinite(ts) ? ageFmt(ts) : "–";
+        // tx count from transactions array (includes coinbase)
+        const txArr = Array.isArray(blk.transactions) ? blk.transactions : [];
+        const txc = txArr.length;
+        const displayHash = vd.hash || hash;
 
         const row=document.createElement("div");
         row.className="bf-row bf-new";
         row.innerHTML=
-          '<span class="bf-hash" title="'+esc(hash)+'">'+esc(hash.slice(0,14))+'…</span>'+
+          '<span class="bf-hash" title="'+esc(displayHash)+'">'+esc(displayHash.slice(0,14))+'…</span>'+
           '<span class="bf-blue">'+(isFinite(blue)?"bs "+compact(blue):"–")+'</span>'+
-          '<span class="bf-tx">'+(isFinite(txc)?txc+" tx":"–")+'</span>'+
+          '<span class="bf-tx">'+(txc>0?txc+" tx":"–")+'</span>'+
           '<span class="bf-age">'+age+'</span>';
         if(sk && !sk.removed){ sk.remove(); sk.removed=true; }
         feed.insertBefore(row, feed.firstChild);
