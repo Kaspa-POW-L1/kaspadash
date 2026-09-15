@@ -184,6 +184,10 @@
   .bf-tx{color:var(--text)}
   .bf-age{color:var(--muted);text-align:right}
 
+  .sig-good{color:var(--teal)}
+  .sig-warn{color:var(--amber)}
+  .sig-bad {color:var(--coral)}
+
   @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:480px){ .grid{grid-template-columns:1fr} .span2{grid-column:span 1} .hero-stats{gap:18px} }
   @media(prefers-reduced-motion:reduce){ .dot,.blk,.bar>i{animation:none;transition:none} }
@@ -234,7 +238,7 @@
       <div class="h"><span>Hashrate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total computing power miners are spending on Kaspa right now (in PH/s = petahashes per second). Higher = more secure network, harder to attack.</span></span></div>
       <div class="v" id="hashrate">–</div>
       <svg class="spark" id="hash-spark" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
-      <div class="note">live session (since page opened)</div>
+      <div class="note">live session (since page opened) · higher = more secure</div>
     </div>
 
     <div class="tile">
@@ -259,7 +263,7 @@
     <div class="tile">
       <div class="h"><span>Difficulty</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How hard it is for miners to find a valid block. The network adjusts this automatically to keep ~10 blocks per second regardless of how much mining power is active. Rising difficulty = more miners joining.</span></span></div>
       <div class="v" id="difficulty">–</div>
-      <div class="note">network difficulty</div>
+      <div class="note">network difficulty · rises with hashrate, auto-adjusts</div>
     </div>
   </div>
 
@@ -267,12 +271,12 @@
     <div class="tile">
       <div class="h"><span>24h volume</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total USD value of KAS traded across all exchanges in the last 24 hours. The % of market cap shows how "active" the market is — higher % means more turnover relative to the coin's size.</span></span></div>
       <div class="v" id="m-vol">–</div>
-      <div class="note">traded last 24h</div>
+      <div class="note" id="vol-note">traded last 24h</div>
     </div>
     <div class="tile">
       <div class="h"><span>Market cap rank</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Kaspa's position in the global crypto market ranked by market capitalisation (price × supply). Lower number = larger market.</span></span></div>
       <div class="v" id="m-rank">–</div>
-      <div class="note">by market cap</div>
+      <div class="note">by market cap · lower rank = more adopted</div>
     </div>
     <div class="tile">
       <div class="h"><span>All-time high</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The highest price KAS has ever reached. The percentage below shows how far the current price is from that peak — a large negative % means significant room to recover (or it may never return).</span></span></div>
@@ -282,7 +286,7 @@
     <div class="tile">
       <div class="h"><span>Price in BTC</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much Bitcoin one KAS costs. Rising = KAS outperforms BTC; falling = KAS underperforms. Useful because BTC is the reference currency most crypto traders benchmark against.</span></span></div>
       <div class="v" id="m-btc">–</div>
-      <div class="note">vs Bitcoin</div>
+      <div class="note">vs Bitcoin · rising = KAS outperforms BTC</div>
     </div>
   </div>
 
@@ -290,12 +294,12 @@
     <div class="tile">
       <div class="h"><span>Total headers</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total block headers the network has ever processed — including red blocks not selected as the main chain. Always larger than blockCount and shows the true scale of Kaspa's BlockDAG activity.</span></span></div>
       <div class="v" id="m-tps">–</div>
-      <div class="note">all headers ever seen</div>
+      <div class="note">all headers ever seen · includes red (non-selected) blocks</div>
     </div>
     <div class="tile">
       <div class="h"><span>Median block time</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The median timestamp of the last 2,641 blocks — Kaspa's internal clock for ordering the DAG. If this matches real time closely, the network is healthy and producing blocks on schedule.</span></span></div>
       <div class="v" id="m-txall" style="font-size:18px">–</div>
-      <div class="note">network median time</div>
+      <div class="note">network median time · should be close to now</div>
     </div>
     <div class="tile">
       <div class="h"><span>Emission today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">New KAS created today via block rewards (10 blocks/sec × 86,400 sec × reward). The annual inflation % shows how much the supply grows per year — it shrinks each month as the reward decreases.</span></span></div>
@@ -323,7 +327,7 @@
     <div class="tile">
       <div class="h"><span>Community sentiment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The percentage of CoinGecko users who voted "bullish" on Kaspa. A rough proxy for community mood — above 60% is generally positive sentiment.</span></span></div>
       <div class="v" id="s-vote">–</div>
-      <div class="note">bullish votes (CoinGecko)</div>
+      <div class="note">bullish votes · > 60% positive, < 40% bearish</div>
     </div>
     <div class="tile">
       <div class="h"><span>Dashboard views</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total pageviews of this dashboard tracked by GoatCounter — a privacy-friendly, cookie-free analytics tool. Each page load counts as one view.</span></span></div>
@@ -337,7 +341,7 @@
       <div class="h"><span>Bitcoin dominance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bitcoin's share of the total crypto market cap. Falling dominance often means capital is rotating from BTC into altcoins (like KAS); rising dominance means money is concentrating back into Bitcoin.</span></span></div>
       <div class="v" id="m-btcdom">–</div>
       <div class="bar"><i id="btcdom-bar"></i></div>
-      <div class="note" id="m-btcdom-note">BTC share of total crypto market cap</div>
+      <div class="note" id="m-btcdom-note">BTC share of total crypto market · rising = risk-off</div>
     </div>
 
     <div class="tile span2">
@@ -528,7 +532,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.4.5";
+  const APP_VERSION = "v2.4.6";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -645,6 +649,18 @@
   }
   function setErr(id){ const e=$(id); if(e){ e.textContent="unavailable"; e.classList.add("err"); e.classList.remove("skeleton"); } }
 
+  // Apply a sentiment colour class to an element based on thresholds.
+  // dir "higher-better": green >= good, amber >= warn, red below warn
+  // dir "lower-better":  green <= good, amber <= warn, red above warn
+  function setSig(id, val, good, warn, dir="higher-better"){
+    const el=$(id); if(!el||!isFinite(val)) return;
+    el.classList.remove("sig-good","sig-warn","sig-bad");
+    if(dir==="higher-better")
+      el.classList.add(val>=good?"sig-good":val>=warn?"sig-warn":"sig-bad");
+    else
+      el.classList.add(val<=good?"sig-good":val<=warn?"sig-warn":"sig-bad");
+  }
+
   // ---- block-strip animation (paced by measured BPS) ----
   const strip = $("blocks"); const N = 34; const blkEls = [];
   for(let i=0;i<N;i++){ const d=document.createElement("div"); d.className="blk"; strip.appendChild(d); blkEls.push(d); }
@@ -700,7 +716,10 @@
       // pastMedianTime — median timestamp of last 2641 blocks (ms since epoch)
       if(isFinite(pmt)){
         const d = new Date(pmt);
-        $("m-txall").textContent = d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"});
+        const diffS = Math.abs(Date.now() - pmt) / 1000;
+        const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        $("m-txall").textContent = d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+d.getDate()+" "+months[d.getMonth()];
+        setSig("m-txall", diffS, 0, 30, "lower-better");
       }
 
       const now = Date.now();
@@ -1032,7 +1051,7 @@
         $("m-btcdom").innerHTML = dom.toFixed(1)+'<small>%</small>';
         const bar=$("btcdom-bar"); if(bar) bar.style.width = Math.min(100,dom).toFixed(1)+"%";
         const eth = num(pick(mcp,["eth"]));
-        if(isFinite(eth)) $("m-btcdom-note").textContent = "BTC share of total market · ETH "+eth.toFixed(1)+"%";
+        if(isFinite(eth)) $("m-btcdom-note").textContent = "BTC share of total market · ETH "+eth.toFixed(1)+"% · rising = risk-off";
       } else setErr("m-btcdom");
     }catch(e){ setErr("m-btcdom"); }
 
@@ -1042,7 +1061,11 @@
     try{
       const d = await cgJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
       const up = num(pick(d,["sentiment_votes_up_percentage"]));
-      if(isFinite(up)) $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
+      if(isFinite(up)){
+        $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
+        // > 60% bullish = positive (green), 40-60% = neutral (amber), < 40% = bearish (red)
+        setSig("s-vote", up, 60, 40);
+      }
     }catch(e){ /* leave as – */ }
   }
 
@@ -1080,7 +1103,12 @@
     $("sec-annual").textContent = "$"+compact(usdPerYear);
     if(isFinite(circ)&&circ>0&&isFinite(price)){
       const mcap = circ*price;
-      if(mcap>0) $("sec-pct").textContent = (usdPerYear/mcap*100).toFixed(2)+"%";
+      if(mcap>0){
+        const pct = usdPerYear/mcap*100;
+        $("sec-pct").textContent = pct.toFixed(2)+"%";
+        // > 1.5% = strong security (green), 0.5–1.5% = moderate (amber), < 0.5% = weak (red)
+        setSig("sec-pct", pct, 1.5, 0.5);
+      }
     }
   }
 
@@ -1256,6 +1284,10 @@
       if(item){
         $("s-fng").textContent = item.value;
         if(item.value_classification) $("s-fng-note").textContent = item.value_classification + " · market-wide";
+        // F&G: 0-24 extreme fear (red), 25-49 fear (amber), 50-74 greed (green), 75-100 extreme greed (amber — caution)
+        const fv=Number(item.value);
+        $("s-fng").classList.remove("sig-good","sig-warn","sig-bad");
+        if(isFinite(fv)) $("s-fng").classList.add(fv>=75?"sig-warn":fv>=50?"sig-good":fv>=25?"sig-warn":"sig-bad");
       }
     }catch(e){ /* leave as – */ }
     // Stock Fear & Greed from fng-history.json (written by Action)
@@ -1267,6 +1299,9 @@
           $("s-fng-stock").textContent = latest.stock;
           const lbl = latest.stock<=24?"Extreme Fear":latest.stock<=49?"Fear":latest.stock<=74?"Greed":"Extreme Greed";
           $("s-fng-stock-note").textContent = lbl+" · stock market · CNN";
+          const sv=Number(latest.stock);
+          $("s-fng-stock").classList.remove("sig-good","sig-warn","sig-bad");
+          if(isFinite(sv)) $("s-fng-stock").classList.add(sv>=75?"sig-warn":sv>=50?"sig-good":sv>=25?"sig-warn":"sig-bad");
         }
       }
     }catch(e){ /* not yet available */ }
