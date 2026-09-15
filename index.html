@@ -471,7 +471,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.3.1";
+  const APP_VERSION = "v2.3.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -940,8 +940,35 @@
       .catch(()=>{ /* counter endpoint disabled or unreachable — leave as – */ });
   }
 
-  // ---- Bitcoin dominance (CoinGecko /global) ----
-  async function loadGlobal(){
+  // ---- All CoinGecko data in one coordinated load ----
+  // Previously loadPeers, loadGlobal and loadSentiment each fired a separate
+  // CoinGecko request almost simultaneously, reliably triggering a 429 on the
+  // free tier even on first load. Now: one function, two requests (markets then
+  // global), with a deliberate 1.5 s gap between them so the rate-limiter stays
+  // happy. The cgJSON cache means subsequent calls (every 2 min) cost at most
+  // one real request each, served from cache otherwise.
+  async function loadAllCoinGecko(){
+    // ---- 1. /coins/markets — peers, market tiles, 24h/7d/30d/1y changes ----
+    let byId = {};
+    try{
+      const url = CG+"/coins/markets?vs_currency=usd&ids="+ALL_PEERS.join(",")+
+                  "&price_change_percentage=24h,7d,30d,1y&order=market_cap_desc&per_page=50&page=1";
+      const d = await cgJSON(url);
+      if(!Array.isArray(d) || !d.length) throw new Error("empty");
+      d.forEach(c=>{ byId[c.id]=c; });
+      renderPeerTable("peers-pow", POW, byId);
+      renderPeerTable("peers-l1", L1, byId);
+      renderMarket(byId);
+      // community sentiment_votes_up_percentage is included in /markets
+      const k = byId["kaspa"];
+      const up = k && num(pick(k,["sentiment_votes_up_percentage"]));
+      if(isFinite(up)) $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
+    }catch(e){
+      $("peers-pow").innerHTML = peerErr();
+      $("peers-l1").innerHTML = peerErr();
+    }
+    // ---- 2. /global — BTC dominance — wait 1.5 s before second request ----
+    await new Promise(r=>setTimeout(r, 1500));
     try{
       const d = await cgJSON(CG+"/global");
       const mcp = d && d.data && d.data.market_cap_percentage;
@@ -976,7 +1003,7 @@
 
   // ---- sentiment & community ----
   async function loadSentiment(){
-    // Crypto Fear & Greed (alternative.me)
+    // Crypto Fear & Greed (alternative.me) — not CoinGecko, no rate-limit issue
     try{
       const d = await getJSON("https://api.alternative.me/fng/?limit=1");
       const item = d && d.data && d.data[0];
@@ -997,29 +1024,10 @@
         }
       }
     }catch(e){ /* not yet available */ }
-    // CoinGecko community (Kaspa-specific): bullish votes
-    try{
-      const d = await cgJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
-      const up = num(pick(d,["sentiment_votes_up_percentage"]));
-      if(isFinite(up)) $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
-    }catch(e){ /* leave as – */ }
+    // Community sentiment (s-vote) is now populated by loadAllCoinGecko via /markets
   }
 
-  async function loadPeers(){
-    try{
-      const url = CG+"/coins/markets?vs_currency=usd&ids="+ALL_PEERS.join(",")+
-                  "&price_change_percentage=24h,7d,30d,1y&order=market_cap_desc&per_page=50&page=1";
-      const d = await cgJSON(url);
-      if(!Array.isArray(d) || !d.length) throw new Error("empty");
-      const byId={}; d.forEach(c=>{ byId[c.id]=c; });
-      renderPeerTable("peers-pow", POW, byId);
-      renderPeerTable("peers-l1", L1, byId);
-      renderMarket(byId);
-    }catch(e){
-      $("peers-pow").innerHTML = peerErr();
-      $("peers-l1").innerHTML = peerErr();
-    }
-  }
+  async function loadAllPeersLegacy(){} // removed — see loadAllCoinGecko
 
   function stamp(){
     const t=new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
@@ -1211,22 +1219,20 @@
 
   refresh();
   loadHistory();
-  loadPeers();
+  loadAllCoinGecko();
   loadSentiment();
   loadTokenGrowth();
   loadViews();
-  loadGlobal();
   loadL2Tvl();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
-  setInterval(loadPeers, 120000);
+  setInterval(loadAllCoinGecko, 120000);
   setInterval(loadSentiment, 5*60000);
   setInterval(loadTokenGrowth, 30*60000);
   setInterval(loadViews, 5*60000);
-  setInterval(loadGlobal, 5*60000);
   setInterval(loadL2Tvl, 10*60000);
   setInterval(renderHalving, 1000);
-  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadPeers(); loadSentiment(); loadTokenGrowth(); loadGlobal(); loadL2Tvl(); } });
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadAllCoinGecko(); loadSentiment(); loadTokenGrowth(); loadL2Tvl(); } });
 })();
 </script>
 <script data-goatcounter="https://zandkorrel.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
