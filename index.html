@@ -172,10 +172,13 @@
   .tip-box{position:absolute;left:0;top:calc(100% + 6px);z-index:100;
     background:var(--bg-2);border:1px solid var(--line);border-radius:10px;
     padding:10px 12px;font-size:12px;line-height:1.55;color:var(--text);
-    width:220px;pointer-events:none;opacity:0;transform:translateY(-4px);
+    width:220px;max-width:min(220px,calc(100vw - 24px));pointer-events:none;opacity:0;transform:translateY(-4px);
     transition:opacity .15s,transform .15s;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  /* prevent tooltip clipping at right edge of viewport */
+  .tip-wrap:last-child .tip-box,
+  .tile .h .tip-wrap:only-of-type .tip-box{left:auto;right:0}
   .tip-wrap:hover .tip-box,.tip-wrap:focus-within .tip-box,.tip-wrap.open .tip-box{opacity:1;transform:none;pointer-events:auto}
-  @media(max-width:480px){.tip-box{width:180px}}
+  @media(max-width:480px){.tip-box{width:180px;left:auto;right:0}}
 
   /* Security budget */
   .sec-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;flex-wrap:wrap;gap:6px}
@@ -573,7 +576,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.5.5";
+  const APP_VERSION = "v2.5.6";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -760,8 +763,8 @@
         const diffS = Math.abs(Date.now() - pmt) / 1000;
         const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         $("m-txall").textContent = d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+d.getDate()+" "+months[d.getMonth()];
-        // < 5min behind = healthy (green), 5-15min = lagging (amber), > 15min = stalled (red)
-        setSig("m-txall", diffS, 0, 300, "lower-better");
+        // < 10min behind = healthy (green), 10-20min = lagging (amber), > 20min = stalled (red)
+        setSig("m-txall", diffS, 0, 600, "lower-better");
       }
 
       const now = Date.now();
