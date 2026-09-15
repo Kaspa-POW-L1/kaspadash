@@ -507,7 +507,9 @@
     <!-- GitHub activiteit -->
     <div class="tile">
       <div class="h"><span>Developer activity</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Live stats from the kaspanet/rusty-kaspa GitHub repository — the main Kaspa node implementation. Last push date shows how recently the codebase was updated. Stars and forks reflect developer interest.</span></span></div>
-      <div class="v" id="gh-commits">–</div>
+      <div class="sec-row" style="margin-top:4px">
+        <div><span class="k" id="gh-commits" style="font-size:15px">–</span><span class="t" id="gh-ago"></span></div>
+      </div>
       <div class="sec-row" style="margin-top:8px">
         <div><span class="k" id="gh-stars">–</span><span class="t"> stars</span></div>
         <div><span class="k" id="gh-forks">–</span><span class="t"> forks</span></div>
@@ -602,7 +604,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.5.1";
+  const APP_VERSION = "v2.5.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1154,8 +1156,8 @@
       if(isFinite(issues)) $("gh-issues").textContent = compact(issues);
       if(pushed){
         const daysAgo = Math.floor((Date.now()-pushed.getTime())/86400000);
-        $("gh-commits").innerHTML = pushed.getDate()+" "+months[pushed.getMonth()]+" "+pushed.getFullYear()
-          +' <small>'+(daysAgo===0?"today":daysAgo+"d ago")+'</small>';
+        $("gh-commits").textContent = pushed.getDate()+" "+months[pushed.getMonth()]+" "+pushed.getFullYear();
+        $("gh-ago").textContent = " · "+(daysAgo===0?"today":daysAgo+"d ago");
       }
     }catch(e){ /* leave as – */ }
   }
