@@ -288,14 +288,14 @@
 
   <div class="grid">
     <div class="tile">
-      <div class="h"><span>Transactions per second</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How many transactions the network is processing right now. Kaspa's BlockDAG allows many blocks in parallel, so TPS can be high without sacrificing decentralisation. Fills after 60 seconds.</span></span></div>
+      <div class="h"><span>Total headers</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total block headers the network has ever processed — including red blocks not selected as the main chain. Always larger than blockCount and shows the true scale of Kaspa's BlockDAG activity.</span></span></div>
       <div class="v" id="m-tps">–</div>
-      <div class="note">live session average</div>
+      <div class="note">all headers ever seen</div>
     </div>
     <div class="tile">
-      <div class="h"><span>All-time transactions</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total number of transactions ever confirmed on the Kaspa network since launch. A growing number shows real usage — not just speculation. Fills after 60 seconds.</span></span></div>
-      <div class="v" id="m-txall">–</div>
-      <div class="note">total ever confirmed</div>
+      <div class="h"><span>Median block time</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The median timestamp of the last 2,641 blocks — Kaspa's internal clock for ordering the DAG. If this matches real time closely, the network is healthy and producing blocks on schedule.</span></span></div>
+      <div class="v" id="m-txall" style="font-size:18px">–</div>
+      <div class="note">network median time</div>
     </div>
     <div class="tile">
       <div class="h"><span>Emission today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">New KAS created today via block rewards (10 blocks/sec × 86,400 sec × reward). The annual inflation % shows how much the supply grows per year — it shrinks each month as the reward decreases.</span></span></div>
@@ -528,7 +528,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.4.4";
+  const APP_VERSION = "v2.4.5";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -682,8 +682,6 @@
   // ---- state for BPS derivation ----
   let lastCount=null, lastTime=null;
 
-  let lastTxCount=null, lastTxTime=null;
-
   async function loadNetwork(){
     try{
       const dag = await getJSON(KAS+"/info/blockdag");
@@ -691,12 +689,19 @@
       const daa  = num(pick(dag,["virtualDaaScore","daaScore"]));
       const bc   = num(pick(dag,["blockCount"]));
       const diff = num(pick(dag,["difficulty"]));
-      const txc  = num(pick(dag,["transactionCount","txCount"]));
+      const hc   = num(pick(dag,["headerCount"]));
+      const pmt  = num(pick(dag,["pastMedianTime"]));
       if(isFinite(tips)) $("tips").textContent = tips;
       if(isFinite(daa))  $("daa").textContent  = compact(daa);
       if(isFinite(bc))   $("blockcount").textContent = compact(bc);
       if(isFinite(diff)) $("difficulty").textContent = compact(diff);
-      if(isFinite(txc))  $("m-txall").textContent = compact(txc);
+      // headerCount — total headers ever processed by the DAG
+      if(isFinite(hc))   $("m-tps").textContent = compact(hc);
+      // pastMedianTime — median timestamp of last 2641 blocks (ms since epoch)
+      if(isFinite(pmt)){
+        const d = new Date(pmt);
+        $("m-txall").textContent = d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"});
+      }
 
       const now = Date.now();
       if(lastCount!=null && isFinite(bc) && bc>lastCount){
@@ -706,13 +711,6 @@
         $("bps").textContent = "≈10"; pace(10);
       }
       if(isFinite(bc)){ lastCount=bc; lastTime=now; }
-
-      // TPS from transaction count delta
-      if(lastTxCount!=null && isFinite(txc) && txc>lastTxCount){
-        const tps = (txc-lastTxCount)/((now-lastTxTime)/1000);
-        if(tps>0 && tps<10000) $("m-tps").textContent = tps.toFixed(1);
-      }
-      if(isFinite(txc)){ lastTxCount=txc; lastTxTime=now; }
     }catch(e){ setErr("bps"); setErr("tips"); setErr("daa"); setErr("difficulty"); }
   }
 
