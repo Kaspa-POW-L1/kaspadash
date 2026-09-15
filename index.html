@@ -573,7 +573,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.5.4";
+  const APP_VERSION = "v2.5.5";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -760,8 +760,8 @@
         const diffS = Math.abs(Date.now() - pmt) / 1000;
         const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         $("m-txall").textContent = d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+" · "+d.getDate()+" "+months[d.getMonth()];
-        // < 120s behind = healthy (green), 120-300s = lagging (amber), > 300s = stalled (red)
-        setSig("m-txall", diffS, 0, 120, "lower-better");
+        // < 5min behind = healthy (green), 5-15min = lagging (amber), > 15min = stalled (red)
+        setSig("m-txall", diffS, 0, 300, "lower-better");
       }
 
       const now = Date.now();
