@@ -117,7 +117,7 @@
   .skeleton{color:var(--muted)}
   /* exchanges table */  .exc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
   .exc-table th{text-align:left;color:var(--muted);font-weight:500;padding:4px 8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
-  .exc-table td{padding:6px 8px;border-top:1px solid var(--line)}
+  .exc-table td{padding:5px 8px;border-top:1px solid var(--line)}
   .exc-table tr:hover td{background:var(--bg-2)}
   .exc-vol{font-family:var(--mono);text-align:right}
   .exc-pct{font-family:var(--mono);text-align:right;color:var(--muted)}
@@ -578,7 +578,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.5.8";
+  const APP_VERSION = "v2.6.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1350,7 +1350,7 @@
       if(!tickers.length) throw new Error("empty");
       // sum total volume for share calculation
       const totalVol = tickers.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
-      const top = tickers.slice(0,8);
+      const top = tickers; // all available tickers — CoinGecko returns up to 100
       const mcap = window.__circ && window.__price ? window.__circ * window.__price : null;
       const body = $("exc-body");
       if(!body) return;
@@ -1366,18 +1366,16 @@
                '<td class="exc-pct">'+vmc+'</td></tr>';
       }).join("");
 
-      // subtitel: som top 8 vs totaal dashboard volume
+      // subtitel: som alle exchanges vs totaal dashboard volume
       const top8vol = top.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
       const dashVol = window.__vol24h;
       const note = $("exc-note");
       if(note){
-        let txt = "Top 8 exchanges combined: $"+compact(top8vol);
+        let txt = top.length+" exchanges · $"+compact(top8vol)+" combined";
         if(isFinite(dashVol) && dashVol>0){
           const coverage = (top8vol/dashVol*100).toFixed(0);
           txt += " · "+coverage+"% of $"+compact(dashVol)+" total 24h volume shown above";
-          txt += " · difference may reflect wash trading filters or smaller exchanges";
-        } else {
-          txt += " · total 24h volume loading…";
+          txt += " · difference may reflect wash trading filters";
         }
         note.textContent = txt;
       }
