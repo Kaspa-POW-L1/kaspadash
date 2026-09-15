@@ -22,6 +22,18 @@
     --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
     --sans:"Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   }
+  [data-theme="light"]{
+    --bg:#f0f7f4;
+    --bg-2:#e4f0eb;
+    --surface:#ffffff;
+    --line:#c5ddd5;
+    --teal:#1a9e82;
+    --teal-dim:#2bb89a;
+    --text:#0d2b22;
+    --muted:#4a7a6a;
+    --amber:#b07d10;
+    --coral:#d93f3f;
+  }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{
@@ -43,6 +55,13 @@
   .brand h1{font-size:19px;font-weight:600;letter-spacing:.2px;margin:0}
   .brand span{color:var(--muted);font-weight:400}
   .status{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .toolbar{display:flex;align-items:center;gap:8px}
+  .tb-btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    color:var(--muted);font-family:var(--sans);font-size:12px;font-weight:500;
+    padding:5px 10px;cursor:pointer;transition:border-color .15s,color .15s;white-space:nowrap}
+  .tb-btn:hover{border-color:var(--teal-dim);color:var(--text)}
+  .tb-btn.active{border-color:var(--teal);color:var(--teal)}
+  .tb-share-ok{color:var(--teal);font-size:12px;opacity:0;transition:opacity .3s}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(73,234,203,.6);animation:pulse 2.4s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(73,234,203,.5)}70%{box-shadow:0 0 0 7px rgba(73,234,203,0)}100%{box-shadow:0 0 0 0 rgba(73,234,203,0)}}
 
@@ -227,6 +246,13 @@
       <h1>Kaspa <span>· live network</span></h1>
     </div>
     <div class="status"><span class="dot"></span><span id="updated">connecting…</span></div>
+    <div class="toolbar">
+      <button class="tb-btn" id="tb-theme" title="Toggle light/dark mode">🌙</button>
+      <button class="tb-btn" id="tb-lang-en">EN</button>
+      <button class="tb-btn" id="tb-lang-nl">NL</button>
+      <button class="tb-btn" id="tb-share">⎘ Share</button>
+      <span class="tb-share-ok" id="tb-share-ok">✓ Copied!</span>
+    </div>
   </div>
 
   <!-- HERO -->
@@ -577,7 +603,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.6.3";
+  const APP_VERSION = "v2.7.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -624,6 +650,175 @@
   })();
 
   async function getJSON(url){
+
+  // ---- Translations (EN / NL) ----
+  const T = {
+    en:{
+      bps_label:"BLOCKS PER SECOND",
+      bps_sub:"Kaspa confirms many blocks in parallel rather than in a single chain. Each square below is a block the network just produced.",
+      dag_tips:"DAG tips now",
+      daa_score:"DAA score",
+      total_blocks:"total blocks",
+      consensus:"consensus",
+      circ_supply:"Circulating supply",
+      hashrate:"Hashrate",
+      price:"Price",
+      block_reward:"Block reward",
+      next_reduction:"Next reward reduction",
+      difficulty:"Difficulty",
+      vol_24h:"24h volume",
+      mcap_rank:"Market cap rank",
+      ath:"All-time high",
+      btc_price:"Price in BTC",
+      total_headers:"Total headers",
+      median_time:"Median block time",
+      emission:"Emission today",
+      range_24h:"24h range",
+      dev_activity:"Developer activity",
+      fng_crypto:"Fear & Greed · Crypto",
+      fng_stocks:"Fear & Greed · Stocks",
+      community:"Community sentiment",
+      dash_views:"Dashboard views",
+      btc_dom:"Bitcoin dominance",
+      igra_tvl:"Igra L2 · TVL",
+      sec_budget:"Security budget",
+      emission_curve:"Emission curve",
+      live_feed:"Live block feed",
+      top_exc:"Top exchanges",
+      footer_live:"live",
+      footer_born:"born",
+    },
+    nl:{
+      bps_label:"BLOKKEN PER SECONDE",
+      bps_sub:"Kaspa bevestigt veel blokken tegelijk in plaats van één keten. Elk vakje hieronder is een blok dat het netwerk zojuist heeft aangemaakt.",
+      dag_tips:"DAG-tips nu",
+      daa_score:"DAA-score",
+      total_blocks:"blokken totaal",
+      consensus:"consensus",
+      circ_supply:"Circulerende voorraad",
+      hashrate:"Hashrate",
+      price:"Prijs",
+      block_reward:"Blokbeloning",
+      next_reduction:"Volgende beloningsverlaging",
+      difficulty:"Moeilijkheidsgraad",
+      vol_24h:"24u volume",
+      mcap_rank:"Marktkapitalisatierang",
+      ath:"All-time high",
+      btc_price:"Prijs in BTC",
+      total_headers:"Totaal headers",
+      median_time:"Mediane bloktijd",
+      emission:"Uitgifte vandaag",
+      range_24h:"24u bereik",
+      dev_activity:"Ontwikkelaarsactiviteit",
+      fng_crypto:"Angst & Hebzucht · Crypto",
+      fng_stocks:"Angst & Hebzucht · Aandelen",
+      community:"Gemeenschapssentiment",
+      dash_views:"Dashboardbezoeken",
+      btc_dom:"Bitcoin-dominantie",
+      igra_tvl:"Igra L2 · TVL",
+      sec_budget:"Veiligheidsbudget",
+      emission_curve:"Uitgiftecurve",
+      live_feed:"Live blokkenfeed",
+      top_exc:"Topbeurzen",
+      footer_live:"live",
+      footer_born:"geboren",
+    }
+  };
+
+  let currentLang = (navigator.language||"en").startsWith("nl") ? "nl" : "en";
+
+  // map of translation key → element selector(s)
+  const TRANS_MAP = [
+    ["bps_label",  ()=>{ const el=document.querySelector(".label"); if(el) el.textContent=T[currentLang].bps_label; }],
+    ["bps_sub",    ()=>{ const el=document.querySelector(".sub");   if(el) el.textContent=T[currentLang].bps_sub;   }],
+  ];
+
+  function applyLang(lang){
+    currentLang = lang;
+    localStorage.setItem("kaspadash-lang", lang);
+    // update toolbar buttons
+    $("tb-lang-en").classList.toggle("active", lang==="en");
+    $("tb-lang-nl").classList.toggle("active", lang==="nl");
+    // apply simple text translations
+    const t = T[lang];
+    const set = (id, val) => { const el=$(id); if(el&&val) el.textContent=val; };
+    // labels via querySelector on first child span of .h elements
+    document.querySelectorAll(".h > span:first-child").forEach(el=>{
+      const txt = el.textContent.trim();
+      // match English → translation
+      const map = {
+        [T.en.circ_supply]:t.circ_supply,[T.en.hashrate]:t.hashrate,[T.en.price]:t.price,
+        [T.en.block_reward]:t.block_reward,[T.en.next_reduction]:t.next_reduction,
+        [T.en.difficulty]:t.difficulty,[T.en.vol_24h]:t.vol_24h,[T.en.mcap_rank]:t.mcap_rank,
+        [T.en.ath]:t.ath,[T.en.btc_price]:t.btc_price,[T.en.total_headers]:t.total_headers,
+        [T.en.median_time]:t.median_time,[T.en.emission]:t.emission,[T.en.range_24h]:t.range_24h,
+        [T.en.dev_activity]:t.dev_activity,[T.en.fng_crypto]:t.fng_crypto,
+        [T.en.fng_stocks]:t.fng_stocks,[T.en.community]:t.community,
+        [T.en.dash_views]:t.dash_views,[T.en.btc_dom]:t.btc_dom,[T.en.igra_tvl]:t.igra_tvl,
+        [T.en.sec_budget]:t.sec_budget,[T.en.emission_curve]:t.emission_curve,
+        [T.en.live_feed]:t.live_feed,
+        // reverse: NL → EN (for switching back)
+        [T.nl.circ_supply]:t.circ_supply,[T.nl.hashrate]:t.hashrate,[T.nl.price]:t.price,
+        [T.nl.block_reward]:t.block_reward,[T.nl.next_reduction]:t.next_reduction,
+        [T.nl.difficulty]:t.difficulty,[T.nl.vol_24h]:t.vol_24h,[T.nl.mcap_rank]:t.mcap_rank,
+        [T.nl.ath]:t.ath,[T.nl.btc_price]:t.btc_price,[T.nl.total_headers]:t.total_headers,
+        [T.nl.median_time]:t.median_time,[T.nl.emission]:t.emission,[T.nl.range_24h]:t.range_24h,
+        [T.nl.dev_activity]:t.dev_activity,[T.nl.fng_crypto]:t.fng_crypto,
+        [T.nl.fng_stocks]:t.fng_stocks,[T.nl.community]:t.community,
+        [T.nl.dash_views]:t.dash_views,[T.nl.btc_dom]:t.btc_dom,[T.nl.igra_tvl]:t.igra_tvl,
+        [T.nl.sec_budget]:t.sec_budget,[T.nl.emission_curve]:t.emission_curve,
+        [T.nl.live_feed]:t.live_feed,
+      };
+      if(map[txt]) el.textContent = map[txt];
+    });
+    // BPS label and subtitle
+    const lbl = document.querySelector(".label");
+    if(lbl) lbl.textContent = t.bps_label;
+    const sub = document.querySelector(".sub");
+    if(sub) sub.textContent = t.bps_sub;
+    // Top exchanges h2
+    const excH2 = document.querySelector("#exc-body")?.closest("section")?.querySelector("h2");
+    if(excH2){ const first=excH2.firstChild; if(first&&first.nodeType===3) first.textContent=t.top_exc+" "; }
+    // hero-stats labels
+    const statsLabels = document.querySelectorAll(".hero-stats .t");
+    const statKeys = ["dag_tips","daa_score","total_blocks","consensus"];
+    statsLabels.forEach((el,i)=>{ if(statKeys[i]){ const child=el.firstChild; if(child&&child.nodeType===3) child.textContent=t[statKeys[i]]+" "; } });
+    // document language
+    document.documentElement.lang = lang;
+  }
+
+  // ---- Theme toggle ----
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("kaspadash-theme", theme);
+    const btn = $("tb-theme");
+    if(btn) btn.textContent = theme==="light" ? "🌙" : "☀️";
+  }
+
+  // ---- Share button ----
+  function initToolbar(){
+    // theme
+    const savedTheme = localStorage.getItem("kaspadash-theme") || "dark";
+    applyTheme(savedTheme);
+    $("tb-theme").addEventListener("click", ()=>{
+      const current = document.documentElement.getAttribute("data-theme");
+      applyTheme(current==="light" ? "dark" : "light");
+    });
+    // language
+    const savedLang = localStorage.getItem("kaspadash-lang") ||
+                      ((navigator.language||"en").startsWith("nl") ? "nl" : "en");
+    applyLang(savedLang);
+    $("tb-lang-en").addEventListener("click", ()=>applyLang("en"));
+    $("tb-lang-nl").addEventListener("click", ()=>applyLang("nl"));
+    // share
+    $("tb-share").addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const ok = $("tb-share-ok");
+        if(ok){ ok.style.opacity="1"; setTimeout(()=>ok.style.opacity="0", 2000); }
+      }catch(e){ prompt("Copy this link:", window.location.href); }
+    });
+  }
     const ctl = new AbortController();
     const t = setTimeout(()=>ctl.abort(), 12000);
     try{
@@ -1653,6 +1848,7 @@
   loadBlockFeed();
   loadExchanges();
   loadGitHub();
+  initToolbar();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadAllCoinGecko, 120000);
