@@ -115,26 +115,13 @@
 
   .err{color:var(--coral);font-family:var(--mono);font-size:13px}
   .skeleton{color:var(--muted)}
-  /* exchanges table */
-  .exc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+  /* exchanges table */  .exc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
   .exc-table th{text-align:left;color:var(--muted);font-weight:500;padding:4px 8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
   .exc-table td{padding:6px 8px;border-top:1px solid var(--line)}
   .exc-table tr:hover td{background:var(--bg-2)}
   .exc-vol{font-family:var(--mono);text-align:right}
   .exc-pct{font-family:var(--mono);text-align:right;color:var(--muted)}
   .exc-pair{color:var(--muted);font-size:11px}
-
-  /* price alert */
-  .alert-row{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
-  .alert-input{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;
-    padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:14px;
-    width:130px;outline:none;transition:border-color .15s}
-  .alert-input:focus{border-color:var(--teal-dim)}
-  .alert-btn{background:var(--teal);color:#062018;border:none;border-radius:8px;
-    padding:7px 16px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
-  .alert-btn:hover{opacity:.85}
-  .alert-btn.alert-active{background:var(--coral);color:#fff}
-  .alert-status{font-size:12px;color:var(--muted)}
 
   footer{margin-top:22px;color:var(--muted);font-size:12.5px;line-height:1.6}
   footer .who{margin-top:6px}
@@ -339,6 +326,16 @@
       <div class="v" id="m-52lo">–</div>
       <div class="note" id="m-52hi">high –</div>
     </div>
+    <div class="tile span2">
+      <div class="h"><span>Developer activity</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Live stats from the kaspanet/rusty-kaspa GitHub repository — the main Kaspa node implementation. Last push date shows how recently the codebase was updated. Stars and forks reflect developer interest in the project.</span></span></div>
+      <div class="sec-row" style="margin-top:4px">
+        <div><span class="k" id="gh-commits" style="font-size:18px">–</span><span class="t" id="gh-ago" style="margin-left:6px"></span></div>
+        <div><span class="k" id="gh-stars">–</span><span class="t"> stars</span></div>
+        <div><span class="k" id="gh-forks">–</span><span class="t"> forks</span></div>
+        <div><span class="k" id="gh-issues">–</span><span class="t"> open issues</span></div>
+      </div>
+      <div class="note">last push to kaspanet/rusty-kaspa · via GitHub API</div>
+    </div>
   </div>
 
   <div class="grid">
@@ -502,34 +499,6 @@
     <div class="cap" id="hist-empty" style="display:none;margin-top:12px"></div>
   </section>
 
-  <!-- GITHUB + EXCHANGES + PRICE ALERT -->
-  <div class="grid" style="margin-top:16px">
-    <!-- GitHub activiteit -->
-    <div class="tile">
-      <div class="h"><span>Developer activity</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Live stats from the kaspanet/rusty-kaspa GitHub repository — the main Kaspa node implementation. Last push date shows how recently the codebase was updated. Stars and forks reflect developer interest.</span></span></div>
-      <div class="sec-row" style="margin-top:4px">
-        <div><span class="k" id="gh-commits" style="font-size:15px">–</span><span class="t" id="gh-ago"></span></div>
-      </div>
-      <div class="sec-row" style="margin-top:8px">
-        <div><span class="k" id="gh-stars">–</span><span class="t"> stars</span></div>
-        <div><span class="k" id="gh-forks">–</span><span class="t"> forks</span></div>
-        <div><span class="k" id="gh-issues">–</span><span class="t"> open issues</span></div>
-      </div>
-      <div class="note">last push to rusty-kaspa · via GitHub</div>
-    </div>
-    <!-- Prijsalert -->
-    <div class="tile">
-      <div class="h"><span>Price alert</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Set a price target and get a browser notification when KAS crosses it — above or below. Works while this tab is open. Requires notification permission.</span></span></div>
-      <div class="v" id="alert-price-display" style="font-size:15px;margin-bottom:4px">Current: <span id="alert-current">–</span></div>
-      <div class="alert-row">
-        <span style="font-size:13px;color:var(--muted)">Alert at $</span>
-        <input id="alert-input" class="alert-input" type="number" step="0.0001" min="0" placeholder="0.0500" />
-        <button id="alert-btn" class="alert-btn">Set alert</button>
-      </div>
-      <div class="note" id="alert-status">enter a price target above</div>
-    </div>
-  </div>
-
   <!-- EXCHANGES TABLE -->
   <section class="panel" style="margin-top:16px">
     <div class="h" style="margin-bottom:0">
@@ -604,7 +573,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.5.2";
+  const APP_VERSION = "v2.5.4";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -880,7 +849,7 @@
     try{
       const d = await getJSON(KAS+"/info/price?stringOnly=false");
       const p = num(pick(d,["price"]));
-      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); window.__price=p; maybeMcap(); checkPriceAlert(p); }
+      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); window.__price=p; maybeMcap(); }
       else setErr("price");
     }catch(e){ setErr("price"); }
   }
@@ -1394,65 +1363,6 @@
     }
   }
 
-  // ---- Price alert (client-side, browser Notification API) ----
-  let alertTarget = null;   // USD price to watch
-  let alertFired  = false;  // only fire once per set
-
-  function initPriceAlert(){
-    const input  = $("alert-input");
-    const btn    = $("alert-btn");
-    const status = $("alert-status");
-    if(!input||!btn||!status) return;
-
-    btn.addEventListener("click", async ()=>{
-      if(alertTarget !== null){
-        // cancel existing alert
-        alertTarget = null; alertFired = false;
-        btn.textContent = "Set alert";
-        btn.classList.remove("alert-active");
-        status.textContent = "alert cancelled";
-        return;
-      }
-      const val = parseFloat(input.value);
-      if(!isFinite(val)||val<=0){ status.textContent = "enter a valid price"; return; }
-
-      // request notification permission
-      if(Notification.permission === "default"){
-        const perm = await Notification.requestPermission();
-        if(perm !== "granted"){
-          status.textContent = "notifications blocked — allow them in browser settings";
-          return;
-        }
-      } else if(Notification.permission === "denied"){
-        status.textContent = "notifications blocked — allow them in browser settings";
-        return;
-      }
-
-      alertTarget = val; alertFired = false;
-      btn.textContent = "Cancel alert";
-      btn.classList.add("alert-active");
-      status.textContent = "watching for $"+val.toFixed(4)+"…";
-    });
-  }
-
-  function checkPriceAlert(price){
-    const display = $("alert-current");
-    if(display && isFinite(price)) display.textContent = "$"+price.toFixed(4);
-    if(alertTarget===null || alertFired || !isFinite(price)) return;
-    const crossed = (price >= alertTarget);
-    if(crossed){
-      alertFired = true;
-      const msg = "KAS is now $"+price.toFixed(4)+" — crossed your alert at $"+alertTarget.toFixed(4);
-      try{ new Notification("Kaspa price alert 🎯", {body: msg, icon: "/favicon.ico"}); }
-      catch(e){ /* fallback */ alert(msg); }
-      const status=$("alert-status");
-      if(status) status.textContent = "✓ alert fired at $"+price.toFixed(4);
-      const btn=$("alert-btn");
-      if(btn){ btn.textContent="Set alert"; btn.classList.remove("alert-active"); }
-      alertTarget = null;
-    }
-  }
-
   // ---- sentiment & community ----
   async function loadSentiment(){
     // Crypto Fear & Greed (alternative.me) — not CoinGecko, no rate-limit issue
@@ -1688,7 +1598,6 @@
   loadBlockFeed();
   loadExchanges();
   loadGitHub();
-  initPriceAlert();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadAllCoinGecko, 120000);
