@@ -528,7 +528,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.4.0";
+  const APP_VERSION = "v2.4.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1145,66 +1145,71 @@
   }
 
   // ---- Live block feed ----
-  const FEED_LIMIT = 12;
-  let feedSeen = new Set();   // block hashes already in the table
+  // /blocks?limit=N requires a database-backed endpoint that api.kaspa.org
+  // serves only with a lowHash parameter (and may 403 without one).
+  // Instead we use tipHashes from /info/blockdag (already fetched every 60s)
+  // and look up each tip individually via /blocks/{hash}?includeTransactions=false.
+  // This works reliably on the public API and gives us real verboseData.
+  const FEED_LIMIT = 10;
+  const feedSeen = new Set();
 
   async function loadBlockFeed(){
+    const feed=$("block-feed"); if(!feed) return;
     try{
-      // The REST endpoint returns an array of block objects.
-      // verboseData fields: hash, blueScore, transactionCount, timestamp (ms)
-      const blocks = await getJSON(KAS+"/blocks?limit="+FEED_LIMIT+"&includeTransactions=false");
-      const list   = Array.isArray(blocks) ? blocks : (blocks.blocks||[]);
-      if(!list.length) return;
+      // Step 1: get current tip hashes from blockdag
+      const dag = await getJSON(KAS+"/info/blockdag");
+      const tips = Array.isArray(dag.tipHashes) ? dag.tipHashes : [];
+      if(!tips.length) return;
 
-      const feed=$("block-feed"); if(!feed) return;
-      let addedAny=false;
+      // Step 2: fetch each unseen tip (max 6 per cycle to avoid burst)
+      const newTips = tips.filter(h=>!feedSeen.has(h)).slice(0,6);
+      if(!newTips.length) return;
 
-      // newest first
-      const sorted=[...list].sort((a,b)=>{
-        const ta=num(pick(a.verboseData||a,["timestamp","blockTime"]));
-        const tb=num(pick(b.verboseData||b,["timestamp","blockTime"]));
-        return tb-ta;
-      });
+      const results = await Promise.allSettled(
+        newTips.map(h=>getJSON(KAS+"/blocks/"+h+"?includeTransactions=false"))
+      );
 
-      sorted.forEach(blk=>{
-        const vd  = blk.verboseData || blk;
-        const hash= blk.blockHash || vd.hash || vd.blockHash || "";
-        if(!hash || feedSeen.has(hash)) return;
+      // remove skeleton on first success
+      const sk=feed.querySelector(".skeleton,.err");
+      let firstSuccess=false;
+      results.forEach((r,i)=>{
+        if(r.status!=="fulfilled") return;
+        const blk=r.value;
+        const hash=newTips[i];
         feedSeen.add(hash);
-        addedAny=true;
+        firstSuccess=true;
 
+        const vd  = blk.verboseData || blk;
         const blue= num(pick(vd,["blueScore","blue_score"]));
-        const txc = num(pick(vd,["transactionCount","txCount","tx_count"]));
-        const ts  = num(pick(vd,["timestamp","blockTime"]));
+        const txc = num(pick(vd,["transactionCount","txCount"]));
+        // timestamp can be in ms or seconds — normalise
+        let ts = num(pick(vd,["timestamp","blockTime"]));
+        if(isFinite(ts) && ts < 2e12) ts *= 1000; // convert s → ms
         const age = isFinite(ts) ? ageFmt(ts) : "–";
 
         const row=document.createElement("div");
         row.className="bf-row bf-new";
         row.innerHTML=
-          '<span class="bf-hash" title="'+esc(hash)+'">'+esc(hash.slice(0,16))+'…</span>'+
-          '<span class="bf-blue">'+(isFinite(blue)?compact(blue):"–")+'</span>'+
+          '<span class="bf-hash" title="'+esc(hash)+'">'+esc(hash.slice(0,14))+'…</span>'+
+          '<span class="bf-blue">'+(isFinite(blue)?"bs "+compact(blue):"–")+'</span>'+
           '<span class="bf-tx">'+(isFinite(txc)?txc+" tx":"–")+'</span>'+
           '<span class="bf-age">'+age+'</span>';
+        if(sk && !sk.removed){ sk.remove(); sk.removed=true; }
         feed.insertBefore(row, feed.firstChild);
-        setTimeout(()=>row.classList.remove("bf-new"), 600);
+        setTimeout(()=>row.classList.remove("bf-new"), 800);
       });
 
       // trim to FEED_LIMIT rows
       while(feed.children.length > FEED_LIMIT) feed.removeChild(feed.lastChild);
 
-      // update header timestamp
-      const st=$("bf-status");
-      if(st) st.textContent="updated "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-
-      if(addedAny && feedSeen.size <= FEED_LIMIT){
-        // first successful load: remove skeleton
-        const sk=feed.querySelector(".skeleton");
-        if(sk) sk.remove();
+      if(firstSuccess){
+        const st=$("bf-status");
+        if(st) st.textContent=new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
       }
     }catch(e){
-      const feed=$("block-feed"); if(!feed) return;
-      if(feed.querySelector(".skeleton"))
+      if(!feed.querySelector(".bf-row")){
         feed.innerHTML='<div class="err" style="font-size:13px;padding:6px 0">Block feed unavailable — API unreachable.</div>';
+      }
     }
   }
 
