@@ -159,7 +159,7 @@
     padding:10px 12px;font-size:12px;line-height:1.55;color:var(--text);
     width:220px;pointer-events:none;opacity:0;transform:translateY(-4px);
     transition:opacity .15s,transform .15s;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-  .tip-wrap:hover .tip-box,.tip-wrap.open .tip-box{opacity:1;transform:none;pointer-events:auto}
+  .tip-wrap:hover .tip-box,.tip-wrap:focus-within .tip-box,.tip-wrap.open .tip-box{opacity:1;transform:none;pointer-events:auto}
   @media(max-width:480px){.tip-box{width:180px}}
 
   @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
@@ -281,7 +281,7 @@
       <div class="note" id="m-emit-note">new KAS per day · inflation –</div>
     </div>
     <div class="tile">
-      <div class="h"><span>52-week range</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The lowest and highest price KAS reached in the last 24 hours. Gives context for where the current price sits relative to today's trading range.</span></span></div>
+      <div class="h"><span>24h range</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The lowest and highest price KAS reached in the last 24 hours. Gives context for where the current price sits relative to today's trading range.</span></span></div>
       <div class="v" id="m-52lo">–</div>
       <div class="note" id="m-52hi">high –</div>
     </div>
@@ -471,7 +471,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.3.0";
+  const APP_VERSION = "v2.3.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -495,6 +495,28 @@
     document.querySelectorAll(".tip-wrap.open").forEach(w=>w.classList.remove("open"));
   });
 
+  // ---- accessible tooltips ----
+  // The ⓘ icons were focusable spans with no accessible name, and the tip text
+  // sat beside them unlinked — a screen reader announced only "ⓘ". Give each icon
+  // a button role + label and point aria-describedby at its tip box (now shown on
+  // focus via the :focus-within CSS rule as well as hover/tap). Escape dismisses.
+  (function initTips(){
+    let n=0;
+    document.querySelectorAll(".tip-wrap").forEach(wrap=>{
+      const icon = wrap.querySelector(".tip-icon");
+      const box  = wrap.querySelector(".tip-box");
+      if(!icon || !box) return;
+      if(!box.id) box.id = "tip-"+(++n);
+      box.setAttribute("role","tooltip");
+      icon.setAttribute("role","button");
+      icon.setAttribute("aria-label","More information");
+      icon.setAttribute("aria-describedby", box.id);
+      icon.addEventListener("keydown", e=>{
+        if(e.key==="Escape"){ wrap.classList.remove("open"); icon.blur(); }
+      });
+    });
+  })();
+
   async function getJSON(url){
     const ctl = new AbortController();
     const t = setTimeout(()=>ctl.abort(), 12000);
@@ -503,6 +525,45 @@
       if(!r.ok) throw new Error("HTTP "+r.status);
       return await r.json();
     } finally { clearTimeout(t); }
+  }
+
+  // ---- CoinGecko fetch: short cache + request de-dupe + 429 backoff ----
+  // loadPeers, loadSentiment and loadGlobal all hit CoinGecko's free tier on
+  // separate timers (plus a burst on visibilitychange). Route them through here
+  // so identical/near-identical calls share one response and a 429 backs off
+  // instead of hammering the endpoint and silently blanking those tiles.
+  const CG_TTL = 60000;              // serve a cached CG response for 60s
+  const cgCache = new Map();         // url -> { t, data }
+  const cgPending = new Map();       // url -> in-flight promise
+  let cgBlockUntil = 0;              // pause CG calls until this timestamp after a 429
+  async function cgJSON(url){
+    const now = Date.now();
+    const cached = cgCache.get(url);
+    if(cached && now - cached.t < CG_TTL) return cached.data;      // fresh cache
+    if(now < cgBlockUntil){                                        // in backoff window
+      if(cached) return cached.data;                              // serve stale rather than call
+      throw new Error("CoinGecko rate-limited");
+    }
+    if(cgPending.has(url)) return cgPending.get(url);              // de-dupe concurrent calls
+    const p = (async ()=>{
+      const ctl = new AbortController();
+      const t = setTimeout(()=>ctl.abort(), 12000);
+      try{
+        const r = await fetch(url, {signal:ctl.signal, headers:{accept:"application/json"}});
+        if(r.status===429){
+          const ra = Number(r.headers.get("retry-after")) || 60;
+          cgBlockUntil = Date.now() + ra*1000;
+          if(cached) return cached.data;                          // fall back to stale on 429
+          throw new Error("HTTP 429");
+        }
+        if(!r.ok) throw new Error("HTTP "+r.status);
+        const data = await r.json();
+        cgCache.set(url, {t:Date.now(), data});
+        return data;
+      } finally { clearTimeout(t); cgPending.delete(url); }
+    })();
+    cgPending.set(url, p);
+    return p;
   }
   function pick(obj, keys){
     for(const k of keys){ if(obj && obj[k]!=null) return obj[k]; }
@@ -804,10 +865,9 @@
     const c24 = (k.price_change_percentage_24h_in_currency!=null)?k.price_change_percentage_24h_in_currency:k.price_change_percentage_24h;
     const c7  = k.price_change_percentage_7d_in_currency;
     $("price-chg").innerHTML = "24h "+fmtPct(c24)+" \u00b7 7d "+fmtPct(c7);
-    // 52-week range
-    const lo = num(pick(k,["low_52w","low_24h"]));
-    const hi = num(pick(k,["high_52w","high_24h"]));
-    // CoinGecko /markets gives 24h high/low; we label it clearly
+    // 24h range — CoinGecko /markets only exposes 24h high/low, not 52-week
+    const lo = num(pick(k,["low_24h"]));
+    const hi = num(pick(k,["high_24h"]));
     if(isFinite(lo)) $("m-52lo").innerHTML = "$"+lo.toFixed(4)+' <small>24h low</small>';
     if(isFinite(hi)) $("m-52hi").textContent = "high $"+hi.toFixed(4);
     // volume / market cap ratio
@@ -883,7 +943,7 @@
   // ---- Bitcoin dominance (CoinGecko /global) ----
   async function loadGlobal(){
     try{
-      const d = await getJSON(CG+"/global");
+      const d = await cgJSON(CG+"/global");
       const mcp = d && d.data && d.data.market_cap_percentage;
       const dom = mcp && num(pick(mcp,["btc"]));
       if(isFinite(dom)){
@@ -939,7 +999,7 @@
     }catch(e){ /* not yet available */ }
     // CoinGecko community (Kaspa-specific): bullish votes
     try{
-      const d = await getJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
+      const d = await cgJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
       const up = num(pick(d,["sentiment_votes_up_percentage"]));
       if(isFinite(up)) $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
     }catch(e){ /* leave as – */ }
@@ -949,7 +1009,7 @@
     try{
       const url = CG+"/coins/markets?vs_currency=usd&ids="+ALL_PEERS.join(",")+
                   "&price_change_percentage=24h,7d,30d,1y&order=market_cap_desc&per_page=50&page=1";
-      const d = await getJSON(url);
+      const d = await cgJSON(url);
       if(!Array.isArray(d) || !d.length) throw new Error("empty");
       const byId={}; d.forEach(c=>{ byId[c.id]=c; });
       renderPeerTable("peers-pow", POW, byId);
