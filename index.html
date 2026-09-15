@@ -577,7 +577,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.6.2";
+  const APP_VERSION = "v2.6.3";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1347,37 +1347,53 @@
       const d = await cgJSON(CG+"/coins/kaspa/tickers?include_exchange_logo=false&order=volume_desc&depth=false");
       const tickers = (d && d.tickers) ? d.tickers : [];
       if(!tickers.length) throw new Error("empty");
-      // sum total volume for share calculation
-      const totalVol = tickers.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
       const mcap = window.__circ && window.__price ? window.__circ * window.__price : null;
       const body = $("exc-body");
       if(!body) return;
 
-      // split into main (>= $1000) and small (< $1000) — small get collapsed into one row
-      const THRESHOLD = 1000;
-      const main  = tickers.filter(t=>(t.converted_volume&&t.converted_volume.usd||0) >= THRESHOLD);
-      const small = tickers.filter(t=>(t.converted_volume&&t.converted_volume.usd||0) <  THRESHOLD);
+      // merge tickers by exchange name — sum volume across all pairs per exchange
+      const byExchange = new Map();
+      tickers.forEach(t=>{
+        const name = (t.market && t.market.name) || "Unknown";
+        const vol  = (t.converted_volume && t.converted_volume.usd) || 0;
+        const pairs = byExchange.get(name) || {vol:0, pairs:[]};
+        pairs.vol += vol;
+        pairs.pairs.push((t.base||"")+"/"+(t.target||""));
+        byExchange.set(name, pairs);
+      });
 
-      const mkRow = (t) => {
-        const vol  = t.converted_volume && t.converted_volume.usd;
-        const name = esc(t.market && t.market.name || "–");
-        const pair = esc((t.base||"")+"/"+(t.target||""));
-        const volStr = isFinite(vol) ? "$"+compact(vol) : "–";
-        const pct  = isFinite(vol)&&totalVol>0 ? (vol/totalVol*100).toFixed(1)+"%" : "–";
-        const vmc  = isFinite(vol)&&mcap&&mcap>0 ? (vol/mcap*100).toFixed(2)+"%" : "–";
-        return '<tr><td>'+name+'</td><td><span class="exc-pair">'+pair+'</span></td>'+
+      // sort merged by volume desc
+      const merged = [...byExchange.entries()]
+        .map(([name,d])=>({name, vol:d.vol, pairs:d.pairs}))
+        .sort((a,b)=>b.vol-a.vol);
+
+      const totalVol = merged.reduce((s,e)=>s+e.vol, 0);
+
+      // split main (>= $1000) and small (< $1000)
+      const THRESHOLD = 1000;
+      const main  = merged.filter(e=>e.vol >= THRESHOLD);
+      const small = merged.filter(e=>e.vol <  THRESHOLD);
+
+      const mkRow = (e) => {
+        const pairStr = e.pairs.length === 1 ? esc(e.pairs[0]) :
+                        e.pairs.length <= 3   ? esc(e.pairs.join(", ")) :
+                        esc(e.pairs.slice(0,2).join(", "))+" +"+( e.pairs.length-2)+" more";
+        const volStr = "$"+compact(e.vol);
+        const pct  = totalVol>0 ? (e.vol/totalVol*100).toFixed(1)+"%" : "–";
+        const vmc  = mcap&&mcap>0 ? (e.vol/mcap*100).toFixed(2)+"%" : "–";
+        return '<tr><td>'+esc(e.name)+'</td><td><span class="exc-pair">'+pairStr+'</span></td>'+
                '<td class="exc-vol">'+volStr+'</td><td class="exc-pct">'+pct+'</td>'+
                '<td class="exc-pct">'+vmc+'</td></tr>';
       };
 
       let rows = main.map(mkRow).join("");
 
-      // collapsed "other" row
+      // collapsed "other" row for small exchanges
       if(small.length > 0){
-        const smallVol = small.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
+        const smallVol = small.reduce((s,e)=>s+e.vol, 0);
         const smallPct = totalVol>0 ? (smallVol/totalVol*100).toFixed(1)+"%" : "–";
         const smallVmc = mcap&&mcap>0 ? (smallVol/mcap*100).toFixed(2)+"%" : "–";
-        const names = [...new Set(small.map(t=>t.market&&t.market.name).filter(Boolean))].join(", ");
+        const names = small.map(e=>e.name).join(", ");
         rows += '<tr style="color:var(--muted)" title="'+esc(names)+'">'+
                 '<td>'+small.length+' other exchanges <span style="font-size:11px">(each &lt; $1k · hover for list)</span></td>'+
                 '<td><span class="exc-pair">various</span></td>'+
@@ -1385,6 +1401,15 @@
                 '<td class="exc-pct">'+smallPct+'</td>'+
                 '<td class="exc-pct">'+smallVmc+'</td></tr>';
       }
+
+      // totaalregel
+      const totalPct = "100%";
+      const totalVmc = mcap&&mcap>0 ? (totalVol/mcap*100).toFixed(2)+"%" : "–";
+      rows += '<tr style="border-top:2px solid var(--line);font-weight:600">'+
+              '<td>Total · '+merged.length+' exchanges</td><td></td>'+
+              '<td class="exc-vol">$'+compact(totalVol)+'</td>'+
+              '<td class="exc-pct">'+totalPct+'</td>'+
+              '<td class="exc-pct">'+totalVmc+'</td></tr>';
 
       body.innerHTML = rows;
     }catch(e){
