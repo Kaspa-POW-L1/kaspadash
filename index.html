@@ -517,7 +517,6 @@
       </tr></thead>
       <tbody id="exc-body"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
     </table>
-    <div class="note" id="exc-note" style="margin-top:8px"></div>
   </section>
 
   <!-- FEEDBACK POPUP -->
@@ -578,7 +577,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.6.0";
+  const APP_VERSION = "v2.6.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1350,35 +1349,44 @@
       if(!tickers.length) throw new Error("empty");
       // sum total volume for share calculation
       const totalVol = tickers.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
-      const top = tickers; // all available tickers — CoinGecko returns up to 100
       const mcap = window.__circ && window.__price ? window.__circ * window.__price : null;
       const body = $("exc-body");
       if(!body) return;
-      body.innerHTML = top.map(t=>{
-        const vol = t.converted_volume && t.converted_volume.usd;
+
+      // split into main (>= $1000) and small (< $1000) — small get collapsed into one row
+      const THRESHOLD = 1000;
+      const main  = tickers.filter(t=>(t.converted_volume&&t.converted_volume.usd||0) >= THRESHOLD);
+      const small = tickers.filter(t=>(t.converted_volume&&t.converted_volume.usd||0) <  THRESHOLD);
+
+      const mkRow = (t) => {
+        const vol  = t.converted_volume && t.converted_volume.usd;
         const name = esc(t.market && t.market.name || "–");
         const pair = esc((t.base||"")+"/"+(t.target||""));
         const volStr = isFinite(vol) ? "$"+compact(vol) : "–";
-        const pct = isFinite(vol)&&totalVol>0 ? (vol/totalVol*100).toFixed(1)+"%" : "–";
-        const vmc = isFinite(vol)&&mcap&&mcap>0 ? (vol/mcap*100).toFixed(2)+"%" : "–";
+        const pct  = isFinite(vol)&&totalVol>0 ? (vol/totalVol*100).toFixed(1)+"%" : "–";
+        const vmc  = isFinite(vol)&&mcap&&mcap>0 ? (vol/mcap*100).toFixed(2)+"%" : "–";
         return '<tr><td>'+name+'</td><td><span class="exc-pair">'+pair+'</span></td>'+
                '<td class="exc-vol">'+volStr+'</td><td class="exc-pct">'+pct+'</td>'+
                '<td class="exc-pct">'+vmc+'</td></tr>';
-      }).join("");
+      };
 
-      // subtitel: som alle exchanges vs totaal dashboard volume
-      const top8vol = top.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
-      const dashVol = window.__vol24h;
-      const note = $("exc-note");
-      if(note){
-        let txt = top.length+" exchanges · $"+compact(top8vol)+" combined";
-        if(isFinite(dashVol) && dashVol>0){
-          const coverage = (top8vol/dashVol*100).toFixed(0);
-          txt += " · "+coverage+"% of $"+compact(dashVol)+" total 24h volume shown above";
-          txt += " · difference may reflect wash trading filters";
-        }
-        note.textContent = txt;
+      let rows = main.map(mkRow).join("");
+
+      // collapsed "other" row
+      if(small.length > 0){
+        const smallVol = small.reduce((s,t)=>s+(t.converted_volume&&t.converted_volume.usd||0),0);
+        const smallPct = totalVol>0 ? (smallVol/totalVol*100).toFixed(1)+"%" : "–";
+        const smallVmc = mcap&&mcap>0 ? (smallVol/mcap*100).toFixed(2)+"%" : "–";
+        const names = [...new Set(small.map(t=>t.market&&t.market.name).filter(Boolean))].join(", ");
+        rows += '<tr style="color:var(--muted)" title="'+esc(names)+'">'+
+                '<td>'+small.length+' other exchanges <span style="font-size:11px">(each &lt; $1k · hover for list)</span></td>'+
+                '<td><span class="exc-pair">various</span></td>'+
+                '<td class="exc-vol">$'+compact(smallVol)+'</td>'+
+                '<td class="exc-pct">'+smallPct+'</td>'+
+                '<td class="exc-pct">'+smallVmc+'</td></tr>';
       }
+
+      body.innerHTML = rows;
     }catch(e){
       const body=$("exc-body");
       if(body) body.innerHTML='<tr><td colspan="5" class="err">Exchange data unavailable.</td></tr>';
