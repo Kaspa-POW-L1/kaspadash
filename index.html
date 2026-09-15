@@ -162,6 +162,28 @@
   .tip-wrap:hover .tip-box,.tip-wrap:focus-within .tip-box,.tip-wrap.open .tip-box{opacity:1;transform:none;pointer-events:auto}
   @media(max-width:480px){.tip-box{width:180px}}
 
+  /* Security budget */
+  .sec-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;flex-wrap:wrap;gap:6px}
+  .sec-row .k{font-family:var(--mono);font-size:18px;font-weight:500}
+  .sec-row .t{font-size:12px;color:var(--muted)}
+
+  /* Emission curve */
+  .ecurve-wrap{position:relative;margin-top:12px}
+  .ecurve-wrap svg{width:100%;height:80px;display:block}
+  .ecurve-now{position:absolute;top:0;bottom:0;width:1px;background:var(--teal);opacity:.7;pointer-events:none}
+  .ecurve-label{position:absolute;top:2px;font-family:var(--mono);font-size:10px;color:var(--teal);white-space:nowrap}
+
+  /* Live block feed */
+  .block-feed{margin-top:12px;display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto}
+  .bf-row{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;
+    padding:5px 8px;border-radius:6px;background:var(--bg-2);border:1px solid var(--line);
+    font-family:var(--mono);font-size:12px;transition:background .3s}
+  .bf-row.bf-new{background:rgba(73,234,203,.12);border-color:rgba(73,234,203,.3)}
+  .bf-hash{color:var(--teal-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bf-blue{color:var(--muted)}
+  .bf-tx{color:var(--text)}
+  .bf-age{color:var(--muted);text-align:right}
+
   @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:480px){ .grid{grid-template-columns:1fr} .span2{grid-column:span 1} .hero-stats{gap:18px} }
   @media(prefers-reduced-motion:reduce){ .dot,.blk,.bar>i{animation:none;transition:none} }
@@ -325,6 +347,41 @@
     </div>
   </div>
 
+  <!-- SECURITY BUDGET -->
+  <div class="grid" style="margin-top:0">
+    <div class="tile span2">
+      <div class="h"><span>Security budget</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What miners earn per day securing the network (block reward × 10 blocks/s × 86,400 s × KAS price). The annualised figure as % of market cap shows how much the network "spends" on security — higher = harder and costlier to attack.</span></span></div>
+      <div class="v" id="sec-usd">–</div>
+      <div class="sec-row">
+        <div><span class="k" id="sec-annual">–</span><span class="t"> annualised</span></div>
+        <div><span class="k" id="sec-pct">–</span><span class="t"> of market cap</span></div>
+        <div><span class="k" id="sec-kas">–</span><span class="t"> KAS/day</span></div>
+      </div>
+    </div>
+    <!-- EMISSION CURVE -->
+    <div class="tile span2">
+      <div class="h"><span>Emission curve</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Kaspa's chromatic halving: the block reward drops by ½^(1/12) every month. The curve shows projected circulating supply to ~2037; the teal line marks today. The asymptote is ~28.7B KAS — no more will ever be created.</span></span><span id="ecurve-cap" style="font-family:var(--mono);font-size:12px;color:var(--muted)"></span></div>
+      <div class="ecurve-wrap">
+        <svg id="ecurve-svg" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="ecurve-now" id="ecurve-now" style="left:0"></div>
+        <div class="ecurve-label" id="ecurve-lbl" style="left:0">now</div>
+      </div>
+      <div class="note" id="ecurve-note">loading…</div>
+    </div>
+  </div>
+
+  <!-- LIVE BLOCK FEED -->
+  <section class="panel" style="margin-top:0;margin-bottom:16px">
+    <div class="h" style="margin-bottom:0">
+      <h2 style="margin:0;font-size:15px;font-weight:600">Live block feed</h2>
+      <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The most recent blocks added to the Kaspa BlockDAG, refreshed every 10 seconds. Blue score is Kaspa's internal ordering metric. Tx = transactions in that block.</span></span>
+      <span id="bf-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
+    </div>
+    <div class="block-feed" id="block-feed">
+      <div class="skeleton" style="font-size:13px;padding:6px 0">connecting…</div>
+    </div>
+  </section>
+
   <!-- KRC-20 -->
   <section class="panel">
     <h2>KRC-20 tokens <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Tokens built on top of Kaspa using the KRC-20 standard — similar to ERC-20 on Ethereum. Anyone can deploy a token. Most are community/meme projects; none have guaranteed value. Click a column header to sort.</span></span></h2>
@@ -471,7 +528,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.3.2";
+  const APP_VERSION = "v2.4.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -696,6 +753,7 @@
       const r = num(pick(d,["blockreward","blockReward"]));
       if(isFinite(r)){
         $("reward").innerHTML = r.toFixed(2)+' <small>KAS</small>';
+        window.__reward = r;
         // emission: 10 blocks/sec × 86400 sec/day × reward
         const perDay = 10 * 86400 * r;
         $("m-emit").innerHTML = compact(Math.round(perDay))+' <small>KAS</small>';
@@ -1001,6 +1059,163 @@
     }catch(e){ setErr("m-igra"); }
   }
 
+  // ---- Security budget ----
+  // Derived entirely from data already fetched (reward + price + supply).
+  // Call after loadReward and loadPeers/renderMarket have populated window.__reward
+  // and window.__price and window.__circ. Wired into refresh() so it stays current.
+  function renderSecurityBudget(){
+    const reward = window.__reward, price = window.__price, circ = window.__circ;
+    if(!isFinite(reward)||!isFinite(price)) return;
+    const kasPerDay  = 10 * 86400 * reward;
+    const usdPerDay  = kasPerDay * price;
+    const usdPerYear = usdPerDay * 365;
+    $("sec-usd").innerHTML = "$"+compact(usdPerDay)+' <small>USD/day to miners</small>';
+    $("sec-kas").textContent = compact(Math.round(kasPerDay));
+    $("sec-annual").textContent = "$"+compact(usdPerYear);
+    if(isFinite(circ)&&circ>0&&isFinite(price)){
+      const mcap = circ*price;
+      if(mcap>0) $("sec-pct").textContent = (usdPerYear/mcap*100).toFixed(2)+"%";
+    }
+  }
+
+  // ---- Emission curve (deterministic, no API) ----
+  // Kaspa chromatic halving: reward halves every 12 months, i.e. factor ½^(1/12) per month.
+  // Genesis: 2021-11-07, initial reward 440 KAS/block, 1 block/s initially → scaled to 10 bps.
+  // We project from a known recent anchor (reward + supply from the live API) to avoid
+  // accumulating drift from the genesis approximation.
+  function renderEmissionCurve(){
+    const reward0 = window.__reward, circ0 = window.__circ;
+    if(!isFinite(reward0)||!isFinite(circ0)) return;
+
+    const MAX   = 28_700_000_000;   // ~28.7B KAS hard cap
+    const BPS   = 10;               // blocks per second
+    const MONTH = 30.4375 * 86400;  // seconds per average month
+    const FACTOR= Math.pow(0.5, 1/12); // chromatic halving factor per month
+
+    const now    = Date.now()/1000;   // unix seconds
+    const months = 12*11;             // project ~11 years forward from now
+    const pts    = [];                // {t (months from now), supply}
+
+    let r = reward0, s = circ0;
+    for(let m=0; m<=months; m++){
+      pts.push({t:m, s: Math.min(s, MAX)});
+      // advance one month
+      const secs = MONTH;
+      s += BPS * secs * r;
+      r *= FACTOR;
+      if(s>=MAX){ pts.push({t:m+1, s:MAX}); break; }
+    }
+
+    // Draw SVG
+    const svg=$("ecurve-svg"); if(!svg) return;
+    const W=300,H=80,pad=4;
+    const tmax=pts[pts.length-1].t;
+    const smax=MAX;
+    const X=t=>pad+((t/tmax)*(W-2*pad));
+    const Y=s=>H-pad-((s/smax)*(H-2*pad));
+
+    // supply curve path
+    const d="M"+pts.map(p=>X(p.t).toFixed(1)+","+Y(p.s).toFixed(1)).join(" L");
+    // area fill
+    const area=d+" L"+X(pts[pts.length-1].t).toFixed(1)+","+(H-pad)+" L"+X(0).toFixed(1)+","+(H-pad)+" Z";
+    svg.innerHTML=
+      '<defs>'+
+        '<linearGradient id="ecg" x1="0" y1="0" x2="0" y2="1">'+
+          '<stop offset="0" stop-color="#49eacb" stop-opacity=".18"/>'+
+          '<stop offset="1" stop-color="#49eacb" stop-opacity="0"/>'+
+        '</linearGradient>'+
+      '</defs>'+
+      // asymptote
+      '<line x1="'+pad+'" y1="'+Y(MAX).toFixed(1)+'" x2="'+(W-pad)+'" y2="'+Y(MAX).toFixed(1)+
+        '" stroke="#183129" stroke-width="1" stroke-dasharray="3 3"/>'+
+      '<path d="'+area+'" fill="url(#ecg)"/>'+
+      '<path d="'+d+'" fill="none" stroke="#49eacb" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>';
+
+    // "now" marker at t=0 (left edge + tiny offset so it's visible)
+    const nowX = X(0);
+    const nowEl=$("ecurve-now"), lblEl=$("ecurve-lbl");
+    if(nowEl){ nowEl.style.left=nowX.toFixed(1)+"px"; }
+    if(lblEl){ lblEl.style.left=(nowX+4).toFixed(1)+"px"; }
+
+    // note
+    const yearsLeft = (tmax/12).toFixed(0);
+    $("ecurve-note").textContent =
+      compact(circ0)+" KAS in circulation · "+compact(MAX)+" max · ~"+yearsLeft+"y to hard cap";
+    $("ecurve-cap").textContent = compact(circ0)+" / "+compact(MAX);
+  }
+
+  // ---- Live block feed ----
+  const FEED_LIMIT = 12;
+  let feedSeen = new Set();   // block hashes already in the table
+
+  async function loadBlockFeed(){
+    try{
+      // The REST endpoint returns an array of block objects.
+      // verboseData fields: hash, blueScore, transactionCount, timestamp (ms)
+      const blocks = await getJSON(KAS+"/blocks?limit="+FEED_LIMIT+"&includeTransactions=false");
+      const list   = Array.isArray(blocks) ? blocks : (blocks.blocks||[]);
+      if(!list.length) return;
+
+      const feed=$("block-feed"); if(!feed) return;
+      let addedAny=false;
+
+      // newest first
+      const sorted=[...list].sort((a,b)=>{
+        const ta=num(pick(a.verboseData||a,["timestamp","blockTime"]));
+        const tb=num(pick(b.verboseData||b,["timestamp","blockTime"]));
+        return tb-ta;
+      });
+
+      sorted.forEach(blk=>{
+        const vd  = blk.verboseData || blk;
+        const hash= blk.blockHash || vd.hash || vd.blockHash || "";
+        if(!hash || feedSeen.has(hash)) return;
+        feedSeen.add(hash);
+        addedAny=true;
+
+        const blue= num(pick(vd,["blueScore","blue_score"]));
+        const txc = num(pick(vd,["transactionCount","txCount","tx_count"]));
+        const ts  = num(pick(vd,["timestamp","blockTime"]));
+        const age = isFinite(ts) ? ageFmt(ts) : "–";
+
+        const row=document.createElement("div");
+        row.className="bf-row bf-new";
+        row.innerHTML=
+          '<span class="bf-hash" title="'+esc(hash)+'">'+esc(hash.slice(0,16))+'…</span>'+
+          '<span class="bf-blue">'+(isFinite(blue)?compact(blue):"–")+'</span>'+
+          '<span class="bf-tx">'+(isFinite(txc)?txc+" tx":"–")+'</span>'+
+          '<span class="bf-age">'+age+'</span>';
+        feed.insertBefore(row, feed.firstChild);
+        setTimeout(()=>row.classList.remove("bf-new"), 600);
+      });
+
+      // trim to FEED_LIMIT rows
+      while(feed.children.length > FEED_LIMIT) feed.removeChild(feed.lastChild);
+
+      // update header timestamp
+      const st=$("bf-status");
+      if(st) st.textContent="updated "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+
+      if(addedAny && feedSeen.size <= FEED_LIMIT){
+        // first successful load: remove skeleton
+        const sk=feed.querySelector(".skeleton");
+        if(sk) sk.remove();
+      }
+    }catch(e){
+      const feed=$("block-feed"); if(!feed) return;
+      if(feed.querySelector(".skeleton"))
+        feed.innerHTML='<div class="err" style="font-size:13px;padding:6px 0">Block feed unavailable — API unreachable.</div>';
+    }
+  }
+
+  function ageFmt(tsMs){
+    const s=Math.floor((Date.now()-tsMs)/1000);
+    if(s<0)   return "just now";
+    if(s<60)  return s+"s ago";
+    if(s<3600)return Math.floor(s/60)+"m ago";
+    return Math.floor(s/3600)+"h ago";
+  }
+
   // ---- sentiment & community ----
   async function loadSentiment(){
     // Crypto Fear & Greed (alternative.me) — not CoinGecko, no rate-limit issue
@@ -1039,6 +1254,8 @@
       loadNetwork(), loadSupply(), loadHashrate(),
       loadReward(), loadHalving(), loadPrice(), loadKrc20()
     ]);
+    renderSecurityBudget();
+    renderEmissionCurve();
     stamp();
   }
 
@@ -1224,6 +1441,7 @@
   loadTokenGrowth();
   loadViews();
   loadL2Tvl();
+  loadBlockFeed();
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadAllCoinGecko, 120000);
@@ -1231,8 +1449,9 @@
   setInterval(loadTokenGrowth, 30*60000);
   setInterval(loadViews, 5*60000);
   setInterval(loadL2Tvl, 10*60000);
+  setInterval(loadBlockFeed, 10000);
   setInterval(renderHalving, 1000);
-  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadAllCoinGecko(); loadSentiment(); loadTokenGrowth(); loadL2Tvl(); } });
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadAllCoinGecko(); loadSentiment(); loadTokenGrowth(); loadL2Tvl(); loadBlockFeed(); } });
 })();
 </script>
 <script data-goatcounter="https://zandkorrel.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
