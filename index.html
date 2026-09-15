@@ -650,6 +650,14 @@
   })();
 
   async function getJSON(url){
+    const ctl = new AbortController();
+    const t = setTimeout(()=>ctl.abort(), 12000);
+    try{
+      const r = await fetch(url, {signal:ctl.signal, headers:{accept:"application/json"}});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return await r.json();
+    } finally { clearTimeout(t); }
+  }
 
   // ---- Translations (EN / NL) ----
   const T = {
@@ -818,14 +826,6 @@
         if(ok){ ok.style.opacity="1"; setTimeout(()=>ok.style.opacity="0", 2000); }
       }catch(e){ prompt("Copy this link:", window.location.href); }
     });
-  }
-    const ctl = new AbortController();
-    const t = setTimeout(()=>ctl.abort(), 12000);
-    try{
-      const r = await fetch(url, {signal:ctl.signal, headers:{accept:"application/json"}});
-      if(!r.ok) throw new Error("HTTP "+r.status);
-      return await r.json();
-    } finally { clearTimeout(t); }
   }
 
   // ---- CoinGecko fetch: short cache + request de-dupe + 429 backoff ----
