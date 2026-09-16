@@ -399,9 +399,16 @@
       <div class="note" id="s-fng-stock-note">stock market · CNN</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Community sentiment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The percentage of CoinGecko users who voted "bullish" on Kaspa. A rough proxy for community mood — above 60% is generally positive sentiment.</span></span></div>
-      <div class="v" id="s-vote">–</div>
-      <div class="note">bullish votes · > 60% positive, < 40% bearish</div>
+      <div class="h"><span>KAS calculator</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Convert any amount of KAS to USD and EUR at the current live price. Uses the same price shown in the Price · USD tile above.</span></span></div>
+      <div style="display:flex;align-items:center;gap:6px;margin:6px 0 4px">
+        <input id="calc-kas" type="number" min="0" step="1" placeholder="1000"
+          style="background:var(--bg-2);border:1px solid var(--line);border-radius:6px;
+          padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:14px;
+          width:100%;outline:none;box-sizing:border-box" />
+        <span style="font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap">KAS</span>
+      </div>
+      <div id="calc-result" style="font-family:var(--mono);font-size:15px;color:var(--teal);min-height:22px"></div>
+      <div class="note">live price · updates automatically</div>
     </div>
     <div class="tile">
       <div class="h"><span>Dashboard views</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total pageviews of this dashboard tracked by GoatCounter — a privacy-friendly, cookie-free analytics tool. Each page load counts as one view.</span></span></div>
@@ -736,7 +743,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.8.4";
+  const APP_VERSION = "v2.8.5";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -819,7 +826,7 @@
       dev_activity:"Developer activity",
       fng_crypto:"Fear & Greed · Crypto",
       fng_stocks:"Fear & Greed · Stocks",
-      community:"Community sentiment",
+      community:"KAS calculator",
       dash_views:"Dashboard views",
       btc_dom:"Bitcoin dominance",
       igra_tvl:"Igra L2 · TVL",
@@ -888,7 +895,7 @@
       dev_activity:"Ontwikkelaarsactiviteit",
       fng_crypto:"Angst & Hebzucht · Crypto",
       fng_stocks:"Angst & Hebzucht · Aandelen",
-      community:"Gemeenschapssentiment",
+      community:"KAS rekenmachine",
       dash_views:"Dashboardbezoeken",
       btc_dom:"Bitcoin-dominantie",
       igra_tvl:"Igra L2 · TVL",
@@ -1302,7 +1309,7 @@
     try{
       const d = await getJSON(KAS+"/info/price?stringOnly=false");
       const p = num(pick(d,["price"]));
-      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); window.__price=p; maybeMcap(); }
+      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); window.__price=p; maybeMcap(); updateCalc(); }
       else setErr("price");
     }catch(e){ setErr("price"); }
   }
@@ -1549,22 +1556,25 @@
         if(isFinite(eth)) $("m-btcdom-note").textContent = "BTC share of total market · ETH "+eth.toFixed(1)+"% · rising = risk-off";
       } else setErr("m-btcdom");
     }catch(e){ setErr("m-btcdom"); }
-
-    // ---- 3. /coins/kaspa — community sentiment (votes_up_percentage) ----
-    // Not in /markets; needs its own call. 2 s gap keeps us under the rate limit.
-    await new Promise(r=>setTimeout(r, 2000));
-    try{
-      const d = await cgJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
-      const up = num(pick(d,["sentiment_votes_up_percentage"]));
-      if(isFinite(up)){
-        $("s-vote").textContent = up.toFixed(0)+"% \u25b2";
-        // > 60% bullish = positive (green), 40-60% = neutral (amber), < 40% = bearish (red)
-        setSig("s-vote", up, 60, 40);
-      }
-    }catch(e){ /* leave as – */ }
   }
 
-  // ---- GitHub stats (rusty-kaspa repo) ----
+  function updateCalc(){
+    const input = $("calc-kas");
+    const result = $("calc-result");
+    if(!input || !result) return;
+    const kas = parseFloat(input.value);
+    const p = window.__price, e = window.__eurPrice;
+    if(!isFinite(kas) || kas <= 0){ result.textContent = ""; return; }
+    let txt = "";
+    if(isFinite(p))  txt += "$"+( kas*p).toLocaleString("en-US",{maximumFractionDigits:2});
+    if(isFinite(e))  txt += (txt?" · ":"")+"€"+(kas*e).toLocaleString("nl-NL",{maximumFractionDigits:2});
+    result.textContent = txt || "price loading…";
+  }
+
+  function initCalc(){
+    const input = $("calc-kas");
+    if(input) input.addEventListener("input", updateCalc);
+  }
   async function loadGitHub(){
     try{
       const d = await getJSON("https://api.github.com/repos/kaspanet/rusty-kaspa");
@@ -1875,7 +1885,7 @@
       if(!kas) return;
       const eur = num(kas.eur);
       const chg = num(kas.eur_24h_change);
-      if(isFinite(eur)) $("m-eur").textContent = "€"+eur.toFixed(4);
+      if(isFinite(eur)){ $("m-eur").textContent = "€"+eur.toFixed(4); window.__eurPrice = eur; updateCalc(); }
       if(isFinite(chg)){
         const el = $("m-eur-note");
         if(el){ el.innerHTML = "24h <span class='"+(chg>=0?"up":"down")+"'>"+(chg>=0?"+":"")+chg.toFixed(2)+"%</span>"; }
@@ -2218,6 +2228,7 @@
   loadGitHub();
   initToolbar();
   initExpand();
+  initCalc();
 
   // CoinGecko calls: gespreid over 30s om rate-limiting te voorkomen
   // loadAllCoinGecko doet intern al 3 stappen met pauzes (markets → 3s → global → 2s → kaspa)
