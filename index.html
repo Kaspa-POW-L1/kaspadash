@@ -399,16 +399,15 @@
       <div class="note" id="s-fng-stock-note">stock market · CNN</div>
     </div>
     <div class="tile">
-      <div class="h"><span>KAS calculator</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Convert any amount of KAS to USD and EUR at the current live price. Uses the same price shown in the Price · USD tile above.</span></span></div>
-      <div style="display:flex;align-items:center;gap:6px;margin:6px 0 4px">
-        <input id="calc-kas" type="number" min="0" step="1" placeholder="1000"
-          style="background:var(--bg-2);border:1px solid var(--line);border-radius:6px;
-          padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:14px;
-          width:100%;outline:none;box-sizing:border-box" />
-        <span style="font-family:var(--mono);font-size:13px;color:var(--muted);white-space:nowrap">KAS</span>
+      <div class="h"><span>Supply breakdown</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much of the total KAS supply has already been mined. The hard cap is ~28.7B KAS — no more will ever be created. The remaining supply will be mined gradually over the coming years via the chromatic halving schedule.</span></span></div>
+      <div class="v" id="supply-bk-pct" style="font-size:28px">–</div>
+      <div class="bar" style="margin:8px 0 4px"><i id="supply-bk-bar" style="width:0%"></i></div>
+      <div class="sec-row" style="margin-top:4px">
+        <div><span class="k" id="supply-bk-circ" style="font-size:14px">–</span><span class="t"> mined</span></div>
+        <div><span class="k" id="supply-bk-rem" style="font-size:14px">–</span><span class="t"> remaining</span></div>
+        <div><span class="k" id="supply-bk-max" style="font-size:14px">~28.70B</span><span class="t"> max</span></div>
       </div>
-      <div id="calc-result" style="font-family:var(--mono);font-size:15px;color:var(--teal);min-height:22px"></div>
-      <div class="note">live price · updates automatically</div>
+      <div class="note">hard cap · fair launch · no premine</div>
     </div>
     <div class="tile">
       <div class="h"><span>Dashboard views</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total pageviews of this dashboard tracked by GoatCounter — a privacy-friendly, cookie-free analytics tool. Each page load counts as one view.</span></span></div>
@@ -743,7 +742,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.8.6";
+  const APP_VERSION = "v2.8.7";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -826,7 +825,7 @@
       dev_activity:"Developer activity",
       fng_crypto:"Fear & Greed · Crypto",
       fng_stocks:"Fear & Greed · Stocks",
-      community:"KAS calculator",
+      community:"Supply breakdown",
       dash_views:"Dashboard views",
       btc_dom:"Bitcoin dominance",
       igra_tvl:"Igra L2 · TVL",
@@ -895,7 +894,7 @@
       dev_activity:"Ontwikkelaarsactiviteit",
       fng_crypto:"Angst & Hebzucht · Crypto",
       fng_stocks:"Angst & Hebzucht · Aandelen",
-      community:"KAS rekenmachine",
+      community:"Supply-verdeling",
       dash_views:"Dashboardbezoeken",
       btc_dom:"Bitcoin-dominantie",
       igra_tvl:"Igra L2 · TVL",
@@ -1309,7 +1308,7 @@
     try{
       const d = await getJSON(KAS+"/info/price?stringOnly=false");
       const p = num(pick(d,["price"]));
-      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); window.__price=p; maybeMcap(); updateCalc(); }
+      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); window.__price=p; maybeMcap(); }
       else setErr("price");
     }catch(e){ setErr("price"); }
   }
@@ -1558,23 +1557,18 @@
     }catch(e){ /* rate limited — leave previous value, next refresh retries */ }
   }
 
-  function updateCalc(){
-    const input = $("calc-kas");
-    const result = $("calc-result");
-    if(!input || !result) return;
-    const kas = parseFloat(input.value);
-    const p = window.__price, e = window.__eurPrice;
-    if(!isFinite(kas) || kas <= 0){ result.textContent = ""; return; }
-    let txt = "";
-    if(isFinite(p))  txt += "$"+( kas*p).toLocaleString("en-US",{maximumFractionDigits:2});
-    if(isFinite(e))  txt += (txt?" · ":"")+"€"+(kas*e).toLocaleString("nl-NL",{maximumFractionDigits:2});
-    result.textContent = txt || "price loading…";
+  function renderSupplyBreakdown(){
+    const circ = window.__circ;
+    const MAX  = 28_700_000_000;
+    if(!isFinite(circ)) return;
+    const pct = circ / MAX * 100;
+    const rem = MAX - circ;
+    $("supply-bk-pct").textContent = pct.toFixed(2)+"%";
+    const bar = $("supply-bk-bar"); if(bar) bar.style.width = Math.min(100,pct).toFixed(2)+"%";
+    $("supply-bk-circ").textContent = compact(circ);
+    $("supply-bk-rem").textContent  = compact(rem);
   }
 
-  function initCalc(){
-    const input = $("calc-kas");
-    if(input) input.addEventListener("input", updateCalc);
-  }
   async function loadGitHub(){
     try{
       const d = await getJSON("https://api.github.com/repos/kaspanet/rusty-kaspa");
@@ -1885,7 +1879,7 @@
       if(!kas) return;
       const eur = num(kas.eur);
       const chg = num(kas.eur_24h_change);
-      if(isFinite(eur)){ $("m-eur").textContent = "€"+eur.toFixed(4); window.__eurPrice = eur; updateCalc(); }
+      if(isFinite(eur)){ $("m-eur").textContent = "€"+eur.toFixed(4); window.__eurPrice = eur; }
       if(isFinite(chg)){
         const el = $("m-eur-note");
         if(el){ el.innerHTML = "24h <span class='"+(chg>=0?"up":"down")+"'>"+(chg>=0?"+":"")+chg.toFixed(2)+"%</span>"; }
@@ -2052,6 +2046,7 @@
     renderEmissionCurve();
     renderDailyStats();
     renderNetAge();
+    renderSupplyBreakdown();
     stamp();
   }
 
@@ -2242,7 +2237,6 @@
   loadGitHub();
   initToolbar();
   initExpand();
-  initCalc();
 
   // CoinGecko calls: gespreid over 30s om rate-limiting te voorkomen
   // loadAllCoinGecko doet intern al 3 stappen met pauzes (markets → 3s → global → 2s → kaspa)
