@@ -134,7 +134,21 @@
 
   .err{color:var(--coral);font-family:var(--mono);font-size:13px}
   .skeleton{color:var(--muted)}
-  /* exchanges table */  .exc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+  /* rendement tabel */
+  .ret-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+  .ret-table th{text-align:left;color:var(--muted);font-weight:500;padding:4px 8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  .ret-table td{padding:6px 8px;border-top:1px solid var(--line);font-family:var(--mono)}
+  .ret-table td:first-child{font-family:var(--sans);color:var(--muted)}
+  .ret-pos{color:var(--teal)} .ret-neg{color:var(--coral)}
+
+  /* uitklapbaar blok */
+  .expand-btn{background:none;border:none;color:var(--teal-dim);font-family:var(--sans);
+    font-size:13px;cursor:pointer;padding:0;display:flex;align-items:center;gap:6px;margin-top:10px}
+  .expand-btn:hover{color:var(--teal)}
+  .expand-content{overflow:hidden;max-height:0;transition:max-height .35s ease}
+  .expand-content.open{max-height:600px}
+  .expand-content p{margin:10px 0 0;font-size:13px;line-height:1.65;color:var(--muted)}
+  .expand-content strong{color:var(--text)}  .exc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
   .exc-table th{text-align:left;color:var(--muted);font-weight:500;padding:4px 8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
   .exc-table td{padding:5px 8px;border-top:1px solid var(--line)}
   .exc-table tr:hover td{background:var(--bg-2)}
@@ -407,6 +421,67 @@
 
   <!-- SECURITY BUDGET -->
   <div class="grid" style="margin-top:0">
+
+    <!-- KAS/EUR prijs -->
+    <div class="tile">
+      <div class="h"><span>Price in EUR</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">KAS price in Euro — relevant for European investors. Movements differ from USD when the EUR/USD exchange rate shifts.</span></span></div>
+      <div class="v" id="m-eur">–</div>
+      <div class="note" id="m-eur-note">24h change –</div>
+    </div>
+
+    <!-- Reddit -->
+    <div class="tile">
+      <div class="h"><span>Reddit community</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Subscribers to the Kaspa subreddit (r/kaspa). A growing community size reflects rising awareness and interest. Active users shows how many are engaging right now.</span></span></div>
+      <div class="v" id="m-reddit">–</div>
+      <div class="note" id="m-reddit-note">subscribers · via CoinGecko</div>
+    </div>
+
+    <!-- Orphan rate -->
+    <div class="tile">
+      <div class="h"><span>Orphan rate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Percentage of block headers that were NOT selected as part of the main chain (red blocks). In a traditional blockchain this would be wasted work, but in Kaspa's GHOSTDAG all blocks contribute to security. A higher orphan rate is normal and not harmful.</span></span></div>
+      <div class="v" id="m-orphan">–</div>
+      <div class="note" id="m-orphan-note">red blocks as % of all headers</div>
+    </div>
+
+    <!-- Gemiddelde bloktijd -->
+    <div class="tile">
+      <div class="h"><span>Avg block interval</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Target is 0.1 seconds (10 blocks per second). Kaspa's DAA adjusts difficulty to maintain this interval. If this deviates significantly, the network is adjusting.</span></span></div>
+      <div class="v" id="m-blocktime">–</div>
+      <div class="note" id="m-blocktime-note">target: 0.100s · via DAA</div>
+    </div>
+  </div>
+
+  <!-- RENDEMENT TABEL -->
+  <div class="grid" style="margin-top:0">
+    <div class="tile span2">
+      <div class="h"><span>Return on investment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What $100 invested in KAS at various points in the past would be worth today. Based on historical closing prices via CoinGecko. Not financial advice.</span></span></div>
+      <table class="ret-table">
+        <thead><tr>
+          <th>Bought</th>
+          <th>Price then</th>
+          <th>$100 → today</th>
+          <th>Return</th>
+        </tr></thead>
+        <tbody id="ret-body"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Kaspa uniek -->
+    <div class="tile span2">
+      <div class="h"><span>What makes Kaspa unique?</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A quick introduction to Kaspa's core innovations for visitors who are new to the project.</span></span></div>
+      <button class="expand-btn" id="kaspa-expand-btn">▶ Read more</button>
+      <div class="expand-content" id="kaspa-expand">
+        <p><strong>GHOSTDAG / BlockDAG</strong> — Unlike Bitcoin where only one block per ~10 minutes is accepted, Kaspa accepts all blocks created simultaneously. This is possible through the GHOSTDAG protocol, which orders parallel blocks mathematically. Result: 10 blocks per second without sacrificing security or decentralisation.</p>
+        <p><strong>Proof of Work</strong> — Kaspa uses the kHeavyHash algorithm, deliberately ASIC-friendly. This means professional miners provide long-term security, just like Bitcoin. No proof-of-stake shortcuts.</p>
+        <p><strong>Chromatic halving</strong> — Instead of a sudden halving every 4 years (like Bitcoin), Kaspa reduces the block reward by ½^(1/12) every month — a smooth, predictable emission curve toward a hard cap of ~28.7B KAS.</p>
+        <p><strong>Fair launch</strong> — No premine, no ICO, no investor allocation. All KAS was and is earned through mining.</p>
+        <p><strong>Rust implementation</strong> — The node software (rusty-kaspa) is written in Rust, known for memory safety and performance. The codebase is open source.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECURITY BUDGET -->
+  <div class="grid" style="margin-top:0">
     <div class="tile span2">
       <div class="h"><span>Security budget</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What miners earn per day securing the network (block reward × 10 blocks/s × 86,400 s × KAS price). The annualised figure as % of market cap shows how much the network "spends" on security — higher = harder and costlier to attack.</span></span></div>
       <div class="v" id="sec-usd">–</div>
@@ -603,7 +678,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.7.0";
+  const APP_VERSION = "v2.8.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -694,6 +769,18 @@
       emission_curve:"Emission curve",
       live_feed:"Live block feed",
       top_exc:"Top exchanges",
+      price_eur:"Price in EUR",
+      reddit:"Reddit community",
+      orphan:"Orphan rate",
+      blocktime:"Avg block interval",
+      roi:"Return on investment",
+      kaspa_unique:"What makes Kaspa unique?",
+      roi_bought:"Bought",
+      roi_price:"Price then",
+      roi_val:"$100 → today",
+      roi_ret:"Return",
+      expand_more:"Read more",
+      expand_less:"Read less",
       // notes
       n_supply:"of max ~28.7B KAS · fair launch, no premine",
       n_reward:"drops monthly (chromatic halving)",
@@ -751,6 +838,18 @@
       emission_curve:"Uitgiftecurve",
       live_feed:"Live blokkenfeed",
       top_exc:"Topbeurzen",
+      price_eur:"Prijs in EUR",
+      reddit:"Reddit-gemeenschap",
+      orphan:"Orphan rate",
+      blocktime:"Gem. blokinterval",
+      roi:"Rendement op investering",
+      kaspa_unique:"Wat maakt Kaspa uniek?",
+      roi_bought:"Gekocht",
+      roi_price:"Prijs toen",
+      roi_val:"€100 → nu",
+      roi_ret:"Rendement",
+      expand_more:"Meer lezen",
+      expand_less:"Minder tonen",
       // notes
       n_supply:"van max ~28,7B KAS · eerlijke lancering, geen premine",
       n_reward:"daalt maandelijks (chromatische halvering)",
@@ -1041,6 +1140,9 @@
       const diff = num(pick(dag,["difficulty"]));
       const hc   = num(pick(dag,["headerCount"]));
       const pmt  = num(pick(dag,["pastMedianTime"]));
+      if(isFinite(hc))  window.__headerCount = hc;
+      if(isFinite(bc))  window.__blockCount  = bc;
+      if(isFinite(daa)) window.__daaScore    = daa;
       if(isFinite(tips)) $("tips").textContent = tips;
       if(isFinite(daa))  $("daa").textContent  = compact(daa);
       if(isFinite(bc))   $("blockcount").textContent = compact(bc);
@@ -1707,6 +1809,116 @@
     }
   }
 
+  // ---- KAS/EUR price ----
+  async function loadEurPrice(){
+    try{
+      const d = await cgJSON(CG+"/simple/price?ids=kaspa&vs_currencies=eur&include_24hr_change=true");
+      const kas = d && d.kaspa;
+      if(!kas) return;
+      const eur = num(kas.eur);
+      const chg = num(kas.eur_24h_change);
+      if(isFinite(eur)) $("m-eur").textContent = "€"+eur.toFixed(4);
+      if(isFinite(chg)){
+        const el = $("m-eur-note");
+        if(el){ el.innerHTML = "24h <span class='"+(chg>=0?"up":"down")+"'>"+(chg>=0?"+":"")+chg.toFixed(2)+"%</span>"; }
+      }
+    }catch(e){ /* leave as – */ }
+  }
+
+  // ---- Reddit community ----
+  async function loadReddit(){
+    try{
+      const d = await cgJSON(CG+"/coins/kaspa?localization=false&tickers=false&market_data=false&community_data=true&developer_data=false&sparkline=false");
+      const cd = d && d.community_data;
+      if(!cd) return;
+      const subs = num(cd.reddit_subscribers);
+      const active = num(cd.reddit_accounts_active_48h);
+      if(isFinite(subs)) $("m-reddit").textContent = compact(subs);
+      const note = $("m-reddit-note");
+      if(note){
+        note.textContent = "subscribers" + (isFinite(active) ? " · "+compact(active)+" active 48h" : "") + " · r/kaspa";
+      }
+    }catch(e){ /* leave as – */ }
+  }
+
+  // ---- Orphan rate & avg block interval ----
+  function renderOrphanRate(){
+    const hc = window.__headerCount, bc = window.__blockCount, daa = window.__daaScore;
+    if(isFinite(hc) && isFinite(bc) && hc > 0){
+      const orphan = ((hc - bc) / hc * 100);
+      $("m-orphan").textContent = orphan.toFixed(2)+"%";
+      $("m-orphan-note").textContent = compact(hc-bc)+" red blocks of "+compact(hc)+" total headers";
+    }
+    // avg block interval: DAA score ÷ blockCount gives blocks per DAA tick
+    // simpler: pastMedianTime drift tells us target; we use blockCount/uptime
+    // Use DAA score as proxy: DAA score ≈ accepted blocks, blockCount ≈ total confirmed
+    // Actual avg interval from genesis: Kaspa launched Nov 2021, ~1370 days ago
+    // Better: use blockCount and total seconds since genesis
+    const GENESIS_MS = new Date("2021-11-07T00:00:00Z").getTime();
+    const uptimeS = (Date.now() - GENESIS_MS) / 1000;
+    if(isFinite(bc) && bc > 0 && uptimeS > 0){
+      const avgInterval = uptimeS / bc;
+      $("m-blocktime").textContent = avgInterval.toFixed(3)+"s";
+      $("m-blocktime-note").textContent = "avg since genesis · target: 0.100s";
+    }
+  }
+
+  // ---- Return on investment ----
+  async function loadROI(){
+    const currentPrice = window.__price;
+    if(!isFinite(currentPrice)) return;
+    const body = $("ret-body");
+    if(!body) return;
+
+    const periods = [
+      {label:"1 week ago",  days:7},
+      {label:"1 month ago", days:30},
+      {label:"3 months ago",days:90},
+      {label:"6 months ago",days:180},
+      {label:"1 year ago",  days:365},
+      {label:"2 years ago", days:730},
+    ];
+
+    const fmt = d => { const dt=new Date(Date.now()-d*86400000); return `${String(dt.getDate()).padStart(2,"0")}-${String(dt.getMonth()+1).padStart(2,"0")}-${dt.getFullYear()}`; };
+
+    body.innerHTML = '<tr><td colspan="4" class="skeleton">loading…</td></tr>';
+
+    const results = await Promise.allSettled(
+      periods.map(p => cgJSON(CG+"/coins/kaspa/history?date="+fmt(p.days)+"&localization=false"))
+    );
+
+    let rows = "";
+    results.forEach((r,i)=>{
+      const p = periods[i];
+      let priceStr = "–", valStr = "–", retStr = "–", cls = "";
+      if(r.status==="fulfilled"){
+        const hist = r.value;
+        const hp = hist && hist.market_data && hist.market_data.current_price && hist.market_data.current_price.usd;
+        if(isFinite(hp) && hp > 0){
+          const val = (100 / hp) * currentPrice;
+          const ret = ((currentPrice - hp) / hp * 100);
+          priceStr = "$"+hp.toFixed(4);
+          valStr = "$"+val.toFixed(2);
+          retStr = (ret>=0?"+":"")+ret.toFixed(1)+"%";
+          cls = ret>=0?"ret-pos":"ret-neg";
+        }
+      }
+      rows += `<tr><td>${p.label}</td><td>${priceStr}</td><td>${valStr}</td><td class="${cls}">${retStr}</td></tr>`;
+    });
+    body.innerHTML = rows;
+  }
+
+  // ---- Kaspa uniek uitklapbaar ----
+  function initExpand(){
+    const btn = $("kaspa-expand-btn");
+    const content = $("kaspa-expand");
+    if(!btn || !content) return;
+    btn.addEventListener("click", ()=>{
+      const open = content.classList.toggle("open");
+      btn.textContent = (open ? "▼ " : "▶ ") + (currentLang==="nl" ? (open?"Minder tonen":"Meer lezen") : (open?"Read less":"Read more"));
+    });
+  }
+
   // ---- sentiment & community ----
   async function loadSentiment(){
     // Crypto Fear & Greed (alternative.me) — not CoinGecko, no rate-limit issue
@@ -1754,6 +1966,7 @@
     ]);
     renderSecurityBudget();
     renderEmissionCurve();
+    renderOrphanRate();
     stamp();
   }
 
@@ -1942,7 +2155,24 @@
   loadBlockFeed();
   loadExchanges();
   loadGitHub();
+  loadEurPrice();
+  loadReddit();
+  loadROI();
   initToolbar();
+  initExpand();
+  setInterval(refresh, 60000);
+  setInterval(loadHistory, 15*60000);
+  setInterval(loadAllCoinGecko, 120000);
+  setInterval(loadSentiment, 5*60000);
+  setInterval(loadTokenGrowth, 30*60000);
+  setInterval(loadViews, 5*60000);
+  setInterval(loadL2Tvl, 10*60000);
+  setInterval(loadBlockFeed, 10000);
+  setInterval(loadExchanges, 10*60000);
+  setInterval(loadGitHub, 30*60000);
+  setInterval(loadEurPrice, 5*60000);
+  setInterval(loadReddit, 30*60000);
+  setInterval(loadROI, 60*60000);
   setInterval(refresh, 60000);
   setInterval(loadHistory, 15*60000);
   setInterval(loadAllCoinGecko, 120000);
