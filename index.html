@@ -736,7 +736,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.8.2";
+  const APP_VERSION = "v2.8.3";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2204,44 +2204,50 @@
     });
   }
 
+  // ---- Init ----
+  // Non-CoinGecko calls: direct
   refresh();
   loadHistory();
-  loadAllCoinGecko();
   loadSentiment();
   loadTokenGrowth();
   loadViews();
   loadL2Tvl();
   loadBlockFeed();
-  loadExchanges();
   loadGitHub();
-  loadEurPrice();
-  loadROI();
   initToolbar();
   initExpand();
-  setInterval(refresh, 60000);
-  setInterval(loadHistory, 15*60000);
-  setInterval(loadAllCoinGecko, 120000);
-  setInterval(loadSentiment, 5*60000);
-  setInterval(loadTokenGrowth, 30*60000);
-  setInterval(loadViews, 5*60000);
-  setInterval(loadL2Tvl, 10*60000);
-  setInterval(loadBlockFeed, 10000);
-  setInterval(loadExchanges, 10*60000);
-  setInterval(loadGitHub, 30*60000);
-  setInterval(loadEurPrice, 5*60000);
-  setInterval(loadROI, 60*60000);
-  setInterval(refresh, 60000);
-  setInterval(loadHistory, 15*60000);
-  setInterval(loadAllCoinGecko, 120000);
-  setInterval(loadSentiment, 5*60000);
-  setInterval(loadTokenGrowth, 30*60000);
-  setInterval(loadViews, 5*60000);
-  setInterval(loadL2Tvl, 10*60000);
-  setInterval(loadBlockFeed, 10000);
-  setInterval(loadExchanges, 10*60000);
-  setInterval(loadGitHub, 30*60000);
-  setInterval(renderHalving, 1000);
-  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden){ refresh(); loadHistory(); loadAllCoinGecko(); loadSentiment(); loadTokenGrowth(); loadL2Tvl(); loadBlockFeed(); } });
+
+  // CoinGecko calls: gespreid over 30s om rate-limiting te voorkomen
+  // loadAllCoinGecko doet intern al 3 stappen met pauzes (markets → 3s → global → 2s → kaspa)
+  // Daarna: exchanges (+10s), EUR prijs (+20s), ROI (+30s)
+  loadAllCoinGecko();
+  setTimeout(loadExchanges,  10000);
+  setTimeout(loadEurPrice,   20000);
+  setTimeout(loadROI,        30000);
+
+  // Intervals
+  setInterval(refresh,          60000);
+  setInterval(loadHistory,  15*60000);
+  setInterval(loadAllCoinGecko,120000);
+  setInterval(loadSentiment,  5*60000);
+  setInterval(loadTokenGrowth,30*60000);
+  setInterval(loadViews,      5*60000);
+  setInterval(loadL2Tvl,     10*60000);
+  setInterval(loadBlockFeed,    10000);
+  setInterval(loadExchanges,  10*60000);
+  setInterval(loadGitHub,     30*60000);
+  setInterval(loadEurPrice,   5*60000);
+  setInterval(loadROI,       60*60000);
+  setInterval(renderHalving,     1000);
+
+  document.addEventListener("visibilitychange", ()=>{
+    if(!document.hidden){
+      refresh(); loadHistory(); loadAllCoinGecko();
+      loadSentiment(); loadTokenGrowth(); loadL2Tvl(); loadBlockFeed();
+      setTimeout(loadExchanges, 5000);
+      setTimeout(loadEurPrice,  8000);
+    }
+  });
 })();
 </script>
 <script data-goatcounter="https://zandkorrel.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
