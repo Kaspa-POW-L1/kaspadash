@@ -759,7 +759,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.9.0";
+  const APP_VERSION = "v2.9.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1280,9 +1280,16 @@
         hist.push(ths); if(hist.length>HMAX) hist.shift(); drawSpark();
         // update trend indicator
         updateHashrateTrend(ths);
-        // set text after trend so span is not overwritten
+        // set hashrate text — the element contains a text node + trend span
+        // update only the text node (firstChild) to preserve the span
         const hEl = $("hashrate");
-        if(hEl){ hEl.firstChild.textContent = fmtHash(ths); }
+        if(hEl){
+          if(hEl.firstChild && hEl.firstChild.nodeType===3){
+            hEl.firstChild.nodeValue = fmtHash(ths);
+          } else {
+            hEl.insertBefore(document.createTextNode(fmtHash(ths)), hEl.firstChild);
+          }
+        }
       } else setErr("hashrate");
     }catch(e){ setErr("hashrate"); }
   }
