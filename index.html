@@ -570,6 +570,41 @@
     <div class="cap" id="tok-empty" style="display:none;margin-top:10px"></div>
   </section>
 
+  <!-- KASPA DEFI ECOSYSTEM -->
+  <section class="panel" id="defi" style="margin-top:16px">
+    <div class="h" style="margin-bottom:2px">
+      <h2 style="margin:0;font-size:15px;font-weight:600">Kaspa DeFi ecosystem <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">DeFi activity on Kaspa's layer-2 chains (Igra, Kasplex and any others). TVL = total value locked, i.e. capital deposited into smart contracts — a proxy for real usage. All figures via DefiLlama.</span></span></h2>
+      <span id="defi-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
+    </div>
+    <div class="cap">Live capital and protocols across Kaspa's L2 chains — the DeFi layer emerging on top of the BlockDAG.</div>
+
+    <!-- chain TVL cards -->
+    <div id="defi-chains" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px">
+      <div class="skeleton" style="font-size:13px">loading chains…</div>
+    </div>
+
+    <!-- stablecoins on Kaspa -->
+    <div class="sec-row" id="defi-stable-row" style="margin-top:14px;display:none">
+      <div><span class="k" id="defi-stable" style="font-size:18px">–</span><span class="t"> stablecoins on Kaspa chains</span></div>
+      <div><span class="k" id="defi-stable-share" style="font-size:14px">–</span><span class="t"> of Kaspa DeFi TVL</span>
+        <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total stablecoin value circulating on Kaspa's L2 chains, and what share of the total locked value that represents. A high stablecoin share usually means the ecosystem is used for trading and lending rather than speculation on volatile assets.</span></span>
+      </div>
+    </div>
+
+    <!-- top protocols -->
+    <table style="margin-top:14px">
+      <thead><tr>
+        <th>Protocol <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">DeFi applications deployed on Kaspa's L2 chains, ranked by the value locked on those chains. Only the portion of each protocol running on a Kaspa chain is counted.</span></span></th>
+        <th style="text-align:left">Type</th>
+        <th class="sortable" id="defi-th-tvl" data-col="tvl" style="cursor:pointer">TVL on Kaspa <span id="defi-sort-tvl">▼</span></th>
+        <th>1d</th>
+        <th>7d</th>
+      </tr></thead>
+      <tbody id="defi-proto"><tr><td colspan="5" class="skeleton">loading protocols…</td></tr></tbody>
+    </table>
+    <div class="cap" id="defi-proto-empty" style="display:none;margin-top:8px"></div>
+  </section>
+
   <!-- PEERS -->
   <section class="panel" id="peers-pow-panel" style="margin-top:16px">
     <h2>Proof-of-Work peers <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Proof-of-Work coins use real computing power (miners) to secure the network — like Bitcoin. Kaspa is PoW but much faster, with a BlockDAG instead of a linear chain.</span></span></h2>
@@ -742,6 +777,24 @@
     </div>
   </div>
 
+  <!-- ABOUT THIS DASHBOARD -->
+  <section class="panel" id="about" style="margin-top:16px">
+    <div class="h" style="margin-bottom:2px">
+      <h2 style="margin:0;font-size:15px;font-weight:600">About this dashboard <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How this dashboard is built and where its numbers come from. Everything is pulled live from public APIs — there is no backend, no account and no tracking.</span></span></h2>
+    </div>
+    <div class="cap">An open, no-login window into the Kaspa network — every figure is pulled live from public sources.</div>
+
+    <div class="sec-row" style="margin-top:12px">
+      <div><span class="k" id="about-count" style="font-size:26px">–</span><span class="t"> live API sources</span></div>
+      <div><span class="k" style="font-size:26px">0</span><span class="t"> API keys · no cookies</span></div>
+      <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
+    </div>
+
+    <div id="about-sources" style="margin-top:14px"></div>
+
+    <div class="note" id="about-extra" style="margin-top:12px"></div>
+  </section>
+
   <footer>
     Live data from public APIs — <a href="https://api.kaspa.org" rel="noopener">api.kaspa.org</a> (network &amp; supply) and <a href="https://kasplex.org" rel="noopener">Kasplex</a> (KRC-20). No API key, refreshes every 60s. Charts show the current session only; the free API returns snapshots, not a time series.
     <div class="who">Not financial advice. Built as an open community tool.</div>
@@ -759,7 +812,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.9.1";
+  const APP_VERSION = "v2.10.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1689,6 +1742,153 @@
     }catch(e){ setErr("m-igra"); }
   }
 
+  // ---- Kaspa DeFi ecosystem (DefiLlama) ----
+  // Kaspa's L2 chains as they appear on DefiLlama. Extend this list when a new
+  // Kaspa L2 launches and gets listed — matching is case-insensitive and also
+  // catches any chain whose name contains "kaspa".
+  const KASPA_CHAINS = ["igra","kasplex"];
+  const isKaspaChain = name => {
+    if(!name) return false;
+    const n = String(name).toLowerCase();
+    return KASPA_CHAINS.includes(n) || n.includes("kaspa");
+  };
+  let defiProtoData = [];
+  let defiProtoSort = -1; // -1 = TVL descending, 1 = ascending
+
+  function renderDefiProto(){
+    const body=$("defi-proto"), empty=$("defi-proto-empty");
+    if(!defiProtoData.length){
+      body.innerHTML="";
+      empty.style.display="block";
+      empty.textContent="No protocols with tracked TVL on Kaspa chains yet — the ecosystem is young. This fills in as DefiLlama indexes deployments.";
+      return;
+    }
+    empty.style.display="none";
+    const rows=[...defiProtoData].sort((a,b)=>defiProtoSort*((a.tvl||0)-(b.tvl||0)));
+    body.innerHTML=rows.slice(0,12).map(p=>
+      '<tr><td>'+esc(p.name)+'</td>'+
+      '<td style="text-align:left;color:var(--muted)">'+esc(p.category||"–")+'</td>'+
+      '<td>$'+compact(p.tvl)+'</td>'+
+      '<td>'+fmtPct(p.c1)+'</td>'+
+      '<td>'+fmtPct(p.c7)+'</td></tr>'
+    ).join("");
+  }
+
+  async function loadDefiEcosystem(){
+    const status=$("defi-status");
+    let kaspaTotal=0;
+
+    // 1) chain TVL cards + total
+    try{
+      const chains = await getJSON("https://api.llama.fi/v2/chains");
+      if(!Array.isArray(chains)) throw new Error("bad");
+      const mine = chains.filter(c=>isKaspaChain(c && c.name))
+        .map(c=>({name:c.name, tvl:num(pick(c,["tvl"]))}))
+        .filter(c=>isFinite(c.tvl))
+        .sort((a,b)=>b.tvl-a.tvl);
+      kaspaTotal = mine.reduce((s,c)=>s+(c.tvl||0),0);
+      const wrap=$("defi-chains");
+      if(mine.length){
+        wrap.innerHTML = mine.map(c=>
+          '<div class="hcal-card">'+
+            '<div class="hcal-n">'+esc(c.name)+'</div>'+
+            '<div class="hcal-date">$'+compact(c.tvl)+'</div>'+
+            '<div class="hcal-days">TVL</div>'+
+          '</div>').join("") +
+          '<div class="hcal-card hcal-next">'+
+            '<div class="hcal-n">Total</div>'+
+            '<div class="hcal-date">$'+compact(kaspaTotal)+'</div>'+
+            '<div class="hcal-days">all Kaspa L2</div>'+
+          '</div>';
+      } else {
+        wrap.innerHTML='<div class="cap">No Kaspa L2 chains indexed on DefiLlama right now.</div>';
+      }
+    }catch(e){
+      $("defi-chains").innerHTML='<div class="err" style="font-size:13px">Chain TVL unavailable right now.</div>';
+    }
+
+    // 2) protocols deployed on Kaspa chains
+    try{
+      const protos = await getJSON("https://api.llama.fi/protocols");
+      if(!Array.isArray(protos)) throw new Error("bad");
+      defiProtoData = protos
+        .filter(p=>Array.isArray(p.chains) && p.chains.some(isKaspaChain))
+        .map(p=>{
+          // sum only exact Kaspa-chain keys, skipping "Chain-staking"/"-borrowed" splits
+          let tvl=0;
+          const ct=p.chainTvls||{};
+          for(const k in ct){ if(isKaspaChain(k) && isFinite(+ct[k])) tvl+=+ct[k]; }
+          return {name:p.name, category:p.category, tvl,
+                  c1:num(pick(p,["change_1d"])), c7:num(pick(p,["change_7d"]))};
+        })
+        .filter(p=>isFinite(p.tvl) && p.tvl>0);
+      renderDefiProto();
+      if(status) status.textContent = defiProtoData.length+" protocol"+(defiProtoData.length===1?"":"s");
+    }catch(e){
+      $("defi-proto").innerHTML='<tr><td colspan="5" class="err">Protocol data unavailable right now.</td></tr>';
+    }
+
+    // 3) stablecoins on Kaspa chains (separate host — optional, fails silently)
+    try{
+      const sc = await getJSON("https://stablecoins.llama.fi/stablecoinchains");
+      if(Array.isArray(sc)){
+        let total=0, found=false;
+        sc.forEach(c=>{
+          if(isKaspaChain(c && c.name)){
+            const obj=c.totalCirculatingUSD||{};
+            const n=Number(obj.peggedUSD ?? obj.total ?? NaN);
+            if(isFinite(n)){ total+=n; found=true; }
+          }
+        });
+        if(found && total>0){
+          $("defi-stable").textContent="$"+compact(total);
+          if(kaspaTotal>0) $("defi-stable-share").textContent=(total/kaspaTotal*100).toFixed(0)+"%";
+          $("defi-stable-row").style.display="";
+        }
+      }
+    }catch(e){ /* stablecoins optional — leave the row hidden */ }
+  }
+
+  // sortable TVL column header
+  {
+    const th=$("defi-th-tvl");
+    if(th) th.onclick=()=>{
+      defiProtoSort*=-1;
+      $("defi-sort-tvl").textContent = defiProtoSort<0 ? "▼" : "▲";
+      renderDefiProto();
+    };
+  }
+
+  // ---- About / data sources (data-driven so the count stays honest) ----
+  // Every live API the dashboard fetches from the browser. Add or remove an
+  // entry here and the "N live API sources" figure updates automatically.
+  const DATA_SOURCES = [
+    {name:"Kaspa REST",    host:"api.kaspa.org",                        use:"Network, supply, hashrate, rewards, halving, live block feed"},
+    {name:"Kasplex",       host:"api.kasplex.org",                      use:"KRC-20 token list"},
+    {name:"CoinGecko",     host:"api.coingecko.com",                    use:"Price, market cap, volume, ROI, exchanges, peer coins"},
+    {name:"DefiLlama",     host:"api.llama.fi · stablecoins.llama.fi",  use:"L2 TVL, DeFi protocols, stablecoins"},
+    {name:"GitHub",        host:"api.github.com",                       use:"rusty-kaspa developer activity"},
+    {name:"Alternative.me",host:"api.alternative.me",                   use:"Crypto Fear & Greed index"}
+  ];
+  function renderAbout(){
+    const el=$("about-sources"); if(!el) return;
+    const cnt=$("about-count"); if(cnt) cnt.textContent = DATA_SOURCES.length;
+    el.innerHTML = DATA_SOURCES.map((s,i)=>
+      '<div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:7px 0'+
+        (i<DATA_SOURCES.length-1?';border-bottom:1px solid var(--line)':'')+'">'+
+        '<span style="font-weight:600;min-width:104px">'+esc(s.name)+'</span>'+
+        '<span style="font-family:var(--mono);font-size:12px;color:var(--teal-dim)">'+esc(s.host)+'</span>'+
+        '<span style="font-size:12.5px;color:var(--muted);flex:1 1 220px">'+esc(s.use)+'</span>'+
+      '</div>').join("");
+    const extra=$("about-extra");
+    if(extra) extra.innerHTML =
+      "Plus an hourly collector (GitHub Actions) that snapshots the live APIs into the history charts and pulls "+
+      "CNN's index for stock-market sentiment, and "+
+      '<a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a> '+
+      "for privacy-friendly, cookie-free view counts. No API keys, no tracking cookies, no backend — "+
+      "everything runs client-side in your browser.";
+  }
+
   // ---- Security budget ----
   // Derived entirely from data already fetched (reward + price + supply).
   // Call after loadReward and loadPeers/renderMarket have populated window.__reward
@@ -2316,10 +2516,12 @@
   loadTokenGrowth();
   loadViews();
   loadL2Tvl();
+  loadDefiEcosystem();
   loadBlockFeed();
   loadGitHub();
   initToolbar();
   initExpand();
+  renderAbout();
 
   // CoinGecko calls: gespreid over 30s om rate-limiting te voorkomen
   // loadAllCoinGecko doet intern al 3 stappen met pauzes (markets → 3s → global → 2s → kaspa)
@@ -2337,6 +2539,7 @@
   setInterval(loadTokenGrowth,30*60000);
   setInterval(loadViews,      5*60000);
   setInterval(loadL2Tvl,     10*60000);
+  setInterval(loadDefiEcosystem, 10*60000);
   setInterval(loadBlockFeed,    10000);
   setInterval(loadExchanges,  10*60000);
   setInterval(loadGitHub,     30*60000);
@@ -2347,7 +2550,7 @@
   document.addEventListener("visibilitychange", ()=>{
     if(!document.hidden){
       refresh(); loadHistory(); loadAllCoinGecko();
-      loadSentiment(); loadTokenGrowth(); loadL2Tvl(); loadBlockFeed();
+      loadSentiment(); loadTokenGrowth(); loadL2Tvl(); loadDefiEcosystem(); loadBlockFeed();
       setTimeout(loadExchanges, 5000);
       setTimeout(loadEurPrice,  8000);
     }
