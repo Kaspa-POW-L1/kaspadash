@@ -661,6 +661,48 @@
     <div class="cap" id="hist-empty" style="display:none;margin-top:12px"></div>
   </section>
 
+  <!-- MARKET SIGNALS -->
+  <section class="panel" id="signals" style="margin-top:16px">
+    <div class="h" style="margin-bottom:2px">
+      <h2 style="margin:0;font-size:15px;font-weight:600">Market signals <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Technical indicators computed from KAS's daily closing prices over the past year (via CoinGecko). These describe recent price behaviour — they are not predictions and not financial advice.</span></span></h2>
+      <span id="sig-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
+    </div>
+    <div class="cap">How KAS has been trading lately — momentum, trend, volatility and how tightly it moves with Bitcoin.</div>
+
+    <div class="grid" style="margin-top:12px">
+      <div class="tile">
+        <div class="h"><span>RSI · 14-day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Relative Strength Index — momentum on a 0–100 scale. Below 30 is traditionally "oversold" (price may have fallen too fast), above 70 "overbought" (may have risen too fast), 30–70 is neutral. A signal, not a guarantee.</span></span></div>
+        <div class="v" id="sig-rsi">–</div>
+        <div class="note" id="sig-rsi-note">momentum · 30 oversold / 70 overbought</div>
+      </div>
+
+      <div class="tile">
+        <div class="h"><span>Volatility · 30-day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Annualised standard deviation of daily returns over the last 30 days. Higher = larger day-to-day price swings. Crypto typically runs far higher than stocks (which sit around 15–20%).</span></span></div>
+        <div class="v" id="sig-vol">–</div>
+        <div class="note">annualised · higher = choppier</div>
+      </div>
+
+      <div class="tile">
+        <div class="h"><span>vs 50-day avg</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How far the current price sits above or below its 50-day moving average — a short/medium-term trend gauge. Above = recent strength, below = recent weakness.</span></span></div>
+        <div class="v" id="sig-ma50">–</div>
+        <div class="note" id="sig-ma50-note">price vs 50d moving average</div>
+      </div>
+
+      <div class="tile">
+        <div class="h"><span>vs 200-day avg</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Price relative to its 200-day moving average — the classic long-term trend line. Whether the 50-day sits above or below the 200-day is watched as a "golden cross" (bullish) or "death cross" (bearish).</span></span></div>
+        <div class="v" id="sig-ma200">–</div>
+        <div class="note" id="sig-ma200-note">price vs 200d moving average</div>
+      </div>
+
+      <div class="tile span2">
+        <div class="h"><span>Correlation with Bitcoin · 90-day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How closely KAS's daily returns track Bitcoin's over the last 90 days, from -1 to +1. Near +1 = moves almost in lockstep with BTC; near 0 = moves independently; below 0 = tends to move opposite. Most altcoins sit between +0.5 and +0.9.</span></span></div>
+        <div class="v" id="sig-btccorr">–</div>
+        <div class="bar"><i id="sig-btccorr-bar"></i></div>
+        <div class="note" id="sig-btccorr-note">daily-return correlation vs BTC</div>
+      </div>
+    </div>
+  </section>
+
   <!-- EXCHANGES TABLE -->
   <section class="panel" style="margin-top:16px">
     <div class="h" style="margin-bottom:0">
@@ -813,7 +855,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.10.3";
+  const APP_VERSION = "v2.11.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2296,6 +2338,111 @@
     body.innerHTML = rows;
   }
 
+  // ---- Market signals (technical indicators from CoinGecko daily history) ----
+  // Kernels verified against textbook RSI (~70.5) and ±1 correlation bounds.
+  function _sma(arr,n){ if(arr.length<n) return NaN; let s=0; for(let i=arr.length-n;i<arr.length;i++) s+=arr[i]; return s/n; }
+  function _rsi(prices,period){
+    period=period||14;
+    if(prices.length<period+1) return NaN;
+    let gain=0,loss=0;
+    for(let i=1;i<=period;i++){ const d=prices[i]-prices[i-1]; if(d>=0) gain+=d; else loss-=d; }
+    let ag=gain/period, al=loss/period;
+    for(let i=period+1;i<prices.length;i++){
+      const d=prices[i]-prices[i-1];
+      ag=(ag*(period-1)+(d>0?d:0))/period;
+      al=(al*(period-1)+(d<0?-d:0))/period;
+    }
+    if(al===0) return 100;
+    return 100-100/(1+ag/al);
+  }
+  function _annVol(prices,win){
+    win=win||30;
+    if(prices.length<win+1) return NaN;
+    const r=[]; for(let i=prices.length-win;i<prices.length;i++) r.push(Math.log(prices[i]/prices[i-1]));
+    const m=r.reduce((a,b)=>a+b,0)/r.length;
+    const v=r.reduce((a,b)=>a+(b-m)*(b-m),0)/(r.length-1);
+    return Math.sqrt(v)*Math.sqrt(365)*100;
+  }
+  // Pearson correlation of daily returns from two [ts,price] series, aligned by day.
+  function _btcCorr(kas, btc, win){
+    win=win||90;
+    const dayKey=t=>Math.floor(t/86400000);
+    const mk=new Map(kas.map(p=>[dayKey(p[0]),+p[1]]));
+    const mb=new Map(btc.map(p=>[dayKey(p[0]),+p[1]]));
+    const days=[...mk.keys()].filter(d=>mb.has(d)).sort((a,b)=>a-b);
+    const use=days.slice(-1-win); // win+1 prices → win returns
+    if(use.length<10) return NaN;
+    const ra=[],rb=[];
+    for(let i=1;i<use.length;i++){
+      ra.push(mk.get(use[i])/mk.get(use[i-1])-1);
+      rb.push(mb.get(use[i])/mb.get(use[i-1])-1);
+    }
+    const ma=ra.reduce((a,b)=>a+b,0)/ra.length, mbn=rb.reduce((a,b)=>a+b,0)/rb.length;
+    let num=0,da=0,db=0;
+    for(let i=0;i<ra.length;i++){ const x=ra[i]-ma,y=rb[i]-mbn; num+=x*y; da+=x*x; db+=y*y; }
+    return (da>0&&db>0) ? num/Math.sqrt(da*db) : NaN;
+  }
+
+  async function loadMarketSignals(){
+    const status=$("sig-status");
+    try{
+      const kd = await cgJSON(CG+"/coins/kaspa/market_chart?vs_currency=usd&days=365");
+      const kprices = (kd && Array.isArray(kd.prices)) ? kd.prices : [];
+      const px = kprices.map(p=>+p[1]).filter(isFinite);
+      if(px.length<30) throw new Error("thin");
+
+      // RSI (14)
+      const rsi=_rsi(px,14);
+      if(isFinite(rsi)){
+        $("sig-rsi").textContent=rsi.toFixed(0);
+        const lbl = rsi<30?"Oversold":rsi>70?"Overbought":"Neutral";
+        $("sig-rsi-note").textContent = lbl+" · 30 oversold / 70 overbought";
+        $("sig-rsi").classList.remove("sig-good","sig-warn","sig-bad");
+        $("sig-rsi").classList.add((rsi<30||rsi>70)?"sig-warn":"sig-good");
+      }
+
+      // Volatility (30d, annualised)
+      const vol=_annVol(px,30);
+      if(isFinite(vol)) $("sig-vol").textContent=vol.toFixed(0)+"%";
+
+      // Moving averages
+      const last=px[px.length-1];
+      const ma50=_sma(px,50), ma200=_sma(px,200);
+      const setMA=(id,m)=>{
+        const el=$(id); if(!el) return;
+        el.classList.remove("up","down");
+        if(isFinite(m)){ const d=(last-m)/m*100; el.textContent=(d>=0?"+":"")+d.toFixed(1)+"%"; el.classList.add(d>=0?"up":"down"); }
+        else el.textContent="–";
+      };
+      setMA("sig-ma50",ma50);
+      setMA("sig-ma200",ma200);
+      if(isFinite(ma50)&&isFinite(ma200))
+        $("sig-ma200-note").textContent = ma50>=ma200 ? "50d above 200d · golden cross" : "50d below 200d · death cross";
+      else if(!isFinite(ma200))
+        $("sig-ma200-note").textContent = "needs ~200 days of history";
+
+      // Correlation with Bitcoin (90d)
+      try{
+        const bd = await cgJSON(CG+"/coins/bitcoin/market_chart?vs_currency=usd&days=365");
+        const bprices = (bd && Array.isArray(bd.prices)) ? bd.prices : [];
+        const c=_btcCorr(kprices, bprices, 90);
+        if(isFinite(c)){
+          $("sig-btccorr").textContent=(c>=0?"+":"")+c.toFixed(2);
+          const bar=$("sig-btccorr-bar"); if(bar) bar.style.width=Math.max(0,Math.min(100,(c+1)/2*100)).toFixed(0)+"%";
+          $("sig-btccorr-note").textContent =
+            c>=0.8?"moves almost in lockstep with BTC":
+            c>=0.5?"fairly tied to BTC":
+            c>=0.2?"loosely tied to BTC":
+            c>=-0.2?"largely independent of BTC":"tends to move opposite BTC";
+        }
+      }catch(e){ /* correlation optional */ }
+
+      if(status){ status.textContent="updated"; status.classList.remove("err"); }
+    }catch(e){
+      if(status){ status.textContent="unavailable"; status.classList.add("err"); }
+    }
+  }
+
   // ---- Kaspa uniek uitklapbaar ----
   function initExpand(){
     const btn = $("kaspa-expand-btn");
@@ -2558,6 +2705,7 @@
   setTimeout(loadExchanges,  10000);
   setTimeout(loadEurPrice,   20000);
   setTimeout(loadROI,        30000);
+  setTimeout(loadMarketSignals, 40000);
 
   // Intervals
   setInterval(refresh,          60000);
@@ -2573,6 +2721,7 @@
   setInterval(loadGitHub,     30*60000);
   setInterval(loadEurPrice,   5*60000);
   setInterval(loadROI,       60*60000);
+  setInterval(loadMarketSignals, 60*60000);
   setInterval(renderHalving,     1000);
 
   document.addEventListener("visibilitychange", ()=>{
