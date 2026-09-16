@@ -442,18 +442,18 @@
       <div class="note" id="m-netage-note">days since genesis · 7 Nov 2021</div>
     </div>
 
-    <!-- Orphan rate -->
+    <!-- Blocks per day -->
     <div class="tile">
-      <div class="h"><span>Orphan rate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Percentage of block headers that were NOT selected as part of the main chain (red blocks). In a traditional blockchain this would be wasted work, but in Kaspa's GHOSTDAG all blocks contribute to security. A higher orphan rate is normal and not harmful.</span></span></div>
-      <div class="v" id="m-orphan">–</div>
-      <div class="note" id="m-orphan-note">red blocks as % of all headers</div>
+      <div class="h"><span>Blocks per day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated number of blocks the network produces per day, based on the DAA score delta between refreshes. At 10 blocks per second the target is 864,000 blocks/day. A lower number means the network is slightly slower than target.</span></span></div>
+      <div class="v" id="m-bpd-live">–</div>
+      <div class="note" id="m-bpd-note">target: 864,000 · based on DAA score</div>
     </div>
 
-    <!-- Gemiddelde bloktijd -->
+    <!-- Mined today -->
     <div class="tile">
-      <div class="h"><span>Avg block interval</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Target is 0.1 seconds (10 blocks per second). Kaspa's DAA adjusts difficulty to maintain this interval. If this deviates significantly, the network is adjusting.</span></span></div>
-      <div class="v" id="m-blocktime">–</div>
-      <div class="note" id="m-blocktime-note">target: 0.100s · via DAA</div>
+      <div class="h"><span>Mined today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated new KAS created since midnight UTC today. Calculated from the block reward and blocks produced today. Shows the daily emission in practice.</span></span></div>
+      <div class="v" id="m-mined-today">–</div>
+      <div class="note" id="m-mined-today-note">new KAS since midnight UTC</div>
     </div>
   </div>
 
@@ -743,7 +743,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.8.5";
+  const APP_VERSION = "v2.8.6";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -836,8 +836,8 @@
       top_exc:"Top exchanges",
       price_eur:"Price · EUR",
       reddit:"Network age",
-      orphan:"Orphan rate",
-      blocktime:"Avg block interval",
+      orphan:"Blocks per day",
+      blocktime:"Mined today",
       roi:"Return on investment",
       kaspa_unique:"What makes Kaspa unique?",
       roi_bought:"Bought",
@@ -905,8 +905,8 @@
       top_exc:"Topbeurzen",
       price_eur:"Prijs · EUR",
       reddit:"Netwerkleeftijd",
-      orphan:"Orphan rate",
-      blocktime:"Gem. blokinterval",
+      orphan:"Blokken per dag",
+      blocktime:"Vandaag gemijnd",
       roi:"Rendement op investering",
       kaspa_unique:"Wat maakt Kaspa uniek?",
       roi_bought:"Gekocht",
@@ -1554,8 +1554,8 @@
         const bar=$("btcdom-bar"); if(bar) bar.style.width = Math.min(100,dom).toFixed(1)+"%";
         const eth = num(pick(mcp,["eth"]));
         if(isFinite(eth)) $("m-btcdom-note").textContent = "BTC share of total market · ETH "+eth.toFixed(1)+"% · rising = risk-off";
-      } else setErr("m-btcdom");
-    }catch(e){ setErr("m-btcdom"); }
+      } else { /* leave as previous value */ }
+    }catch(e){ /* rate limited — leave previous value, next refresh retries */ }
   }
 
   function updateCalc(){
@@ -1909,27 +1909,41 @@
     const bpdEl = $("m-bpd"); if(bpdEl && bpd) bpdEl.textContent = compact(bpd);
   }
 
-  // ---- Orphan rate & avg block interval ----
-  function renderOrphanRate(){
-    const hc = window.__headerCount, bc = window.__blockCount;
-    // Orphan rate: red blocks = headers that were not selected as main chain
-    // blockCount = confirmed/accepted blocks; headerCount = all blocks ever seen
-    if(isFinite(hc) && isFinite(bc) && hc > 0 && bc > 0){
-      const redBlocks = hc - bc;
-      const orphan = (redBlocks / hc * 100);
-      $("m-orphan").textContent = orphan.toFixed(2)+"%";
-      $("m-orphan-note").textContent = compact(redBlocks > 0 ? redBlocks : 0)+" red blocks of "+compact(hc)+" total headers";
+  // ---- Blocks per day & Mined today ----
+  let _lastDaa = null, _lastDaaTime = null;
+
+  function renderDailyStats(){
+    const daa    = window.__daaScore;
+    const reward = window.__reward;
+    const now    = Date.now();
+
+    // Blocks per day from DAA delta between refreshes
+    if(isFinite(daa)){
+      if(_lastDaa !== null && _lastDaaTime !== null){
+        const deltaDaa = daa - _lastDaa;
+        const deltaMs  = now - _lastDaaTime;
+        if(deltaDaa > 0 && deltaMs > 5000){
+          const bpd = Math.round(deltaDaa / deltaMs * 86400000);
+          $("m-bpd-live").textContent = compact(bpd);
+          const pct = (bpd / 864000 * 100).toFixed(1);
+          $("m-bpd-note").textContent = pct+"% of target 864,000 · based on DAA delta";
+          setSig("m-bpd-live", bpd, 800000, 700000);
+        }
+      }
+      _lastDaa = daa; _lastDaaTime = now;
     }
-    // Avg block interval: headerCount / uptime since genesis
-    // headerCount includes all blocks (red + blue), giving the true production rate
-    const GENESIS_MS = new Date("2021-11-07T00:00:00Z").getTime();
-    const uptimeS = (Date.now() - GENESIS_MS) / 1000;
-    if(isFinite(hc) && hc > 0 && uptimeS > 0){
-      const avgInterval = uptimeS / hc;
-      $("m-blocktime").textContent = avgInterval.toFixed(3)+"s";
-      // colour: close to 0.1s = green, > 0.15s or < 0.05s = amber
-      setSig("m-blocktime", Math.abs(avgInterval - 0.1), 0, 0.05, "lower-better");
-      $("m-blocktime-note").textContent = "avg since genesis · target: 0.100s";
+
+    // Mined today: seconds since midnight UTC × 10 BPS × reward
+    if(isFinite(reward)){
+      const midnight = new Date();
+      midnight.setUTCHours(0,0,0,0);
+      const secsSinceMidnight = (now - midnight.getTime()) / 1000;
+      const minedToday = secsSinceMidnight * 10 * reward;
+      $("m-mined-today").textContent = compact(Math.round(minedToday))+" KAS";
+      const usd = window.__price;
+      if(isFinite(usd)){
+        $("m-mined-today-note").textContent = "≈ $"+compact(Math.round(minedToday*usd))+" · new KAS since midnight UTC";
+      }
     }
   }
 
@@ -2036,7 +2050,7 @@
     ]);
     renderSecurityBudget();
     renderEmissionCurve();
-    renderOrphanRate();
+    renderDailyStats();
     renderNetAge();
     stamp();
   }
