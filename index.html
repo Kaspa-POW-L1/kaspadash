@@ -812,7 +812,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.10.1";
+  const APP_VERSION = "v2.10.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1743,15 +1743,23 @@
   }
 
   // ---- Kaspa DeFi ecosystem (DefiLlama) ----
-  // Kaspa's L2 chains as they appear on DefiLlama. Extend this list when a new
-  // Kaspa L2 launches and gets listed — matching is case-insensitive and also
-  // catches any chain whose name contains "kaspa".
+  // Kaspa's L2 chains exactly as DefiLlama names them. Extend this list when a
+  // new Kaspa L2 launches and gets listed (case-insensitive, exact match).
+  // NB: we deliberately do NOT substring-match "kaspa" — that also catches the
+  // layer-1 "Kaspa" chain, where exchanges/custodians hold KAS reserves. Counting
+  // those would pull CEX balances (e.g. Gate) into the DeFi TVL and break the
+  // consistency with the chain cards, which only see the L2 chains.
   const KASPA_CHAINS = ["igra","kasplex"];
-  const isKaspaChain = name => {
-    if(!name) return false;
-    const n = String(name).toLowerCase();
-    return KASPA_CHAINS.includes(n) || n.includes("kaspa");
-  };
+  const isKaspaChain = name => !!name && KASPA_CHAINS.includes(String(name).toLowerCase());
+
+  // Unambiguous USD: compact for >=$1k, whole dollars for $100–$1k, cents below.
+  // Prevents "$457.555" (≈$458) reading like 457k next to "$568,880".
+  function tvlUSD(n){
+    if(!isFinite(n)) return "–";
+    if(n>=1e3) return "$"+compact(n);
+    if(n>=100) return "$"+n.toFixed(0);
+    return "$"+n.toFixed(2);
+  }
   let defiProtoData = [];
   let defiProtoSort = -1; // -1 = TVL descending, 1 = ascending
 
@@ -1768,7 +1776,7 @@
     body.innerHTML=rows.slice(0,12).map(p=>
       '<tr><td>'+esc(p.name)+'</td>'+
       '<td style="text-align:left;color:var(--muted)">'+esc(p.category||"–")+'</td>'+
-      '<td>$'+compact(p.tvl)+'</td>'+
+      '<td>'+tvlUSD(p.tvl)+'</td>'+
       '<td>'+fmtPct(p.c1)+'</td>'+
       '<td>'+fmtPct(p.c7)+'</td></tr>'
     ).join("");
@@ -1792,12 +1800,12 @@
         wrap.innerHTML = mine.map(c=>
           '<div class="hcal-card">'+
             '<div class="hcal-n">'+esc(c.name)+'</div>'+
-            '<div class="hcal-date">$'+compact(c.tvl)+'</div>'+
+            '<div class="hcal-date">'+tvlUSD(c.tvl)+'</div>'+
             '<div class="hcal-days">TVL</div>'+
           '</div>').join("") +
           '<div class="hcal-card hcal-next">'+
             '<div class="hcal-n">Total</div>'+
-            '<div class="hcal-date">$'+compact(kaspaTotal)+'</div>'+
+            '<div class="hcal-date">'+tvlUSD(kaspaTotal)+'</div>'+
             '<div class="hcal-days">all Kaspa L2</div>'+
           '</div>';
       } else {
@@ -1813,6 +1821,7 @@
       if(!Array.isArray(protos)) throw new Error("bad");
       defiProtoData = protos
         .filter(p=>Array.isArray(p.chains) && p.chains.some(isKaspaChain))
+        .filter(p=>String(p.category||"").toLowerCase()!=="cex") // exchanges aren't L2 DeFi
         .map(p=>{
           // sum only exact Kaspa-chain keys, skipping "Chain-staking"/"-borrowed" splits
           let tvl=0;
