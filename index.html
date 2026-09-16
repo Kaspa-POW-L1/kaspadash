@@ -596,11 +596,12 @@
       <thead><tr>
         <th>Protocol <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">DeFi applications deployed on Kaspa's L2 chains, ranked by the value locked on those chains. Only the portion of each protocol running on a Kaspa chain is counted. Staking pools are listed separately below, since DefiLlama excludes them from the headline chain TVL.</span></span></th>
         <th style="text-align:left">Type</th>
+        <th style="text-align:left">Chain <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Which Kaspa L2 the protocol's value sits on — Igra or Kasplex. A protocol running on both shows two badges; hover for the split.</span></span></th>
         <th class="sortable" id="defi-th-tvl" data-col="tvl" style="cursor:pointer">TVL on Kaspa <span id="defi-sort-tvl">▼</span></th>
         <th>1d</th>
         <th>7d</th>
       </tr></thead>
-      <tbody id="defi-proto"><tr><td colspan="5" class="skeleton">loading protocols…</td></tr></tbody>
+      <tbody id="defi-proto"><tr><td colspan="6" class="skeleton">loading protocols…</td></tr></tbody>
     </table>
     <div class="cap" id="defi-proto-empty" style="display:none;margin-top:8px"></div>
     <div class="note" id="defi-staking-note" style="margin-top:10px;display:none"></div>
@@ -855,7 +856,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.11.0";
+  const APP_VERSION = "v2.11.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1806,6 +1807,22 @@
   let defiProtoData = [];
   let defiProtoSort = -1; // -1 = TVL descending, 1 = ascending
 
+  // Coloured chain badges: Igra (teal) vs Kasplex (amber), largest share first.
+  // Multi-chain protocols show both, with the per-chain split in the hover title.
+  function chainBadges(perChain){
+    const names={igra:"Igra",kasplex:"Kasplex"};
+    const cols ={igra:"var(--teal)",kasplex:"var(--amber)"};
+    const keys=Object.keys(perChain||{}).sort((a,b)=>perChain[b]-perChain[a]);
+    if(!keys.length) return '<span style="color:var(--muted)">–</span>';
+    const title=keys.map(k=>(names[k]||k)+" "+tvlUSD(perChain[k])).join(" · ");
+    return '<span title="'+esc(title)+'">'+keys.map(k=>{
+      const c=cols[k]||"var(--muted)";
+      return '<span style="display:inline-block;font-family:var(--sans);font-size:11px;font-weight:600;'+
+             'padding:2px 7px;border-radius:99px;border:1px solid '+c+';color:'+c+';margin-right:4px">'+
+             esc(names[k]||k)+'</span>';
+    }).join("")+'</span>';
+  }
+
   function renderDefiProto(){
     const body=$("defi-proto"), empty=$("defi-proto-empty");
     if(!defiProtoData.length){
@@ -1819,6 +1836,7 @@
     body.innerHTML=rows.slice(0,12).map(p=>
       '<tr><td>'+esc(p.name)+'</td>'+
       '<td style="text-align:left;color:var(--muted)">'+esc(p.category||"–")+'</td>'+
+      '<td style="text-align:left">'+chainBadges(p.perChain)+'</td>'+
       '<td>'+tvlUSD(p.tvl)+'</td>'+
       '<td>'+fmtPct(p.c1)+'</td>'+
       '<td>'+fmtPct(p.c7)+'</td></tr>'
@@ -1866,11 +1884,14 @@
         .filter(p=>Array.isArray(p.chains) && p.chains.some(isKaspaChain))
         .filter(p=>String(p.category||"").toLowerCase()!=="cex") // exchanges aren't L2 DeFi
         .map(p=>{
-          // sum only exact Kaspa-chain keys, skipping "Chain-staking"/"-borrowed" splits
+          // sum only exact Kaspa-chain keys, skipping "Chain-staking"/"-borrowed" splits,
+          // and keep the per-chain breakdown (Igra vs Kasplex) for the Chain column.
           let tvl=0;
-          const ct=p.chainTvls||{};
-          for(const k in ct){ if(isKaspaChain(k) && isFinite(+ct[k])) tvl+=+ct[k]; }
-          return {name:p.name, category:p.category, tvl, staking:/stak/i.test(p.category||""),
+          const ct=p.chainTvls||{}, perChain={};
+          for(const k in ct){
+            if(isKaspaChain(k) && isFinite(+ct[k])){ tvl+=+ct[k]; perChain[String(k).toLowerCase()]=+ct[k]; }
+          }
+          return {name:p.name, category:p.category, tvl, perChain, staking:/stak/i.test(p.category||""),
                   c1:num(pick(p,["change_1d"])), c7:num(pick(p,["change_7d"]))};
         })
         .filter(p=>isFinite(p.tvl) && p.tvl>0);
@@ -1895,7 +1916,7 @@
 
       if(status) status.textContent = defiProtoData.length+" protocol"+(defiProtoData.length===1?"":"s");
     }catch(e){
-      $("defi-proto").innerHTML='<tr><td colspan="5" class="err">Protocol data unavailable right now.</td></tr>';
+      $("defi-proto").innerHTML='<tr><td colspan="6" class="err">Protocol data unavailable right now.</td></tr>';
     }
 
     // 3) stablecoins on Kaspa chains (separate host — optional, fails silently)
