@@ -736,7 +736,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.8.3";
+  const APP_VERSION = "v2.8.4";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1887,8 +1887,8 @@
   function renderNetAge(){
     const GENESIS = new Date("2021-11-07T00:00:00Z").getTime();
     const days = Math.floor((Date.now() - GENESIS) / 86400000);
-    const bc = window.__blockCount;
-    const bpd = isFinite(bc) && days > 0 ? Math.round(bc / days) : null;
+    const hc = window.__headerCount;
+    const bpd = isFinite(hc) && days > 0 ? Math.round(hc / days) : null;
     // tile
     const el = $("m-netage");
     if(el) el.textContent = days.toLocaleString()+" d";
@@ -1901,22 +1901,24 @@
 
   // ---- Orphan rate & avg block interval ----
   function renderOrphanRate(){
-    const hc = window.__headerCount, bc = window.__blockCount, daa = window.__daaScore;
-    if(isFinite(hc) && isFinite(bc) && hc > 0){
-      const orphan = ((hc - bc) / hc * 100);
+    const hc = window.__headerCount, bc = window.__blockCount;
+    // Orphan rate: red blocks = headers that were not selected as main chain
+    // blockCount = confirmed/accepted blocks; headerCount = all blocks ever seen
+    if(isFinite(hc) && isFinite(bc) && hc > 0 && bc > 0){
+      const redBlocks = hc - bc;
+      const orphan = (redBlocks / hc * 100);
       $("m-orphan").textContent = orphan.toFixed(2)+"%";
-      $("m-orphan-note").textContent = compact(hc-bc)+" red blocks of "+compact(hc)+" total headers";
+      $("m-orphan-note").textContent = compact(redBlocks > 0 ? redBlocks : 0)+" red blocks of "+compact(hc)+" total headers";
     }
-    // avg block interval: DAA score ÷ blockCount gives blocks per DAA tick
-    // simpler: pastMedianTime drift tells us target; we use blockCount/uptime
-    // Use DAA score as proxy: DAA score ≈ accepted blocks, blockCount ≈ total confirmed
-    // Actual avg interval from genesis: Kaspa launched Nov 2021, ~1370 days ago
-    // Better: use blockCount and total seconds since genesis
+    // Avg block interval: headerCount / uptime since genesis
+    // headerCount includes all blocks (red + blue), giving the true production rate
     const GENESIS_MS = new Date("2021-11-07T00:00:00Z").getTime();
     const uptimeS = (Date.now() - GENESIS_MS) / 1000;
-    if(isFinite(bc) && bc > 0 && uptimeS > 0){
-      const avgInterval = uptimeS / bc;
+    if(isFinite(hc) && hc > 0 && uptimeS > 0){
+      const avgInterval = uptimeS / hc;
       $("m-blocktime").textContent = avgInterval.toFixed(3)+"s";
+      // colour: close to 0.1s = green, > 0.15s or < 0.05s = amber
+      setSig("m-blocktime", Math.abs(avgInterval - 0.1), 0, 0.05, "lower-better");
       $("m-blocktime-note").textContent = "avg since genesis · target: 0.100s";
     }
   }
