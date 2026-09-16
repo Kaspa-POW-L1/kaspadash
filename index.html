@@ -663,6 +663,7 @@
   const T = {
     en:{
       bps_label:"BLOCKS PER SECOND",
+      bps_small:"parallel blocks · GHOSTDAG BlockDAG",
       bps_sub:"Kaspa confirms many blocks in parallel rather than in a single chain. Each square below is a block the network just produced.",
       dag_tips:"DAG tips now",
       daa_score:"DAA score",
@@ -693,11 +694,33 @@
       emission_curve:"Emission curve",
       live_feed:"Live block feed",
       top_exc:"Top exchanges",
-      footer_live:"live",
-      footer_born:"born",
+      // notes
+      n_supply:"of max ~28.7B KAS · fair launch, no premine",
+      n_reward:"drops monthly (chromatic halving)",
+      n_halving:"reward drops to {amt} KAS · chromatic halving",
+      n_difficulty:"network difficulty · rises with hashrate, auto-adjusts",
+      n_vol:"traded last 24h · {ratio}% of mcap",
+      n_mcap_rank:"by market cap · lower rank = more adopted",
+      n_btc:"vs Bitcoin · rising = KAS outperforms BTC",
+      n_headers:"all headers ever seen · includes red (non-selected) blocks",
+      n_median:"network median time · should be close to now",
+      n_emit:"new KAS per day · {pct}% annual inflation",
+      n_fng:"market-wide crypto",
+      n_fng_stock:"stock market · CNN",
+      n_btcdom:"BTC share of total market · ETH {eth}% · rising = risk-off",
+      n_github:"last push to kaspanet/rusty-kaspa · via GitHub API",
+      n_community:"bullish votes · > 60% positive, < 40% bearish",
+      n_minted:"{pct}% minted",
+      n_today:"today",
+      n_ago:"{n}d ago",
+      n_sec_kas:"KAS/day",
+      n_sec_annual:"annualised",
+      n_sec_mcap:"of market cap",
+      n_sec_note:"USD/day to miners",
     },
     nl:{
       bps_label:"BLOKKEN PER SECONDE",
+      bps_small:"parallelle blokken · GHOSTDAG BlockDAG",
       bps_sub:"Kaspa bevestigt veel blokken tegelijk in plaats van één keten. Elk vakje hieronder is een blok dat het netwerk zojuist heeft aangemaakt.",
       dag_tips:"DAG-tips nu",
       daa_score:"DAA-score",
@@ -728,8 +751,29 @@
       emission_curve:"Uitgiftecurve",
       live_feed:"Live blokkenfeed",
       top_exc:"Topbeurzen",
-      footer_live:"live",
-      footer_born:"geboren",
+      // notes
+      n_supply:"van max ~28,7B KAS · eerlijke lancering, geen premine",
+      n_reward:"daalt maandelijks (chromatische halvering)",
+      n_halving:"beloning daalt naar {amt} KAS · chromatische halvering",
+      n_difficulty:"netwerkmoeilijkheid · stijgt met hashrate, past zich aan",
+      n_vol:"verhandeld afgelopen 24u · {ratio}% van marktkapitalisatie",
+      n_mcap_rank:"op marktkapitalisatie · lagere rang = meer adoptie",
+      n_btc:"vs Bitcoin · stijgend = KAS presteert beter dan BTC",
+      n_headers:"alle headers ooit gezien · inclusief rode (niet-geselecteerde) blokken",
+      n_median:"netwerkmediantijd · zou dicht bij nu moeten zijn",
+      n_emit:"nieuwe KAS per dag · {pct}% jaarlijkse inflatie",
+      n_fng:"marktbreed crypto",
+      n_fng_stock:"aandelenmarkt · CNN",
+      n_btcdom:"BTC-aandeel totale markt · ETH {eth}% · stijgend = risicomijding",
+      n_github:"laatste push naar kaspanet/rusty-kaspa · via GitHub API",
+      n_community:"optimistische stemmen · > 60% positief, < 40% negatief",
+      n_minted:"{pct}% geslagen",
+      n_today:"vandaag",
+      n_ago:"{n}d geleden",
+      n_sec_kas:"KAS/dag",
+      n_sec_annual:"geannualiseerd",
+      n_sec_mcap:"van marktkapitalisatie",
+      n_sec_note:"USD/dag aan miners",
     }
   };
 
@@ -779,11 +823,61 @@
       };
       if(map[txt]) el.textContent = map[txt];
     });
-    // BPS label and subtitle
+    // BPS label, subtitle and small
     const lbl = document.querySelector(".label");
     if(lbl) lbl.textContent = t.bps_label;
     const sub = document.querySelector(".sub");
     if(sub) sub.textContent = t.bps_sub;
+    const bpsSmall = document.querySelector(".bps small");
+    if(bpsSmall) bpsSmall.textContent = t.bps_small;
+    // static notes
+    const sn = (id, val) => { const el=$(id); if(el&&val) el.textContent=val; };
+    sn("supply-note",   t.n_supply);
+    sn("s-fng-note",    t.n_fng);
+    // dynamic notes — re-render with current lang
+    // reward/halving note is set by renderHalving/loadReward; just update static part
+    const rwd = document.querySelector(".tile .note:not([id])");
+    // difficulty note
+    document.querySelectorAll(".tile .note:not([id])").forEach(el=>{
+      const txt = el.textContent.trim();
+      const map = {
+        "drops monthly (chromatic halving)":t.n_reward,
+        "daalt maandelijks (chromatische halvering)":t.n_reward,
+        "network difficulty · rises with hashrate, auto-adjusts":t.n_difficulty,
+        "netwerkmoeilijkheid · stijgt met hashrate, past zich aan":t.n_difficulty,
+        "by market cap · lower rank = more adopted":t.n_mcap_rank,
+        "op marktkapitalisatie · lagere rang = meer adoptie":t.n_mcap_rank,
+        "vs Bitcoin · rising = KAS outperforms BTC":t.n_btc,
+        "vs Bitcoin · stijgend = KAS presteert beter dan BTC":t.n_btc,
+        "all headers ever seen · includes red (non-selected) blocks":t.n_headers,
+        "alle headers ooit gezien · inclusief rode (niet-geselecteerde) blokken":t.n_headers,
+        "network median time · should be close to now":t.n_median,
+        "netwerkmediantijd · zou dicht bij nu moeten zijn":t.n_median,
+        "last push to kaspanet/rusty-kaspa · via GitHub API":t.n_github,
+        "laatste push naar kaspanet/rusty-kaspa · via GitHub API":t.n_github,
+        "bullish votes · > 60% positive, < 40% bearish":t.n_community,
+        "optimistische stemmen · > 60% positief, < 40% negatief":t.n_community,
+      };
+      if(map[txt]) el.textContent = map[txt];
+    });
+    // minted pct
+    const mp = $("minted-pct");
+    if(mp && mp.textContent.includes("%")){
+      const pct = mp.textContent.match(/[\d.]+/)?.[0];
+      if(pct) mp.textContent = t.n_minted.replace("{pct}", pct);
+    }
+    // security budget labels
+    const secNote = document.querySelector("#sec-usd small");
+    if(secNote) secNote.textContent = t.n_sec_note;
+    document.querySelectorAll(".sec-row .t").forEach(el=>{
+      const txt = el.textContent.trim();
+      const map = {
+        " annualised":t.n_sec_annual," geannualiseerd":t.n_sec_annual,
+        " of market cap":t.n_sec_mcap," van marktkapitalisatie":t.n_sec_mcap,
+        " KAS/day":t.n_sec_kas," KAS/dag":t.n_sec_kas,
+      };
+      if(map[txt]!==undefined) el.textContent = " "+map[txt.trim()]||txt;
+    });
     // Top exchanges h2
     const excH2 = document.querySelector("#exc-body")?.closest("section")?.querySelector("h2");
     if(excH2){ const first=excH2.firstChild; if(first&&first.nodeType===3) first.textContent=t.top_exc+" "; }
