@@ -156,6 +156,17 @@
   .exc-pct{font-family:var(--mono);text-align:right;color:var(--muted)}
   .exc-pair{color:var(--muted);font-size:11px}
 
+  /* halving calendar cards */
+  .hcal-card{background:var(--bg-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .hcal-card.hcal-next{border-color:var(--teal-dim)}
+  .hcal-n{font-size:11px;color:var(--muted);margin-bottom:2px}
+  .hcal-date{font-family:var(--mono);font-size:13px;font-weight:600}
+  .hcal-reward{font-family:var(--mono);font-size:12px;color:var(--teal-dim);margin-top:2px}
+  .hcal-days{font-size:11px;color:var(--muted);margin-top:1px}
+
+  /* hashrate sparkline trend */
+  .hash-trend{font-size:11px;margin-left:6px;vertical-align:middle}
+
   footer{margin-top:22px;color:var(--muted);font-size:12.5px;line-height:1.6}
   footer .who{margin-top:6px}
 
@@ -293,10 +304,10 @@
     </div>
 
     <div class="tile">
-      <div class="h"><span>Hashrate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total computing power miners are spending on Kaspa right now (in PH/s = petahashes per second). Higher = more secure network, harder to attack.</span></span></div>
-      <div class="v" id="hashrate">–</div>
+      <div class="h"><span>Hashrate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total computing power miners are spending on Kaspa right now (in PH/s = petahashes per second). Higher = more secure network, harder to attack. The trend arrow shows whether hashrate is rising or falling over this session.</span></span></div>
+      <div class="v" id="hashrate">–<span class="hash-trend" id="hash-trend"></span></div>
       <svg class="spark" id="hash-spark" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
-      <div class="note">live session (since page opened) · higher = more secure</div>
+      <div class="note" id="hash-note">live session (since page opened) · higher = more secure</div>
     </div>
 
     <div class="tile">
@@ -324,6 +335,11 @@
       <div class="note" id="halving-note">emission halves ~1/2^(1/12) per month</div>
     </div>
 
+    <div class="tile span2">
+      <div class="h"><span>Halving calendar</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The next 6 monthly reward reductions. Each month the block reward is multiplied by ½^(1/12) ≈ 0.9439. Dates are approximate — based on the current reward and the chromatic halving formula.</span></span></div>
+      <div id="halving-cal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px"></div>
+    </div>
+
     <div class="tile">
       <div class="h"><span>Difficulty</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How hard it is for miners to find a valid block. The network adjusts this automatically to keep ~10 blocks per second regardless of how much mining power is active. Rising difficulty = more miners joining.</span></span></div>
       <div class="v" id="difficulty">–</div>
@@ -346,6 +362,7 @@
       <div class="h"><span>All-time high</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The highest price KAS has ever reached. The percentage below shows how far the current price is from that peak — a large negative % means significant room to recover (or it may never return).</span></span></div>
       <div class="v" id="m-ath">–</div>
       <div class="note" id="m-ath-note">from ATH</div>
+      <div class="note" id="m-ath-date" style="margin-top:2px"></div>
     </div>
     <div class="tile">
       <div class="h"><span>Price · BTC</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much Bitcoin one KAS costs. Rising = KAS outperforms BTC; falling = KAS underperforms. Useful because BTC is the reference currency most crypto traders benchmark against.</span></span></div>
@@ -742,7 +759,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.8.7";
+  const APP_VERSION = "v2.9.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1259,8 +1276,13 @@
       let d = await getJSON(KAS+"/info/hashrate?stringOnly=false");
       let ths = num(pick(d,["hashrate"]));
       if(isFinite(ths)){
-        $("hashrate").textContent = fmtHash(ths);
+        // update sparkline (existing)
         hist.push(ths); if(hist.length>HMAX) hist.shift(); drawSpark();
+        // update trend indicator
+        updateHashrateTrend(ths);
+        // set text after trend so span is not overwritten
+        const hEl = $("hashrate");
+        if(hEl){ hEl.firstChild.textContent = fmtHash(ths); }
       } else setErr("hashrate");
     }catch(e){ setErr("hashrate"); }
   }
@@ -1433,6 +1455,14 @@
     if(isFinite(k.ath)){
       $("m-ath").textContent = "$"+(+k.ath).toFixed(4);
       if(isFinite(k.ath_change_percentage)) $("m-ath-note").textContent = (+k.ath_change_percentage).toFixed(1)+"% from ATH";
+      // ATH datum + maanden geleden
+      if(k.ath_date){
+        const athDate = new Date(k.ath_date);
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const monthsAgo = Math.round((Date.now()-athDate.getTime())/(30.44*86400000));
+        const dateStr = athDate.getDate()+" "+months[athDate.getMonth()]+" "+athDate.getFullYear();
+        $("m-ath-date").textContent = dateStr+" · "+monthsAgo+"mo ago";
+      }
     }
     const btc = byId["bitcoin"];
     if(btc && isFinite(btc.current_price) && isFinite(k.current_price) && btc.current_price>0){
@@ -1555,6 +1585,51 @@
         if(isFinite(eth)) $("m-btcdom-note").textContent = "BTC share of total market · ETH "+eth.toFixed(1)+"% · rising = risk-off";
       } else { /* leave as previous value */ }
     }catch(e){ /* rate limited — leave previous value, next refresh retries */ }
+  }
+
+  // ---- Halving calendar ----
+  function renderHalvingCalendar(){
+    const reward = window.__reward;
+    if(!isFinite(reward)) return;
+    const cal = $("halving-cal");
+    if(!cal) return;
+    const FACTOR = Math.pow(0.5, 1/12);
+    const mos = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const now = new Date();
+    let r = reward, cards = "", found = 0;
+    for(let i=1; i<=60 && found<6; i++){
+      const d = new Date(now.getFullYear(), now.getMonth()+i, 7);
+      if(d <= now) continue;
+      const nextR = r * FACTOR;
+      const daysAway = Math.round((d-now)/86400000);
+      const isNext = found===0;
+      cards += `<div class="hcal-card${isNext?" hcal-next":""}">
+        <div class="hcal-n">${isNext?"▶ next":"#"+(found+1)}</div>
+        <div class="hcal-date">${d.getDate()} ${mos[d.getMonth()]} ${d.getFullYear()}</div>
+        <div class="hcal-reward">${nextR.toFixed(3)} KAS/block</div>
+        <div class="hcal-days">${daysAway}d away</div>
+      </div>`;
+      r = nextR; found++;
+    }
+    cal.innerHTML = cards;
+  }
+
+  // ---- Hashrate trend ----
+  let _hashHistory = [];
+  function updateHashrateTrend(ths){
+    if(!isFinite(ths)) return;
+    _hashHistory.push(ths);
+    if(_hashHistory.length < 3) return;
+    const first = _hashHistory[0];
+    const last  = _hashHistory[_hashHistory.length-1];
+    const pct   = ((last-first)/first*100);
+    const trend = $("hash-trend");
+    if(!trend) return;
+    if(Math.abs(pct) < 0.5){ trend.textContent = ""; }
+    else if(pct > 0){ trend.innerHTML = ' <span class="sig-good" style="font-size:14px">↑ +'+pct.toFixed(1)+'%</span>'; }
+    else            { trend.innerHTML = ' <span class="sig-bad"  style="font-size:14px">↓ '+pct.toFixed(1)+'%</span>'; }
+    const note = $("hash-note");
+    if(note) note.textContent = "vs session start · "+_hashHistory.length+" readings · higher = more secure";
   }
 
   function renderSupplyBreakdown(){
@@ -2047,6 +2122,7 @@
     renderDailyStats();
     renderNetAge();
     renderSupplyBreakdown();
+    renderHalvingCalendar();
     stamp();
   }
 
