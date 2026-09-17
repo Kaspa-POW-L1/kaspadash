@@ -840,7 +840,7 @@
   </section>
 
   <footer>
-    Live data from public APIs — <a href="https://api.kaspa.org" rel="noopener">api.kaspa.org</a> (network &amp; supply) and <a href="https://kasplex.org" rel="noopener">Kasplex</a> (KRC-20). No API key, refreshes every 60s. Charts show the current session only; the free API returns snapshots, not a time series.
+    Live data from public APIs — <a href="https://api.kaspa.org" rel="noopener">api.kaspa.org</a> (network &amp; supply), <a href="https://kasplex.org" rel="noopener">Kasplex</a> (KRC-20) and CoinGecko via caching proxy (market data). Refreshes every 60s. Charts show the current session only; the API returns snapshots, not a time series.
     <div class="who">Not financial advice. Built as an open community tool.</div>
   </footer>
 
@@ -1518,7 +1518,7 @@
   // ---- CoinGecko via eigen caching-proxy (Cloudflare Worker, zie worker.js) ----
   // De Worker houdt de API-key server-side en cachet antwoorden aan de edge.
   // >>> VERVANG het subdomein hieronder door je eigen Worker-URL na deployen. <<<
-  const CG = "https://kaspa-cg-proxy.pma78.workers.dev/api/v3";
+  const CG = "https://kaspa-cg-proxy.JOUW-SUBDOMEIN.workers.dev/api/v3";
   const POW = ["kaspa","bitcoin","litecoin","monero","dogecoin"];
   const L1  = ["kaspa","solana","avalanche-2","near","sui","aptos"];
   const ALL_PEERS = Array.from(new Set(POW.concat(L1)));
