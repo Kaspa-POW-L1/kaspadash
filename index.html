@@ -824,13 +824,13 @@
   <!-- ABOUT THIS DASHBOARD -->
   <section class="panel" id="about" style="margin-top:16px">
     <div class="h" style="margin-bottom:2px">
-      <h2 style="margin:0;font-size:15px;font-weight:600">About this dashboard <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How this dashboard is built and where its numbers come from. Everything is pulled live from public APIs — there is no backend, no account and no tracking.</span></span></h2>
+      <h2 style="margin:0;font-size:15px;font-weight:600">About this dashboard <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How this dashboard is built and where its numbers come from. Figures are pulled live from public APIs — CoinGecko runs through a lightweight caching proxy that keeps its API key server-side and is shared across all visitors; everything else is fetched straight from your browser. No login, no cookies.</span></span></h2>
     </div>
     <div class="cap">An open, no-login window into the Kaspa network — every figure is pulled live from public sources.</div>
 
     <div class="sec-row" style="margin-top:12px">
       <div><span class="k" id="about-count" style="font-size:26px">–</span><span class="t"> live API sources</span></div>
-      <div><span class="k" style="font-size:26px">0</span><span class="t"> API keys · no cookies</span></div>
+      <div><span class="k" style="font-size:26px">1</span><span class="t"> caching proxy · no cookies</span></div>
       <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
     </div>
 
@@ -856,7 +856,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.11.1";
+  const APP_VERSION = "v2.12.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1515,8 +1515,10 @@
   }
   function esc(s){ return String(s).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
 
-  // ---- peer comparison (CoinGecko free API) ----
-  const CG = "https://api.coingecko.com/api/v3";
+  // ---- CoinGecko via eigen caching-proxy (Cloudflare Worker, zie worker.js) ----
+  // De Worker houdt de API-key server-side en cachet antwoorden aan de edge.
+  // >>> VERVANG het subdomein hieronder door je eigen Worker-URL na deployen. <<<
+  const CG = "https://kaspa-cg-proxy.pma78.workers.dev/api/v3";
   const POW = ["kaspa","bitcoin","litecoin","monero","dogecoin"];
   const L1  = ["kaspa","solana","avalanche-2","near","sui","aptos"];
   const ALL_PEERS = Array.from(new Set(POW.concat(L1)));
@@ -1957,7 +1959,7 @@
   const DATA_SOURCES = [
     {name:"Kaspa REST",    host:"api.kaspa.org",                        use:"Network, supply, hashrate, rewards, halving, live block feed"},
     {name:"Kasplex",       host:"api.kasplex.org",                      use:"KRC-20 token list"},
-    {name:"CoinGecko",     host:"api.coingecko.com",                    use:"Price, market cap, volume, ROI, exchanges, peer coins"},
+    {name:"CoinGecko",     host:"api.coingecko.com · via proxy",         use:"Price, market cap, volume, ROI, exchanges, peer coins"},
     {name:"DefiLlama",     host:"api.llama.fi · stablecoins.llama.fi",  use:"L2 TVL, DeFi protocols, stablecoins"},
     {name:"GitHub",        host:"api.github.com",                       use:"rusty-kaspa developer activity"},
     {name:"Alternative.me",host:"api.alternative.me",                   use:"Crypto Fear & Greed index"}
@@ -1974,11 +1976,13 @@
       '</div>').join("");
     const extra=$("about-extra");
     if(extra) extra.innerHTML =
-      "Plus an hourly collector (GitHub Actions) that snapshots the live APIs into the history charts and pulls "+
-      "CNN's index for stock-market sentiment, and "+
+      "CoinGecko is fetched through a small Cloudflare Worker that caches responses at the edge "+
+      "and keeps its Demo API key server-side, so no key is ever exposed in the page and all "+
+      "visitors share the same cached data. Every other source is fetched straight from your browser. "+
+      "Plus an hourly collector (GitHub Actions) that snapshots the live APIs into the history charts "+
+      "and pulls CNN's index for stock-market sentiment, and "+
       '<a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a> '+
-      "for privacy-friendly, cookie-free view counts. No API keys, no tracking cookies, no backend — "+
-      "everything runs client-side in your browser.";
+      "for privacy-friendly, cookie-free view counts. No tracking cookies, no login.";
   }
 
   // ---- Security budget ----
