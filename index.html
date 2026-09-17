@@ -670,12 +670,13 @@
       <thead><tr>
         <th>Protocol <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">DeFi applications deployed on Kaspa's L2 chains, ranked by the value locked on those chains. Only the portion of each protocol running on a Kaspa chain is counted. Staking pools are listed separately below, since DefiLlama excludes them from the headline chain TVL.</span></span></th>
         <th style="text-align:left">Type</th>
-        <th style="text-align:left">Chain <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Which Kaspa L2 the protocol's value sits on — Igra or Kasplex. A protocol running on both shows two badges; hover for the split.</span></span></th>
+        <th style="text-align:right"><span style="color:var(--teal)">Igra</span></th>
+        <th style="text-align:right"><span style="color:var(--amber)">Kasplex</span></th>
         <th class="sortable" id="defi-th-tvl" data-col="tvl" style="cursor:pointer">TVL on Kaspa <span id="defi-sort-tvl">▼</span></th>
         <th>1d</th>
         <th>7d</th>
       </tr></thead>
-      <tbody id="defi-proto"><tr><td colspan="6" class="skeleton">loading protocols…</td></tr></tbody>
+      <tbody id="defi-proto"><tr><td colspan="7" class="skeleton">loading protocols…</td></tr></tbody>
     </table></div>
     <div class="cap" id="defi-proto-empty" style="display:none;margin-top:8px"></div>
     <div class="note" id="defi-staking-note" style="margin-top:10px;display:none"></div>
@@ -959,7 +960,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.13.0";
+  const APP_VERSION = "v2.15.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1939,14 +1940,17 @@
     }
     empty.style.display="none";
     const rows=[...defiProtoData].sort((a,b)=>defiProtoSort*((a.tvl||0)-(b.tvl||0)));
-    body.innerHTML=rows.slice(0,12).map(p=>
-      '<tr><td>'+esc(p.name)+'</td>'+
+    body.innerHTML=rows.slice(0,12).map(p=>{
+      const ig=p.perChain&&isFinite(p.perChain.igra)?tvlUSD(p.perChain.igra):'<span style="color:var(--muted)">–</span>';
+      const kp=p.perChain&&isFinite(p.perChain.kasplex)?tvlUSD(p.perChain.kasplex):'<span style="color:var(--muted)">–</span>';
+      return '<tr><td>'+esc(p.name)+'</td>'+
       '<td style="text-align:left;color:var(--muted)">'+esc(p.category||"–")+'</td>'+
-      '<td style="text-align:left">'+chainBadges(p.perChain)+'</td>'+
+      '<td style="text-align:right;color:var(--teal)">'+ig+'</td>'+
+      '<td style="text-align:right;color:var(--amber)">'+kp+'</td>'+
       '<td>'+tvlUSD(p.tvl)+'</td>'+
       '<td>'+fmtPct(p.c1)+'</td>'+
-      '<td>'+fmtPct(p.c7)+'</td></tr>'
-    ).join("");
+      '<td>'+fmtPct(p.c7)+'</td></tr>';
+    }).join("");
   }
 
   async function loadDefiEcosystem(){
@@ -2022,7 +2026,7 @@
 
       if(status) status.textContent = defiProtoData.length+" protocol"+(defiProtoData.length===1?"":"s");
     }catch(e){
-      $("defi-proto").innerHTML='<tr><td colspan="6" class="err">Protocol data unavailable right now.</td></tr>';
+      $("defi-proto").innerHTML='<tr><td colspan="7" class="err">Protocol data unavailable right now.</td></tr>';
     }
 
     // 3) stablecoins on Kaspa chains (separate host — optional, fails silently)
