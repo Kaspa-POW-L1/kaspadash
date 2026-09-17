@@ -619,13 +619,15 @@
       <table id="krc20-table">
         <thead><tr>
           <th class="sortable" data-col="tick" style="cursor:pointer">Token <span id="sort-tick"></span></th>
+          <th class="sortable" data-col="price" style="cursor:pointer;text-align:right">Price <span id="sort-price"></span></th>
+          <th class="sortable" data-col="mcap" style="cursor:pointer;text-align:right">Mcap <span id="sort-mcap"></span></th>
           <th class="sortable" data-col="pct" style="cursor:pointer;text-align:right">Minted <span id="sort-pct">▼</span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">% of the maximum supply that has been minted so far. 100% = fully minted, emission complete.</span></span></th>
           <th style="text-align:right">Max supply <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The maximum number of tokens that will ever exist for this KRC-20 token.</span></span></th>
-          <th class="sortable" data-col="holders" style="cursor:pointer;text-align:right">Holders <span id="sort-holders"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Number of unique addresses holding this token. More holders generally means wider distribution.</span></span></th>
-          <th class="sortable" data-col="transfers" style="cursor:pointer;text-align:right">Transfers <span id="sort-transfers"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total number of transfer transactions for this token since deployment.</span></span></th>
-          <th class="sortable" data-col="state" style="cursor:pointer;text-align:right">State <span id="sort-state"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">"finished" = fully minted, no new tokens possible. "deployed" = still being minted — new tokens are being created.</span></span></th>
+          <th class="sortable" data-col="holders" style="cursor:pointer;text-align:right">Holders <span id="sort-holders"></span></th>
+          <th class="sortable" data-col="transfers" style="cursor:pointer;text-align:right">Transfers <span id="sort-transfers"></span></th>
+          <th class="sortable" data-col="state" style="cursor:pointer;text-align:right">State <span id="sort-state"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">"finished" = fully minted, no new tokens possible. "deployed" = still being minted.</span></span></th>
         </tr></thead>
-        <tbody id="krc20"><tr><td colspan="6" class="skeleton">loading…</td></tr></tbody>
+        <tbody id="krc20"><tr><td colspan="8" class="skeleton">loading…</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -962,7 +964,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.16.0";
+  const APP_VERSION = "v2.17.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1559,6 +1561,8 @@
     const {col,dir} = krc20Sort;
     const sorted = [...krc20Data].sort((a,b)=>{
       if(col==="tick") return dir*(a.tick.localeCompare(b.tick));
+      if(col==="price") return dir*((a.price||0)-(b.price||0));
+      if(col==="mcap") return dir*((a.mcap||0)-(b.mcap||0));
       if(col==="pct")  return dir*((b.pct??-1)-(a.pct??-1));
       if(col==="holders") return dir*((a.holders||0)-(b.holders||0));
       if(col==="transfers") return dir*((a.transfers||0)-(b.transfers||0));
@@ -1566,7 +1570,7 @@
       return 0;
     });
     // update sort indicators
-    ["tick","pct","holders","transfers","state"].forEach(c=>{
+    ["tick","price","mcap","pct","holders","transfers","state"].forEach(c=>{
       const el=$("sort-"+c); if(!el) return;
       el.textContent = col===c ? (dir<0?"▼":"▲") : "";
     });
@@ -1575,14 +1579,18 @@
     const finished = sorted.filter(t=>t.state!=="deployed");
     const rows = (list, label) => {
       if(!list.length) return "";
-      const header = '<tr><td colspan="6" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
+      const header = '<tr><td colspan="8" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
       return header + list.map(t=>{
         const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
         const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
         const stColor = t.state==="deployed" ? "var(--teal-dim)" : "var(--muted)";
         const h = isFinite(t.holders) ? compact(t.holders) : "–";
         const tr = isFinite(t.transfers) ? compact(t.transfers) : "–";
+        const price = isFinite(t.price) ? "$"+t.price.toFixed(t.price>=0.01?4:t.price>=0.0001?6:8) : '<span style="color:var(--muted)">–</span>';
+        const mcap = isFinite(t.mcap)&&t.mcap>0 ? "$"+compact(t.mcap) : '<span style="color:var(--muted)">–</span>';
         return '<tr><td class="tick">'+esc(t.tick)+'</td>'+
+               '<td>'+price+'</td>'+
+               '<td>'+mcap+'</td>'+
                '<td>'+bar+pctTxt+'</td>'+
                '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
                '<td>'+h+'</td>'+
@@ -1624,10 +1632,39 @@
         };
       });
     }catch(e){
-      body.innerHTML='<tr><td colspan="6" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
+      body.innerHTML='<tr><td colspan="8" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
     }
   }
   function esc(s){ return String(s).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
+
+  // ---- KRC-20 price data via CoinGecko (tokens that are listed) ----
+  const KRC20_CG_MAP = {
+    "NACHO":"nacho-the-kat", "KASPY":"kaspy", "KASPER":"kasper",
+    "KANGO":"kango", "GHOAD":"ghoad", "KASBOT":"kasbot",
+    "KDAO":"kdao-2", "KONAN":"konan"
+  };
+  async function loadKrc20Prices(){
+    const ids = Object.values(KRC20_CG_MAP);
+    if(!ids.length) return;
+    try{
+      const d = await cgJSON(CG+"/coins/markets?vs_currency=usd&ids="+ids.join(",")+"&per_page=50&page=1&sparkline=false");
+      if(!Array.isArray(d)) return;
+      const byId={};
+      d.forEach(c=>{ byId[c.id]=c; });
+      // merge into krc20Data
+      const idToTick={};
+      for(const [tick,id] of Object.entries(KRC20_CG_MAP)) idToTick[id]=tick;
+      krc20Data.forEach(t=>{
+        const cgId = KRC20_CG_MAP[t.tick];
+        if(cgId && byId[cgId]){
+          const c = byId[cgId];
+          t.price = c.current_price;
+          t.mcap = c.market_cap;
+        }
+      });
+      renderKrc20Table();
+    }catch(e){ /* prices are optional — table still works without them */ }
+  }
 
   // ---- CoinGecko via eigen caching-proxy (Cloudflare Worker, zie worker.js) ----
   // De Worker houdt de API-key server-side en cachet antwoorden aan de edge.
@@ -2868,6 +2905,7 @@
   setTimeout(loadEurPrice,   20000);
   setTimeout(loadROI,        30000);
   setTimeout(loadMarketSignals, 40000);
+  setTimeout(loadKrc20Prices,   50000);
 
   // Intervals
   setInterval(refresh,          60000);
@@ -2884,6 +2922,7 @@
   setInterval(loadEurPrice,   5*60000);
   setInterval(loadROI,       60*60000);
   setInterval(loadMarketSignals, 60*60000);
+  setInterval(loadKrc20Prices,  10*60000);
   setInterval(renderHalving,     1000);
 
   document.addEventListener("visibilitychange", ()=>{
