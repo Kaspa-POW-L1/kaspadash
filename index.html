@@ -253,6 +253,68 @@
   @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:480px){ .grid{grid-template-columns:1fr} .span2{grid-column:span 1} .hero-stats{gap:18px} }
   @media(prefers-reduced-motion:reduce){ .dot,.blk,.bar>i{animation:none;transition:none} }
+
+  /* ── Tab navigation ── */
+  .tab-bar{display:flex;gap:4px;margin-bottom:18px;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;padding:2px 0;position:sticky;top:0;z-index:40;
+    background:var(--bg);border-bottom:1px solid var(--line);padding-bottom:8px;padding-top:8px}
+  .tab-bar::-webkit-scrollbar{display:none}
+  .tab-btn{appearance:none;background:transparent;border:1px solid var(--line);border-radius:99px;
+    color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:500;
+    padding:7px 16px;cursor:pointer;transition:border-color .15s,color .15s,background .15s;
+    white-space:nowrap;flex:0 0 auto}
+  .tab-btn:hover{border-color:var(--teal-dim);color:var(--text)}
+  .tab-btn.active{background:var(--teal);color:#062018;border-color:var(--teal);font-weight:600}
+  [data-tab]{display:none}
+  [data-tab].tab-visible{display:block}
+  .grid[data-tab].tab-visible{display:grid}
+
+  /* ── Mobile-responsive enhancements ── */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -18px;padding:0 18px}
+  .table-scroll table{min-width:480px}
+  @media(max-width:640px){
+    body{padding:12px}
+    .top{gap:10px;margin-bottom:16px}
+    .brand h1{font-size:16px}
+    .toolbar{gap:4px;flex-wrap:wrap}
+    .tb-btn{padding:4px 8px;font-size:11px}
+    .hero{padding:16px;border-radius:12px}
+    .bps b{font-size:clamp(32px,8vw,46px)}
+    .hero-stats{gap:12px}
+    .hero-stats .k{font-size:16px}
+    .tile{padding:14px;border-radius:10px}
+    .tile .v{font-size:20px}
+    .panel{padding:14px;border-radius:10px}
+    .tab-bar{gap:3px;margin-bottom:12px;padding-top:6px;padding-bottom:6px}
+    .tab-btn{padding:6px 12px;font-size:12px}
+    .sec-row{flex-direction:column;gap:10px}
+    .sec-row .k{font-size:16px}
+    .grid{gap:10px;margin-bottom:10px}
+    .charts{gap:10px}
+    .chart{padding:10px}
+    .chart svg{height:72px}
+    .hcal-card{padding:6px 8px}
+    .bf-row{grid-template-columns:1fr auto auto;font-size:11px;gap:6px;padding:4px 6px}
+    .bf-blue{display:none}
+    .block-feed{max-height:160px}
+    .exc-table{font-size:12px}
+    .exc-table th,.exc-table td{padding:4px 6px}
+    .ret-table{font-size:12px}
+    .ret-table th,.ret-table td{padding:4px 6px}
+    table{font-size:12px}
+    th,td{padding:6px 8px}
+    .version{font-size:10px;padding:2px 8px;right:6px;bottom:6px}
+    #fb-toggle{right:10px;bottom:38px;padding:9px 14px 9px 12px;font-size:13px}
+    #fb-toggle span{display:none}
+    .expand-content p{font-size:12px}
+  }
+  @media(max-width:380px){
+    body{padding:8px}
+    .bps b{font-size:28px}
+    .tile .v{font-size:18px}
+    .hero-stats{flex-direction:column;gap:8px}
+    .tab-btn{padding:5px 10px;font-size:11px}
+  }
 </style>
 </head>
 <body>
@@ -294,8 +356,19 @@
     </div>
   </section>
 
+
+  <!-- TAB NAVIGATION -->
+  <nav class="tab-bar" id="tab-bar" role="tablist">
+    <button class="tab-btn active" data-target="overview" role="tab" aria-selected="true">Overview</button>
+    <button class="tab-btn" data-target="market" role="tab">Market</button>
+    <button class="tab-btn" data-target="network" role="tab">Network</button>
+    <button class="tab-btn" data-target="tokens" role="tab">Tokens &amp; DeFi</button>
+    <button class="tab-btn" data-target="history" role="tab">History</button>
+    <button class="tab-btn" data-target="about" role="tab">About</button>
+  </nav>
+
   <!-- METRICS -->
-  <div class="grid">
+  <div class="grid tab-visible" data-tab="overview">
     <div class="tile span2">
       <div class="h"><span>Circulating supply</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The amount of KAS currently in circulation out of the maximum ~28.7 billion ever. Kaspa had a fair launch — no premine, no founder allocation.</span></span><span id="minted-pct" class="skeleton">–</span></div>
       <div class="v" id="supply">–</div>
@@ -347,7 +420,7 @@
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid" data-tab="market">
     <div class="tile">
       <div class="h"><span>24h volume</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total USD value of KAS traded across all exchanges in the last 24 hours. The % of market cap shows how "active" the market is — higher % means more turnover relative to the coin's size.</span></span></div>
       <div class="v" id="m-vol">–</div>
@@ -371,7 +444,7 @@
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid" data-tab="network">
     <div class="tile">
       <div class="h"><span>Total headers</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total block headers the network has ever processed — including red blocks not selected as the main chain. Always larger than blockCount and shows the true scale of Kaspa's BlockDAG activity.</span></span></div>
       <div class="v" id="m-tps">–</div>
@@ -404,7 +477,7 @@
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid" data-tab="market">
     <div class="tile">
       <div class="h"><span>Fear &amp; Greed · Crypto</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A 0–100 score for the overall crypto market mood. 0–24: Extreme Fear. 25–49: Fear. 50–74: Greed. 75–100: Extreme Greed (market may be overheated). Not Kaspa-specific.</span></span></div>
       <div class="v" id="s-fng">–</div>
@@ -433,7 +506,7 @@
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid" data-tab="market">
     <div class="tile span2">
       <div class="h"><span>Bitcoin dominance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bitcoin's share of the total crypto market cap. Falling dominance often means capital is rotating from BTC into altcoins (like KAS); rising dominance means money is concentrating back into Bitcoin.</span></span></div>
       <div class="v" id="m-btcdom">–</div>
@@ -449,7 +522,7 @@
   </div>
 
   <!-- SECURITY BUDGET -->
-  <div class="grid" style="margin-top:0">
+  <div class="grid" data-tab="network" style="margin-top:0">
 
     <!-- Netwerk leeftijd -->
     <div class="tile">
@@ -474,10 +547,10 @@
   </div>
 
   <!-- RENDEMENT TABEL -->
-  <div class="grid" style="margin-top:0">
+  <div class="grid" data-tab="market" style="margin-top:0">
     <div class="tile span2">
       <div class="h"><span>Return on investment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What $100 invested in KAS at various points in the past would be worth today. Based on historical closing prices via CoinGecko. Not financial advice.</span></span></div>
-      <table class="ret-table">
+      <div class="table-scroll"><table class="ret-table">
         <thead><tr>
           <th>Bought</th>
           <th>Price then</th>
@@ -485,7 +558,7 @@
           <th>Return</th>
         </tr></thead>
         <tbody id="ret-body"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
-      </table>
+      </table></div>
     </div>
 
     <!-- Kaspa uniek -->
@@ -503,7 +576,7 @@
   </div>
 
   <!-- SECURITY BUDGET -->
-  <div class="grid" style="margin-top:0">
+  <div class="grid" data-tab="network" style="margin-top:0">
     <div class="tile span2">
       <div class="h"><span>Security budget</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What miners earn per day securing the network (block reward × 10 blocks/s × 86,400 s × KAS price). The annualised figure as % of market cap shows how much the network "spends" on security — higher = harder and costlier to attack.</span></span></div>
       <div class="v" id="sec-usd">–</div>
@@ -526,7 +599,7 @@
   </div>
 
   <!-- LIVE BLOCK FEED -->
-  <section class="panel" style="margin-top:0;margin-bottom:16px">
+  <section class="panel" data-tab="network" style="margin-top:0;margin-bottom:16px">
     <div class="h" style="margin-bottom:0">
       <h2 style="margin:0;font-size:15px;font-weight:600">Live block feed</h2>
       <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The most recent blocks added to the Kaspa BlockDAG, refreshed every 10 seconds. Blue score is Kaspa's internal ordering metric. Tx = transactions in that block.</span></span>
@@ -538,10 +611,10 @@
   </section>
 
   <!-- KRC-20 -->
-  <section class="panel">
+  <section class="panel" data-tab="tokens">
     <h2>KRC-20 tokens <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Tokens built on top of Kaspa using the KRC-20 standard — similar to ERC-20 on Ethereum. Anyone can deploy a token. Most are community/meme projects; none have guaranteed value. Click a column header to sort.</span></span></h2>
     <div class="cap">Top tokens on the Kasplex layer, ranked by mint progress — the emerging token ecosystem after Toccata.</div>
-    <div id="krc20-wrap">
+    <div id="krc20-wrap" class="table-scroll">
       <table id="krc20-table">
         <thead><tr>
           <th class="sortable" data-col="tick" style="cursor:pointer">Token <span id="sort-tick"></span></th>
@@ -555,7 +628,7 @@
   </section>
 
   <!-- KRC-20 GROWTH -->
-  <section class="panel" id="tokgrowth" style="margin-top:16px">
+  <section class="panel" id="tokgrowth" data-tab="tokens" style="margin-top:16px">
     <div class="hist-head">
       <div>
         <h2>KRC-20 growth</h2>
@@ -571,7 +644,7 @@
   </section>
 
   <!-- KASPA DEFI ECOSYSTEM -->
-  <section class="panel" id="defi" style="margin-top:16px">
+  <section class="panel" id="defi" data-tab="tokens" style="margin-top:16px">
     <div class="h" style="margin-bottom:2px">
       <h2 style="margin:0;font-size:15px;font-weight:600">Kaspa DeFi ecosystem <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">DeFi activity on Kaspa's layer-2 chains (Igra, Kasplex and any others). TVL = total value locked, i.e. capital deposited into smart contracts — a proxy for real usage. All figures via DefiLlama.</span></span></h2>
       <span id="defi-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
@@ -592,7 +665,7 @@
     </div>
 
     <!-- top protocols -->
-    <table style="margin-top:14px">
+    <div class="table-scroll"><table style="margin-top:14px">
       <thead><tr>
         <th>Protocol <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">DeFi applications deployed on Kaspa's L2 chains, ranked by the value locked on those chains. Only the portion of each protocol running on a Kaspa chain is counted. Staking pools are listed separately below, since DefiLlama excludes them from the headline chain TVL.</span></span></th>
         <th style="text-align:left">Type</th>
@@ -602,16 +675,16 @@
         <th>7d</th>
       </tr></thead>
       <tbody id="defi-proto"><tr><td colspan="6" class="skeleton">loading protocols…</td></tr></tbody>
-    </table>
+    </table></div>
     <div class="cap" id="defi-proto-empty" style="display:none;margin-top:8px"></div>
     <div class="note" id="defi-staking-note" style="margin-top:10px;display:none"></div>
   </section>
 
   <!-- PEERS -->
-  <section class="panel" id="peers-pow-panel" style="margin-top:16px">
+  <section class="panel" id="peers-pow-panel" data-tab="tokens" style="margin-top:16px">
     <h2>Proof-of-Work peers <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Proof-of-Work coins use real computing power (miners) to secure the network — like Bitcoin. Kaspa is PoW but much faster, with a BlockDAG instead of a linear chain.</span></span></h2>
     <div class="cap">Kaspa versus other proof-of-work coins. Kaspa's row is highlighted.</div>
-    <table>
+    <div class="table-scroll"><table>
       <thead><tr>
         <th>Coin</th>
         <th>Market cap <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value of all coins in circulation (price × supply). Larger = more established.</span></span></th>
@@ -620,13 +693,13 @@
         <th>V/MC <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">24h volume ÷ market cap. Shows how actively the coin is traded relative to its size. Higher = more liquid. Very high (>20%) may indicate speculation or wash trading.</span></span></th>
       </tr></thead>
       <tbody id="peers-pow"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
-    </table>
+    </table></div>
   </section>
 
-  <section class="panel" id="peers-l1-panel" style="margin-top:16px">
+  <section class="panel" id="peers-l1-panel" data-tab="tokens" style="margin-top:16px">
     <h2>Layer-1 peers <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Layer-1 networks are base blockchains that process transactions directly. Kaspa competes here as a fast, scalable L1 — but is unique in being PoW while most others use Proof-of-Stake.</span></span></h2>
     <div class="cap">Kaspa versus other fast layer-1 networks. Kaspa's row is highlighted.</div>
-    <table>
+    <div class="table-scroll"><table>
       <thead><tr>
         <th>Coin</th>
         <th>Market cap <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value of all coins in circulation (price × supply). Larger = more established.</span></span></th>
@@ -635,11 +708,11 @@
         <th>V/MC <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">24h volume ÷ market cap. Shows how actively the coin is traded relative to its size. Higher = more liquid. Very high (>20%) may indicate speculation or wash trading.</span></span></th>
       </tr></thead>
       <tbody id="peers-l1"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
-    </table>
+    </table></div>
   </section>
 
   <!-- HISTORY -->
-  <section class="panel" id="history" style="margin-top:16px">
+  <section class="panel" id="history" data-tab="history" style="margin-top:16px">
     <div class="hist-head">
       <div>
         <h2>History</h2>
@@ -663,7 +736,7 @@
   </section>
 
   <!-- MARKET SIGNALS -->
-  <section class="panel" id="signals" style="margin-top:16px">
+  <section class="panel" id="signals" data-tab="market" style="margin-top:16px">
     <div class="h" style="margin-bottom:2px">
       <h2 style="margin:0;font-size:15px;font-weight:600">Market signals <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Technical indicators computed from KAS's daily closing prices over the past year (via CoinGecko). These describe recent price behaviour — they are not predictions and not financial advice.</span></span></h2>
       <span id="sig-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
@@ -705,11 +778,11 @@
   </section>
 
   <!-- EXCHANGES TABLE -->
-  <section class="panel" style="margin-top:16px">
+  <section class="panel" data-tab="market" style="margin-top:16px">
     <div class="h" style="margin-bottom:0">
       <h2 style="margin:0;font-size:15px;font-weight:600">Top exchanges <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Where KAS is traded, ranked by 24h volume. V/MC = volume as % of market cap — higher means more active trading relative to size. Data via CoinGecko.</span></span></h2>
     </div>
-    <table class="exc-table">
+    <div class="table-scroll"><table class="exc-table">
       <thead><tr>
         <th>Exchange</th>
         <th>Pair</th>
@@ -718,11 +791,11 @@
         <th class="exc-pct">V/MC <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Volume/Market cap ratio for this exchange: how much of Kaspa's total market cap is traded here in 24h. Higher = more active trading of KAS on this platform.</span></span></th>
       </tr></thead>
       <tbody id="exc-body"><tr><td colspan="5" class="skeleton">loading…</td></tr></tbody>
-    </table>
+    </table></div>
   </section>
 
   <!-- COMMUNITY & NETWERK STATS -->
-  <section class="panel" style="margin-top:16px">
+  <section class="panel" data-tab="tokens" style="margin-top:16px">
     <div class="h" style="margin-bottom:8px">
       <h2 style="margin:0;font-size:15px;font-weight:600">Community &amp; links</h2>
     </div>
@@ -822,7 +895,7 @@
   </div>
 
   <!-- ABOUT THIS DASHBOARD -->
-  <section class="panel" id="about" style="margin-top:16px">
+  <section class="panel" id="about" data-tab="about" style="margin-top:16px">
     <div class="h" style="margin-bottom:2px">
       <h2 style="margin:0;font-size:15px;font-weight:600">About this dashboard <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How this dashboard is built and where its numbers come from. Figures are pulled live from public APIs — CoinGecko runs through a lightweight caching proxy that keeps its API key server-side and is shared across all visitors; everything else is fetched straight from your browser. No login, no cookies.</span></span></h2>
     </div>
@@ -847,6 +920,35 @@
 <script>
 (function(){
   "use strict";
+
+  // ── Tab navigation ──
+  (function(){
+    const bar = document.getElementById("tab-bar");
+    if(!bar) return;
+    function activateTab(name){
+      bar.querySelectorAll(".tab-btn").forEach(b=>{
+        const on = b.dataset.target===name;
+        b.classList.toggle("active",on);
+        b.setAttribute("aria-selected", on);
+      });
+      document.querySelectorAll("[data-tab]").forEach(el=>{
+        el.classList.toggle("tab-visible", el.dataset.tab===name);
+      });
+      // Scroll to top of tab content area
+      bar.scrollIntoView({behavior:"smooth",block:"start"});
+      // Persist in URL hash
+      history.replaceState(null,"","#"+name);
+    }
+    bar.addEventListener("click",e=>{
+      const btn=e.target.closest(".tab-btn");
+      if(btn) activateTab(btn.dataset.target);
+    });
+    // Restore tab from URL hash on load
+    const hash = location.hash.replace("#","");
+    const validTabs = ["overview","market","network","tokens","history","about"];
+    if(hash && validTabs.includes(hash)) activateTab(hash);
+  })();
+
   const KAS = "https://api.kaspa.org";
   const KASPLEX = "https://api.kasplex.org";
   const SOMPI = 1e8;
@@ -856,7 +958,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.12.0";
+  const APP_VERSION = "v2.13.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
