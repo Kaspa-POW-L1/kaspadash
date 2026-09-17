@@ -1208,6 +1208,7 @@
   const cgCache = new Map();         // url -> { t, data }
   const cgPending = new Map();       // url -> in-flight promise
   let cgBlockUntil = 0;              // pause CG calls until this timestamp after a 429
+  const sleep = ms => new Promise(res=>setTimeout(res, ms));
   async function cgJSON(url){
     const now = Date.now();
     const cached = cgCache.get(url);
@@ -2334,9 +2335,19 @@
 
     body.innerHTML = '<tr><td colspan="4" class="skeleton">loading…</td></tr>';
 
-    const results = await Promise.allSettled(
-      periods.map(p => cgJSON(CG+"/coins/kaspa/history?date="+fmt(p.days)+"&localization=false"))
-    );
+    // Serieel met een korte pauze i.p.v. 6 calls tegelijk: een burst tript
+    // de gratis CoinGecko-tier direct op een 429, wat daarna o.a. het
+    // Market signals-paneel uithongert.
+    const results = [];
+    for(const p of periods){
+      try{
+        const v = await cgJSON(CG+"/coins/kaspa/history?date="+fmt(p.days)+"&localization=false");
+        results.push({status:"fulfilled", value:v});
+      }catch(e){
+        results.push({status:"rejected", reason:e});
+      }
+      await sleep(350);
+    }
 
     let rows = "";
     results.forEach((r,i)=>{
@@ -2404,7 +2415,7 @@
     return (da>0&&db>0) ? num/Math.sqrt(da*db) : NaN;
   }
 
-  async function loadMarketSignals(){
+  async function loadMarketSignals(retry){
     const status=$("sig-status");
     try{
       const kd = await cgJSON(CG+"/coins/kaspa/market_chart?vs_currency=usd&days=365");
@@ -2460,6 +2471,15 @@
 
       if(status){ status.textContent="updated"; status.classList.remove("err"); }
     }catch(e){
+      // Staat CoinGecko net in backoff (429)? Dan niet tot de volgende
+      // uurlijkse run wachten, maar één keer opnieuw proberen zodra het
+      // venster voorbij is. Andere fouten → direct 'unavailable'.
+      const wait = cgBlockUntil - Date.now();
+      if(!retry && wait > 0){
+        if(status){ status.textContent="retrying…"; status.classList.remove("err"); }
+        setTimeout(()=>loadMarketSignals(true), wait + 2000);
+        return;
+      }
       if(status){ status.textContent="unavailable"; status.classList.add("err"); }
     }
   }
