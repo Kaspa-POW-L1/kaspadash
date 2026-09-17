@@ -621,9 +621,11 @@
           <th class="sortable" data-col="tick" style="cursor:pointer">Token <span id="sort-tick"></span></th>
           <th class="sortable" data-col="pct" style="cursor:pointer;text-align:right">Minted <span id="sort-pct">▼</span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">% of the maximum supply that has been minted so far. 100% = fully minted, emission complete.</span></span></th>
           <th style="text-align:right">Max supply <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The maximum number of tokens that will ever exist for this KRC-20 token.</span></span></th>
+          <th class="sortable" data-col="holders" style="cursor:pointer;text-align:right">Holders <span id="sort-holders"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Number of unique addresses holding this token. More holders generally means wider distribution.</span></span></th>
+          <th class="sortable" data-col="transfers" style="cursor:pointer;text-align:right">Transfers <span id="sort-transfers"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total number of transfer transactions for this token since deployment.</span></span></th>
           <th class="sortable" data-col="state" style="cursor:pointer;text-align:right">State <span id="sort-state"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">"finished" = fully minted, no new tokens possible. "deployed" = still being minted — new tokens are being created.</span></span></th>
         </tr></thead>
-        <tbody id="krc20"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
+        <tbody id="krc20"><tr><td colspan="6" class="skeleton">loading…</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -960,7 +962,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.15.0";
+  const APP_VERSION = "v2.16.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1558,11 +1560,13 @@
     const sorted = [...krc20Data].sort((a,b)=>{
       if(col==="tick") return dir*(a.tick.localeCompare(b.tick));
       if(col==="pct")  return dir*((b.pct??-1)-(a.pct??-1));
+      if(col==="holders") return dir*((a.holders||0)-(b.holders||0));
+      if(col==="transfers") return dir*((a.transfers||0)-(b.transfers||0));
       if(col==="state") return dir*(a.state.localeCompare(b.state));
       return 0;
     });
     // update sort indicators
-    ["tick","pct","state"].forEach(c=>{
+    ["tick","pct","holders","transfers","state"].forEach(c=>{
       const el=$("sort-"+c); if(!el) return;
       el.textContent = col===c ? (dir<0?"▼":"▲") : "";
     });
@@ -1571,14 +1575,18 @@
     const finished = sorted.filter(t=>t.state!=="deployed");
     const rows = (list, label) => {
       if(!list.length) return "";
-      const header = '<tr><td colspan="4" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
+      const header = '<tr><td colspan="6" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
       return header + list.map(t=>{
         const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
         const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
         const stColor = t.state==="deployed" ? "var(--teal-dim)" : "var(--muted)";
+        const h = isFinite(t.holders) ? compact(t.holders) : "–";
+        const tr = isFinite(t.transfers) ? compact(t.transfers) : "–";
         return '<tr><td class="tick">'+esc(t.tick)+'</td>'+
                '<td>'+bar+pctTxt+'</td>'+
                '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
+               '<td>'+h+'</td>'+
+               '<td>'+tr+'</td>'+
                '<td><span style="color:'+stColor+'">'+esc(t.state)+'</span></td></tr>';
       }).join("");
     };
@@ -1600,7 +1608,9 @@
           tick: t.tick || t.ticker || "?",
           state: (pick(t,["state"]) || "").toString(),
           maxh: isFinite(max) ? max/scale : NaN,
-          pct: (isFinite(minted)&&isFinite(max)&&max>0) ? Math.min(100, minted/max*100) : null
+          pct: (isFinite(minted)&&isFinite(max)&&max>0) ? Math.min(100, minted/max*100) : null,
+          holders: num(pick(t,["holderTotal"])),
+          transfers: num(pick(t,["transferTotal"]))
         };
       }).filter(t=>t.tick && t.tick!=="?").slice(0,24);
       renderKrc20Table();
@@ -1614,7 +1624,7 @@
         };
       });
     }catch(e){
-      body.innerHTML='<tr><td colspan="4" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
+      body.innerHTML='<tr><td colspan="6" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
     }
   }
   function esc(s){ return String(s).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
