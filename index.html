@@ -540,16 +540,7 @@
     </div>
   </div>
 
-  <div class="grid" data-tab="market">
-    <div class="tile span2">
-      <div class="h"><span>Bitcoin dominance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bitcoin's share of the total crypto market cap. Falling dominance often means capital is rotating from BTC into altcoins (like KAS); rising dominance means money is concentrating back into Bitcoin.</span></span></div>
-      <div class="v" id="m-btcdom">–</div>
-      <div class="bar"><i id="btcdom-bar"></i></div>
-      <div class="note" id="m-btcdom-note">BTC share of total crypto market · rising = risk-off</div>
-    </div>
-  </div>
-
-  <!-- RENDEMENT TABEL -->
+  <!-- RENDEMENT & BTC DOMINANCE -->
   <div class="grid" data-tab="market" style="margin-top:0">
     <div class="tile span2">
       <div class="h"><span>Return on investment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What $100 invested in KAS at various points in the past would be worth today. Based on historical closing prices via CoinGecko. Not financial advice.</span></span></div>
@@ -562,6 +553,12 @@
         </tr></thead>
         <tbody id="ret-body"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
       </table></div>
+    </div>
+    <div class="tile span2">
+      <div class="h"><span>Bitcoin dominance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bitcoin's share of the total crypto market cap. Falling dominance often means capital is rotating from BTC into altcoins (like KAS); rising dominance means money is concentrating back into Bitcoin.</span></span></div>
+      <div class="v" id="m-btcdom">–</div>
+      <div class="bar"><i id="btcdom-bar"></i></div>
+      <div class="note" id="m-btcdom-note">BTC share of total crypto market · rising = risk-off</div>
     </div>
   </div>
 
@@ -946,7 +943,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.24.1";
+  const APP_VERSION = "v2.25.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
