@@ -577,7 +577,7 @@
   <!-- KRC-20 -->
   <section class="panel" data-tab="tokens">
     <h2>KRC-20 tokens <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Tokens built on top of Kaspa using the KRC-20 standard — similar to ERC-20 on Ethereum. Anyone can deploy a token. Most are community/meme projects; none have guaranteed value. Click a column header to sort.</span></span></h2>
-    <div class="cap">Top tokens on the Kasplex layer, ranked by mint progress — the emerging token ecosystem after Toccata.</div>
+    <div class="cap">Top tokens on the Kasplex layer, ranked by market cap — the emerging token ecosystem after Toccata.</div>
     <div id="krc20-wrap" class="table-scroll">
       <table id="krc20-table">
         <thead><tr>
@@ -940,7 +940,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.26.0";
+  const APP_VERSION = "v2.27.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1611,40 +1611,21 @@
   }
   function esc(s){ return String(s).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
 
-  // ---- KRC-20 price data via CoinGecko (auto-matched) ----
-  // Fetches /coins/list once, matches Kasplex tickers against CoinGecko symbols,
-  // then pulls market data for any hits. No manual mapping needed.
-  let krc20CgMap = {};  // tick → coingecko id, built dynamically
-
-  async function buildKrc20CgMap(){
-    if(!krc20Data.length) return;
-    try{
-      const list = await cgJSON(CG+"/coins/list");
-      if(!Array.isArray(list)) return;
-      // index by uppercase symbol → [{id, name}, ...]
-      const bySym = {};
-      list.forEach(c=>{
-        const s = (c.symbol||"").toUpperCase();
-        (bySym[s] = bySym[s]||[]).push(c);
-      });
-      // match each Kasplex ticker
-      const kaspaHints = /kaspa|krc|kat|kas/i;
-      krc20CgMap = {};
-      krc20Data.forEach(t=>{
-        const candidates = bySym[t.tick];
-        if(!candidates || !candidates.length) return;
-        if(candidates.length===1){ krc20CgMap[t.tick]=candidates[0].id; return; }
-        // multiple matches: prefer the one with a Kaspa-related name
-        const hit = candidates.find(c=>kaspaHints.test(c.name||"")) || candidates[0];
-        krc20CgMap[t.tick] = hit.id;
-      });
-    }catch(e){ /* coins/list optional — fall back to empty map */ }
-  }
+  // ---- KRC-20 price data via CoinGecko ----
+  // ⚠️  MAINTAINER NOTE (also for AI assistants editing this file):
+  //  1. Always bump APP_VERSION on every change (search "APP_VERSION").
+  //  2. When new KRC-20 tokens get listed on CoinGecko, add them to the
+  //     map below. Find the id in the CoinGecko URL: coingecko.com/en/coins/{id}
+  //  3. Community section lives under its own "Community" tab (data-tab="community").
+  //  4. "What makes Kaspa unique?" lives under the About tab.
+  const KRC20_CG_MAP = {
+    "NACHO":"nacho-the-kat", "KASPY":"kaspy", "KASPER":"kasper",
+    "KANGO":"kango", "GHOAD":"ghoad", "KASBOT":"kasbot",
+    "KDAO":"kdao-2", "KONAN":"konan"
+  };
 
   async function loadKrc20Prices(){
-    // build map on first run or when empty
-    if(!Object.keys(krc20CgMap).length) await buildKrc20CgMap();
-    const ids = [...new Set(Object.values(krc20CgMap))];
+    const ids = [...new Set(Object.values(KRC20_CG_MAP))];
     if(!ids.length) return;
     try{
       const d = await cgJSON(CG+"/coins/markets?vs_currency=usd&ids="+ids.join(",")+"&per_page=50&page=1&sparkline=false");
@@ -1652,7 +1633,7 @@
       const byId={};
       d.forEach(c=>{ byId[c.id]=c; });
       krc20Data.forEach(t=>{
-        const cgId = krc20CgMap[t.tick];
+        const cgId = KRC20_CG_MAP[t.tick];
         if(cgId && byId[cgId]){
           t.price = byId[cgId].current_price;
           t.mcap = byId[cgId].market_cap;
