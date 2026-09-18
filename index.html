@@ -461,11 +461,6 @@
       <div class="v" id="m-emit">–</div>
       <div class="note" id="m-emit-note">new KAS per day · inflation –</div>
     </div>
-    <div class="tile">
-      <div class="h"><span>24h range</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The lowest and highest price KAS reached in the last 24 hours. Gives context for where the current price sits relative to today's trading range.</span></span></div>
-      <div class="v" id="m-52lo">–</div>
-      <div class="note" id="m-52hi">high –</div>
-    </div>
     <div class="tile span2">
       <div class="h"><span>Developer activity</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Live stats from the kaspanet/rusty-kaspa GitHub repository — the main Kaspa node implementation. Last push date shows how recently the codebase was updated. Stars and forks reflect developer interest in the project.</span></span></div>
       <div class="sec-row" style="margin-top:4px">
@@ -501,9 +496,9 @@
       <div class="note">hard cap · fair launch · no premine</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Dashboard views</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total pageviews of this dashboard tracked by GoatCounter — a privacy-friendly, cookie-free analytics tool. Each page load counts as one view.</span></span></div>
-      <div class="v" id="gc-views">–</div>
-      <div class="note" id="gc-note">total · <a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener" style="color:var(--teal-dim)">stats →</a></div>
+      <div class="h"><span>24h range</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The lowest and highest price KAS reached in the last 24 hours. Gives context for where the current price sits relative to today's trading range.</span></span></div>
+      <div class="v" id="m-52lo">–</div>
+      <div class="note" id="m-52hi">high –</div>
     </div>
   </div>
 
@@ -513,12 +508,6 @@
       <div class="v" id="m-btcdom">–</div>
       <div class="bar"><i id="btcdom-bar"></i></div>
       <div class="note" id="m-btcdom-note">BTC share of total crypto market · rising = risk-off</div>
-    </div>
-
-    <div class="tile span2">
-      <div class="h"><span>Igra L2 · TVL</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value locked on Igra — Kaspa's EVM-compatible layer-2, public mainnet since March 2026. TVL is capital deposited into the chain's smart contracts, a proxy for real DeFi usage. Source: DefiLlama.</span></span></div>
-      <div class="v" id="m-igra">–</div>
-      <div class="note" id="m-igra-note">Kaspa L2 DeFi · via DefiLlama</div>
     </div>
   </div>
 
@@ -966,7 +955,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.19.0";
+  const APP_VERSION = "v2.21.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1819,23 +1808,6 @@
 
   // ---- GoatCounter dashboard views ----
   // Requires "Allow adding visitor counts on your website" enabled in GoatCounter
-  // site settings — otherwise the /counter/ endpoint returns 403 and the tile stays "–".
-  function loadViews(){
-    const base = "https://zandkorrel.goatcounter.com/counter/";
-    const grab = p => fetch(base + p + ".json").then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); });
-    const show = d => {
-      const raw = d && (d.count!=null ? d.count : d.count_unique);
-      if(raw==null) return;
-      const n = Number(String(raw).replace(/[^0-9.]/g,""));      // count is a comma-formatted string
-      $("gc-views").textContent = isFinite(n) ? compact(n) : String(raw);
-    };
-    // Site-wide total first; fall back to this page's exact path if TOTAL is unavailable.
-    grab("TOTAL")
-      .then(show)
-      .catch(()=> grab(encodeURIComponent(window.location.pathname || "/")).then(show))
-      .catch(()=>{ /* counter endpoint disabled or unreachable — leave as – */ });
-  }
-
   // ---- All CoinGecko data in one coordinated load ----
   // Previously loadPeers, loadGlobal and loadSentiment each fired a separate
   // CoinGecko request almost simultaneously, reliably triggering a 429 on the
@@ -1951,25 +1923,6 @@
         $("gh-ago").textContent = " · "+(daysAgo===0?"today":daysAgo+"d ago");
       }
     }catch(e){ /* leave as – */ }
-  }
-
-  // ---- Kaspa L2 TVL: Igra (+ Kasplex for context), via DefiLlama ----
-  async function loadL2Tvl(){
-    try{
-      const d = await getJSON("https://api.llama.fi/v2/chains");
-      if(!Array.isArray(d)) throw new Error("bad");
-      const tvlOf = name => {
-        const c = d.find(x=>x && x.name && x.name.toLowerCase()===name);
-        return c ? num(pick(c,["tvl"])) : NaN;
-      };
-      const igra = tvlOf("igra"), kasplex = tvlOf("kasplex");
-      if(isFinite(igra)){
-        $("m-igra").textContent = "$"+compact(igra);
-        $("m-igra-note").textContent = isFinite(kasplex)
-          ? "Kaspa L2 · Kasplex $"+compact(kasplex)+" · via DefiLlama"
-          : "Kaspa L2 DeFi · via DefiLlama";
-      } else setErr("m-igra");
-    }catch(e){ setErr("m-igra"); }
   }
 
   // ---- Kaspa DeFi ecosystem (DefiLlama) ----
@@ -2920,8 +2873,6 @@
   loadHistory();
   loadSentiment();
   loadTokenGrowth();
-  loadViews();
-  loadL2Tvl();
   loadDefiEcosystem();
   loadBlockFeed();
   loadGitHub();
@@ -2945,8 +2896,6 @@
   setInterval(loadAllCoinGecko,120000);
   setInterval(loadSentiment,  5*60000);
   setInterval(loadTokenGrowth,30*60000);
-  setInterval(loadViews,      5*60000);
-  setInterval(loadL2Tvl,     10*60000);
   setInterval(loadDefiEcosystem, 10*60000);
   setInterval(loadBlockFeed,    10000);
   setInterval(loadExchanges,  10*60000);
@@ -2960,7 +2909,7 @@
   document.addEventListener("visibilitychange", ()=>{
     if(!document.hidden){
       refresh(); loadHistory(); loadAllCoinGecko();
-      loadSentiment(); loadTokenGrowth(); loadL2Tvl(); loadDefiEcosystem(); loadBlockFeed();
+      loadSentiment(); loadTokenGrowth(); loadDefiEcosystem(); loadBlockFeed();
       setTimeout(loadExchanges, 5000);
       setTimeout(loadEurPrice,  8000);
     }
