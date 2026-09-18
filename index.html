@@ -584,15 +584,12 @@
           <th class="sortable" data-col="tick" style="cursor:pointer">Token <span id="sort-tick"></span></th>
           <th class="sortable" data-col="price" style="cursor:pointer;text-align:right">Price <span id="sort-price"></span></th>
           <th class="sortable" data-col="c24" style="cursor:pointer;text-align:right">24h <span id="sort-c24"></span></th>
-          <th class="sortable" data-col="mcap" style="cursor:pointer;text-align:right">Mcap <span id="sort-mcap"></span></th>
-          <th class="sortable" data-col="pct" style="cursor:pointer;text-align:right">Minted <span id="sort-pct">▼</span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">% of the maximum supply that has been minted so far. 100% = fully minted, emission complete.</span></span></th>
+          <th class="sortable" data-col="mcap" style="cursor:pointer;text-align:right">Mcap <span id="sort-mcap">▼</span></th>
+          <th class="sortable" data-col="pct" style="cursor:pointer;text-align:right">Minted <span id="sort-pct"></span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">% of the maximum supply that has been minted so far. 100% = fully minted, emission complete.</span></span></th>
           <th style="text-align:right">Max supply <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The maximum number of tokens that will ever exist for this KRC-20 token.</span></span></th>
-          <th class="sortable" data-col="holders" style="cursor:pointer;text-align:right">Holders <span id="sort-holders"></span></th>
-          <th class="sortable" data-col="mints" style="cursor:pointer;text-align:right">Mints <span id="sort-mints"></span></th>
-          <th class="sortable" data-col="transfers" style="cursor:pointer;text-align:right">Transfers <span id="sort-transfers"></span></th>
           <th class="sortable" data-col="state" style="cursor:pointer;text-align:right">State <span id="sort-state"></span></th>
         </tr></thead>
-        <tbody id="krc20"><tr><td colspan="10" class="skeleton">loading…</td></tr></tbody>
+        <tbody id="krc20"><tr><td colspan="7" class="skeleton">loading…</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -943,7 +940,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.25.0";
+  const APP_VERSION = "v2.26.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1533,7 +1530,7 @@
 
   // ---- KRC-20 with sorting ----
   let krc20Data = [];
-  let krc20Sort = {col:"pct", dir:-1}; // default: minted % desc
+  let krc20Sort = {col:"mcap", dir:-1}; // default: market cap desc
 
   function renderKrc20Table(){
     const body=$("krc20"); if(!body||!krc20Data.length) return;
@@ -1544,14 +1541,11 @@
       if(col==="c24") return dir*((a.c24||0)-(b.c24||0));
       if(col==="mcap") return dir*((a.mcap||0)-(b.mcap||0));
       if(col==="pct")  return dir*((b.pct??-1)-(a.pct??-1));
-      if(col==="holders") return dir*((a.holders||0)-(b.holders||0));
-      if(col==="mints") return dir*((a.mints||0)-(b.mints||0));
-      if(col==="transfers") return dir*((a.transfers||0)-(b.transfers||0));
       if(col==="state") return dir*(a.state.localeCompare(b.state));
       return 0;
     });
     // update sort indicators
-    ["tick","price","c24","mcap","pct","holders","mints","transfers","state"].forEach(c=>{
+    ["tick","price","c24","mcap","pct","state"].forEach(c=>{
       const el=$("sort-"+c); if(!el) return;
       el.textContent = col===c ? (dir<0?"▼":"▲") : "";
     });
@@ -1560,14 +1554,11 @@
     const finished = sorted.filter(t=>t.state!=="deployed");
     const rows = (list, label) => {
       if(!list.length) return "";
-      const header = '<tr><td colspan="10" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
+      const header = '<tr><td colspan="7" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
       return header + list.map(t=>{
         const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
         const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
         const stColor = t.state==="deployed" ? "var(--teal-dim)" : "var(--muted)";
-        const h = isFinite(t.holders) ? compact(t.holders) : "–";
-        const m = isFinite(t.mints) ? compact(t.mints) : "–";
-        const tr = isFinite(t.transfers) ? compact(t.transfers) : "–";
         const price = isFinite(t.price) ? "$"+t.price.toFixed(t.price>=0.01?4:t.price>=0.0001?6:8) : '<span style="color:var(--muted)">–</span>';
         const c24 = isFinite(t.c24) ? fmtPct(t.c24) : '<span style="color:var(--muted)">–</span>';
         const mcap = isFinite(t.mcap)&&t.mcap>0 ? "$"+compact(t.mcap) : '<span style="color:var(--muted)">–</span>';
@@ -1577,9 +1568,6 @@
                '<td>'+mcap+'</td>'+
                '<td>'+bar+pctTxt+'</td>'+
                '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
-               '<td>'+h+'</td>'+
-               '<td>'+m+'</td>'+
-               '<td>'+tr+'</td>'+
                '<td><span style="color:'+stColor+'">'+esc(t.state)+'</span></td></tr>';
       }).join("");
     };
@@ -1618,7 +1606,7 @@
         };
       });
     }catch(e){
-      body.innerHTML='<tr><td colspan="10" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
+      body.innerHTML='<tr><td colspan="7" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
     }
   }
   function esc(s){ return String(s).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
