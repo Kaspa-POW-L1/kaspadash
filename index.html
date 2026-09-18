@@ -461,6 +461,21 @@
       <div class="v" id="m-emit">–</div>
       <div class="note" id="m-emit-note">new KAS per day · inflation –</div>
     </div>
+    <div class="tile">
+      <div class="h"><span>Mined today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated new KAS created since midnight UTC today. Calculated from the block reward and blocks produced today. Shows the daily emission in practice.</span></span></div>
+      <div class="v" id="m-mined-today">–</div>
+      <div class="note" id="m-mined-today-note">new KAS since midnight UTC</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Network age</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Days since Kaspa's genesis block on 7 November 2021 — a fair launch with no premine. Shows how mature the network is and gives context to the total block count.</span></span></div>
+      <div class="v" id="m-netage">–</div>
+      <div class="note" id="m-netage-note">days since genesis · 7 Nov 2021</div>
+    </div>
+    <div class="tile">
+      <div class="h"><span>Blocks per day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated number of blocks the network produces per day, based on the DAA score delta between refreshes. At 10 blocks per second the target is 864,000 blocks/day. A lower number means the network is slightly slower than target.</span></span></div>
+      <div class="v" id="m-bpd-live">–</div>
+      <div class="note" id="m-bpd-note">target: 864,000 · based on DAA score</div>
+    </div>
     <div class="tile span2">
       <div class="h"><span>Developer activity</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Live stats from the kaspanet/rusty-kaspa GitHub repository — the main Kaspa node implementation. Last push date shows how recently the codebase was updated. Stars and forks reflect developer interest in the project.</span></span></div>
       <div class="sec-row" style="margin-top:4px">
@@ -470,6 +485,15 @@
         <div><span class="k" id="gh-issues">–</span><span class="t"> open issues</span></div>
       </div>
       <div class="note">last push to kaspanet/rusty-kaspa · via GitHub API</div>
+    </div>
+  </div>
+
+  <!-- SECURITY BUDGET & EMISSION CURVE -->
+  <div class="grid" data-tab="network" style="margin-top:0">
+        <p><strong>Chromatic halving</strong> — Instead of a sudden halving every 4 years (like Bitcoin), Kaspa reduces the block reward by ½^(1/12) every month — a smooth, predictable emission curve toward a hard cap of ~28.7B KAS.</p>
+        <p><strong>Fair launch</strong> — No premine, no ICO, no investor allocation. All KAS was and is earned through mining.</p>
+        <p><strong>Rust implementation</strong> — The node software (rusty-kaspa) is written in Rust, known for memory safety and performance. The codebase is open source.</p>
+      </div>
     </div>
   </div>
 
@@ -511,31 +535,6 @@
     </div>
   </div>
 
-  <!-- SECURITY BUDGET -->
-  <div class="grid" data-tab="network" style="margin-top:0">
-
-    <!-- Netwerk leeftijd -->
-    <div class="tile">
-      <div class="h"><span>Network age</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Days since Kaspa's genesis block on 7 November 2021 — a fair launch with no premine. Shows how mature the network is and gives context to the total block count.</span></span></div>
-      <div class="v" id="m-netage">–</div>
-      <div class="note" id="m-netage-note">days since genesis · 7 Nov 2021</div>
-    </div>
-
-    <!-- Blocks per day -->
-    <div class="tile">
-      <div class="h"><span>Blocks per day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated number of blocks the network produces per day, based on the DAA score delta between refreshes. At 10 blocks per second the target is 864,000 blocks/day. A lower number means the network is slightly slower than target.</span></span></div>
-      <div class="v" id="m-bpd-live">–</div>
-      <div class="note" id="m-bpd-note">target: 864,000 · based on DAA score</div>
-    </div>
-
-    <!-- Mined today -->
-    <div class="tile">
-      <div class="h"><span>Mined today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated new KAS created since midnight UTC today. Calculated from the block reward and blocks produced today. Shows the daily emission in practice.</span></span></div>
-      <div class="v" id="m-mined-today">–</div>
-      <div class="note" id="m-mined-today-note">new KAS since midnight UTC</div>
-    </div>
-  </div>
-
   <!-- RENDEMENT TABEL -->
   <div class="grid" data-tab="market" style="margin-top:0">
     <div class="tile span2">
@@ -565,7 +564,7 @@
     </div>
   </div>
 
-  <!-- SECURITY BUDGET -->
+  <!-- SECURITY BUDGET & EMISSION CURVE -->
   <div class="grid" data-tab="network" style="margin-top:0">
     <div class="tile span2">
       <div class="h"><span>Security budget</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What miners earn per day securing the network (block reward × 10 blocks/s × 86,400 s × KAS price). The annualised figure as % of market cap shows how much the network "spends" on security — higher = harder and costlier to attack.</span></span></div>
@@ -955,7 +954,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.21.0";
+  const APP_VERSION = "v2.22.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
