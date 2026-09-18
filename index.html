@@ -549,19 +549,6 @@
         <tbody id="ret-body"><tr><td colspan="4" class="skeleton">loading…</td></tr></tbody>
       </table></div>
     </div>
-
-    <!-- Kaspa uniek -->
-    <div class="tile span2">
-      <div class="h"><span>What makes Kaspa unique?</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A quick introduction to Kaspa's core innovations for visitors who are new to the project.</span></span></div>
-      <button class="expand-btn" id="kaspa-expand-btn">▶ Read more</button>
-      <div class="expand-content" id="kaspa-expand">
-        <p><strong>GHOSTDAG / BlockDAG</strong> — Unlike Bitcoin where only one block per ~10 minutes is accepted, Kaspa accepts all blocks created simultaneously. This is possible through the GHOSTDAG protocol, which orders parallel blocks mathematically. Result: 10 blocks per second without sacrificing security or decentralisation.</p>
-        <p><strong>Proof of Work</strong> — Kaspa uses the kHeavyHash algorithm, deliberately ASIC-friendly. This means professional miners provide long-term security, just like Bitcoin. No proof-of-stake shortcuts.</p>
-        <p><strong>Chromatic halving</strong> — Instead of a sudden halving every 4 years (like Bitcoin), Kaspa reduces the block reward by ½^(1/12) every month — a smooth, predictable emission curve toward a hard cap of ~28.7B KAS.</p>
-        <p><strong>Fair launch</strong> — No premine, no ICO, no investor allocation. All KAS was and is earned through mining.</p>
-        <p><strong>Rust implementation</strong> — The node software (rusty-kaspa) is written in Rust, known for memory safety and performance. The codebase is open source.</p>
-      </div>
-    </div>
   </div>
 
   <!-- SECURITY BUDGET & EMISSION CURVE -->
@@ -893,6 +880,20 @@
   <!-- ABOUT THIS DASHBOARD -->
   <section class="panel" id="about" data-tab="about" style="margin-top:16px">
     <div class="h" style="margin-bottom:2px">
+      <h2 style="margin:0;font-size:15px;font-weight:600">What makes Kaspa unique? <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A quick introduction to Kaspa's core innovations for visitors who are new to the project.</span></span></h2>
+    </div>
+    <button class="expand-btn" id="kaspa-expand-btn">▶ Read more</button>
+    <div class="expand-content" id="kaspa-expand">
+      <p><strong>GHOSTDAG / BlockDAG</strong> — Unlike Bitcoin where only one block per ~10 minutes is accepted, Kaspa accepts all blocks created simultaneously. This is possible through the GHOSTDAG protocol, which orders parallel blocks mathematically. Result: 10 blocks per second without sacrificing security or decentralisation.</p>
+      <p><strong>Proof of Work</strong> — Kaspa uses the kHeavyHash algorithm, deliberately ASIC-friendly. This means professional miners provide long-term security, just like Bitcoin. No proof-of-stake shortcuts.</p>
+      <p><strong>Chromatic halving</strong> — Instead of a sudden halving every 4 years (like Bitcoin), Kaspa reduces the block reward by ½^(1/12) every month — a smooth, predictable emission curve toward a hard cap of ~28.7B KAS.</p>
+      <p><strong>Fair launch</strong> — No premine, no ICO, no investor allocation. All KAS was and is earned through mining.</p>
+      <p><strong>Rust implementation</strong> — The node software (rusty-kaspa) is written in Rust, known for memory safety and performance. The codebase is open source.</p>
+    </div>
+  </section>
+
+  <section class="panel" data-tab="about" style="margin-top:16px">
+    <div class="h" style="margin-bottom:2px">
       <h2 style="margin:0;font-size:15px;font-weight:600">About this dashboard <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How this dashboard is built and where its numbers come from. Figures are pulled live from public APIs — CoinGecko runs through a lightweight caching proxy that keeps its API key server-side and is shared across all visitors; everything else is fetched straight from your browser. No login, no cookies.</span></span></h2>
     </div>
     <div class="cap">An open, no-login window into the Kaspa network — every figure is pulled live from public sources.</div>
@@ -954,7 +955,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.22.0";
+  const APP_VERSION = "v2.23.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
