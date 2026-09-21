@@ -655,9 +655,20 @@
         <div class="note" id="ta-roc-note">14-day price momentum</div>
       </div>
       <div class="tile">
-        <div class="h"><span>Momentum score</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Combined momentum reading: aggregates RSI, Stochastic RSI and Rate of Change into a single bullish/bearish/neutral verdict.</span></span></div>
+        <div class="h"><span>Momentum score</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Combined momentum reading: aggregates RSI, Stochastic RSI, Rate of Change, Williams %R and CCI into a single bullish/bearish/neutral verdict.</span></span></div>
         <div class="v" id="ta-mom-score">–</div>
         <div class="note" id="ta-mom-note">combined momentum indicators</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>Williams %R (14)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A momentum oscillator ranging from −100 to 0. Below −80 = oversold (bullish), above −20 = overbought (bearish). Faster than RSI — reacts sooner to reversals, but gives more false signals.</span></span></div>
+        <div class="v" id="ta-willr">–</div>
+        <div class="bar"><i id="ta-willr-bar"></i></div>
+        <div class="note" id="ta-willr-note">−80 oversold / −20 overbought</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>CCI (20)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Commodity Channel Index — measures how far price deviates from its statistical mean. Above +100 = overbought/breakout, below −100 = oversold/breakdown. Useful for spotting trend starts and exhaustion.</span></span></div>
+        <div class="v" id="ta-cci">–</div>
+        <div class="note" id="ta-cci-note">±100 breakout thresholds</div>
       </div>
     </div>
   </section>
@@ -685,6 +696,23 @@
         <div class="h"><span>Volatility · 30d</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Annualised standard deviation of daily returns over the last 30 days. Higher = choppier. Crypto typically runs 60–120%; stocks sit around 15–20%.</span></span></div>
         <div class="v" id="ta-vol">–</div>
         <div class="note">annualised · higher = choppier</div>
+      </div>
+      <div class="tile span2">
+        <div class="h"><span>Keltner Channels (20,10,1.5)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">EMA 20 ± 1.5× ATR(10). When Bollinger Bands fit inside Keltner Channels the market is in a "squeeze" — a compression that often precedes a big move. Price above the upper channel = strong uptrend, below lower = strong downtrend.</span></span></div>
+        <div class="v" id="ta-keltner">–</div>
+        <div class="note" id="ta-keltner-note">EMA ± ATR envelope · squeeze detection</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VOLUME -->
+  <section class="panel" data-tab="technical" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Volume</h2>
+    <div class="grid" style="margin-top:0">
+      <div class="tile span2">
+        <div class="h"><span>OBV (On-Balance Volume)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Cumulative volume indicator — adds volume on up-days and subtracts on down-days. When OBV rises with price, the trend is confirmed. OBV diverging from price warns of a potential reversal. Compared against its own 20-day SMA.</span></span></div>
+        <div class="v" id="ta-obv">–</div>
+        <div class="note" id="ta-obv-note">cumulative volume momentum vs SMA 20</div>
       </div>
     </div>
   </section>
@@ -1070,7 +1098,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.31.0";
+  const APP_VERSION = "v2.32.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2741,12 +2769,56 @@
     return {0:high, 0.236:high-d*0.236, 0.382:high-d*0.382, 0.5:high-d*0.5, 0.618:high-d*0.618, 0.786:high-d*0.786, 1:low};
   }
 
-  function loadTechnical(prices){
+  // ---- New indicator helpers (v2.32) ----
+  function _williamsR(prices,period){
+    period=period||14;
+    if(prices.length<period) return NaN;
+    const slice=prices.slice(-period);
+    const hi=Math.max(...slice), lo=Math.min(...slice);
+    if(hi===lo) return -50;
+    return ((hi-prices[prices.length-1])/(hi-lo))*-100;
+  }
+  function _cci(prices,period){
+    period=period||20;
+    if(prices.length<period) return NaN;
+    const slice=prices.slice(-period);
+    const mean=slice.reduce((a,b)=>a+b,0)/period;
+    const md=slice.reduce((a,b)=>a+Math.abs(b-mean),0)/period;
+    if(md===0) return 0;
+    return (prices[prices.length-1]-mean)/(0.015*md);
+  }
+  function _keltner(prices,emaPeriod,atrPeriod,mult){
+    emaPeriod=emaPeriod||20; atrPeriod=atrPeriod||10; mult=mult||1.5;
+    const ema=_emaLast(prices,emaPeriod);
+    const atr=_atr(prices,atrPeriod);
+    if(!isFinite(ema)||!isFinite(atr)||atr===0) return {upper:NaN,middle:NaN,lower:NaN,pctK:NaN,squeeze:false};
+    const upper=ema+mult*atr, lower=ema-mult*atr;
+    const last=prices[prices.length-1];
+    const bb=_bollinger(prices,20,2);
+    const squeeze=isFinite(bb.upper)&&isFinite(bb.lower)&&bb.upper<upper&&bb.lower>lower;
+    return {upper,middle:ema,lower,pctK:(upper-lower)>0?(last-lower)/(upper-lower):0.5,squeeze};
+  }
+  function _obv(prices,volumes){
+    if(!prices||!volumes||prices.length<2||volumes.length<2) return {value:NaN,trend:0};
+    const len=Math.min(prices.length,volumes.length);
+    let obv=0;
+    const arr=[0];
+    for(let i=1;i<len;i++){
+      if(prices[i]>prices[i-1]) obv+=volumes[i];
+      else if(prices[i]<prices[i-1]) obv-=volumes[i];
+      arr.push(obv);
+    }
+    const sma20=arr.length>=20?arr.slice(-20).reduce((a,b)=>a+b,0)/20:NaN;
+    return {value:obv,trend:isFinite(sma20)?(obv>sma20?1:-1):0};
+  }
+
+  function loadTechnical(prices,volumes){
     if(!prices||prices.length<50) return;
     const px=prices.map(p=>+p[1]).filter(isFinite);
     if(px.length<20) return;
     const last=px[px.length-1];
     if(!isFinite(last)||last<=0) return;
+    const vx=(volumes&&Array.isArray(volumes))?volumes.map(p=>+p[1]).filter(isFinite):[];
     let bulls=0, bears=0, neutrals=0;
     const vote=(b)=>{ if(b>0) bulls++; else if(b<0) bears++; else neutrals++; };
     const priceFmt=(v)=>v<0.01?v.toPrecision(3):v<1?"$"+v.toFixed(4):"$"+v.toFixed(3);
@@ -2890,6 +2962,67 @@
       }
     }catch(e){ console.warn("TA Fib:",e); }
 
+    try{ // Williams %R (14)
+      const wr=_williamsR(px,14);
+      if(isFinite(wr)){
+        const el=_s("ta-willr"); if(el){ el.textContent=wr.toFixed(1); el.classList.remove("up","down"); el.classList.add(wr<-80?"up":wr>-20?"down":""); }
+        const bar=_s("ta-willr-bar"); if(bar){ bar.style.width=Math.min(100,100+wr).toFixed(0)+"%"; bar.style.background=wr<-80?"var(--teal)":wr>-20?"var(--coral)":"var(--teal-dim)"; }
+        const n=_s("ta-willr-note"); if(n) n.textContent=wr<-80?"oversold · bullish signal":wr>-20?"overbought · bearish signal":"neutral ("+wr.toFixed(0)+")";
+        vote(wr<-80?1:wr>-20?-1:0);
+      }
+    }catch(e){ console.warn("TA Williams %R:",e); }
+
+    try{ // CCI (20)
+      const cci=_cci(px,20);
+      if(isFinite(cci)){
+        const el=_s("ta-cci"); if(el){ el.innerHTML=(cci>=0?"+":"")+cci.toFixed(0); el.classList.remove("up","down"); el.classList.add(cci<-100?"up":cci>100?"down":""); }
+        const n=_s("ta-cci-note"); if(n) n.textContent=cci>200?"extreme overbought":cci>100?"overbought · possible breakout":cci<-200?"extreme oversold":cci<-100?"oversold · possible breakdown":"neutral range";
+        vote(cci<-100?1:cci>100?-1:0);
+      }
+    }catch(e){ console.warn("TA CCI:",e); }
+
+    try{ // Keltner Channels (20,10,1.5)
+      const kc=_keltner(px,20,10,1.5);
+      if(isFinite(kc.pctK)){
+        const pos=kc.pctK>1?"above upper":kc.pctK<0?"below lower":kc.pctK>0.8?"near upper":kc.pctK<0.2?"near lower":"mid-channel";
+        const sqTxt=kc.squeeze?" · BB squeeze ⚡":"";
+        const el=_s("ta-keltner"); if(el) el.innerHTML=priceFmt(kc.lower)+' <small>—</small> '+priceFmt(kc.upper)+sqTxt;
+        const n=_s("ta-keltner-note"); if(n) n.textContent="price "+pos+(kc.squeeze?" · Bollinger inside Keltner = squeeze":"");
+        vote(kc.pctK>1?1:kc.pctK<0?-1:0);
+      }
+    }catch(e){ console.warn("TA Keltner:",e); }
+
+    try{ // OBV (On-Balance Volume)
+      if(vx.length>=20&&px.length>=20){
+        const obvLen=Math.min(px.length,vx.length);
+        const obvResult=_obv(px.slice(-obvLen),vx.slice(-obvLen));
+        if(isFinite(obvResult.value)){
+          const el=_s("ta-obv"); if(el){ el.textContent=compact(obvResult.value); el.classList.remove("up","down"); el.classList.add(obvResult.trend>0?"up":obvResult.trend<0?"down":""); }
+          const rising=obvResult.trend>0;
+          const priceUp=px.length>=2&&px[px.length-1]>px[px.length-2];
+          let note="OBV "+(rising?"rising":"falling")+" · ";
+          if(rising&&priceUp) note+="volume confirms uptrend";
+          else if(!rising&&!priceUp) note+="volume confirms downtrend";
+          else if(rising&&!priceUp) note+="bullish divergence — accumulation";
+          else note+="bearish divergence — distribution";
+          const n=_s("ta-obv-note"); if(n) n.textContent=note;
+          vote(obvResult.trend);
+        }
+      }
+    }catch(e){ console.warn("TA OBV:",e); }
+
+    // Update momentum score to include Williams %R and CCI
+    try{
+      const wr=_williamsR(px,14);
+      const cci=_cci(px,20);
+      const momCount=5; // RSI, StochRSI, ROC, Williams %R, CCI
+      const momBull=(isFinite(rsi)&&rsi<30?1:0)+(isFinite(srsi.k)&&srsi.k<20?1:0)+(px.length>=15&&last/px[px.length-15]>1.03?1:0)+(isFinite(wr)&&wr<-80?1:0)+(isFinite(cci)&&cci<-100?1:0);
+      const momBear=(isFinite(rsi)&&rsi>70?1:0)+(isFinite(srsi.k)&&srsi.k>80?1:0)+(px.length>=15&&last/px[px.length-15]<0.97?1:0)+(isFinite(wr)&&wr>-20?1:0)+(isFinite(cci)&&cci>100?1:0);
+      const momVerdict=momBull>momBear?"Bullish":momBear>momBull?"Bearish":"Neutral";
+      const el=_s("ta-mom-score"); if(el){ el.textContent=momVerdict; el.classList.remove("up","down"); el.classList.add(momVerdict==="Bullish"?"up":momVerdict==="Bearish"?"down":""); }
+      const n=_s("ta-mom-note"); if(n) n.textContent=momBull+" bullish / "+momBear+" bearish / "+(momCount-momBull-momBear)+" neutral of "+momCount;
+    }catch(e){ console.warn("TA Momentum update:",e); }
+
     // Overall verdict
     const total=bulls+bears+neutrals;
     let verdict="Neutral", vClass="";
@@ -2908,9 +3041,10 @@
     try{
       const kd = await cgJSON(CG+"/coins/kaspa/market_chart?vs_currency=usd&days=365");
       const kprices = (kd && Array.isArray(kd.prices)) ? kd.prices : [];
+      const kvols = (kd && Array.isArray(kd.total_volumes)) ? kd.total_volumes : [];
       const px = kprices.map(p=>+p[1]).filter(isFinite);
       if(px.length<30) throw new Error("thin");
-      try{ loadTechnical(kd.prices); }catch(e){ /* technical tab optional */ }
+      try{ loadTechnical(kd.prices, kvols); }catch(e){ /* technical tab optional */ }
 
       // RSI (14)
       const rsi=_rsi(px,14);
