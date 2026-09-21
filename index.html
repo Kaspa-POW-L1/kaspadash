@@ -365,6 +365,7 @@
     <button class="tab-btn" data-target="market" role="tab">Market</button>
     <button class="tab-btn" data-target="network" role="tab">Network</button>
     <button class="tab-btn" data-target="tokens" role="tab">Tokens &amp; DeFi</button>
+    <button class="tab-btn" data-target="technical" role="tab">Technical</button>
     <button class="tab-btn" data-target="history" role="tab">History</button>
     <button class="tab-btn" data-target="community" role="tab">Community</button>
     <button class="tab-btn" data-target="about" role="tab">About</button>
@@ -585,6 +586,121 @@
     </div>
     <div class="block-feed" id="block-feed">
       <div class="skeleton" style="font-size:13px;padding:6px 0">connecting…</div>
+    </div>
+  </section>
+
+  <!-- TECHNICAL ANALYSIS -->
+  <section class="panel" data-tab="technical" style="margin-top:0">
+    <div class="h" style="margin-bottom:2px">
+      <h2 style="margin:0;font-size:15px;font-weight:600">Technical analysis <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Classic technical indicators computed from KAS's daily closing prices (CoinGecko, 365 days). These describe recent price behaviour — they are not predictions and not financial advice.</span></span></h2>
+      <span id="ta-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
+    </div>
+    <div class="cap" id="ta-cap">Trend, momentum, volatility and key price levels for KAS/USD.</div>
+  </section>
+
+  <div class="grid" data-tab="technical" style="margin-top:0">
+    <!-- OVERALL SIGNAL -->
+    <div class="tile span2">
+      <div class="h"><span>Overall signal</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Aggregate of all indicators below. Counts how many lean bullish, bearish or neutral and gives a majority verdict. Not financial advice — just a snapshot of where the indicators point right now.</span></span></div>
+      <div class="v" id="ta-verdict">–</div>
+      <div class="note" id="ta-verdict-note">aggregated from all indicators below</div>
+    </div>
+  </div>
+
+  <!-- TREND -->
+  <section class="panel" data-tab="technical" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Trend</h2>
+    <div class="grid" style="margin-top:0">
+      <div class="tile">
+        <div class="h"><span>MACD (12,26,9)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Moving Average Convergence/Divergence — tracks the gap between the 12-day and 26-day EMA. When the MACD line crosses above the signal line it suggests upward momentum; below = downward. The histogram shows the distance between the two lines.</span></span></div>
+        <div class="v" id="ta-macd">–</div>
+        <div class="note" id="ta-macd-note">MACD line vs signal line</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>MACD histogram</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The difference between the MACD line and the signal line. Positive and growing = strengthening uptrend. Negative and shrinking = downtrend may be weakening. A flip from negative to positive is a bullish crossover signal.</span></span></div>
+        <div class="v" id="ta-macd-hist">–</div>
+        <div class="note" id="ta-macd-hist-note">momentum direction</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>EMA 12 / EMA 26</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Exponential Moving Averages give more weight to recent prices. EMA 12 (fast) above EMA 26 (slow) = short-term uptrend. The gap between them drives the MACD.</span></span></div>
+        <div class="v" id="ta-emas">–</div>
+        <div class="note" id="ta-emas-note">fast vs slow EMA</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>SMA 50 / SMA 200</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Simple Moving Averages — the classic long-term trend compass. SMA 50 above SMA 200 = "golden cross" (bullish). Below = "death cross" (bearish). Price above both = strong uptrend.</span></span></div>
+        <div class="v" id="ta-sma">–</div>
+        <div class="note" id="ta-sma-note">golden cross / death cross</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOMENTUM -->
+  <section class="panel" data-tab="technical" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Momentum</h2>
+    <div class="grid" style="margin-top:0">
+      <div class="tile">
+        <div class="h"><span>RSI (14)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Relative Strength Index — momentum on a 0–100 scale. Below 30 = oversold, above 70 = overbought, 30–70 = neutral.</span></span></div>
+        <div class="v" id="ta-rsi">–</div>
+        <div class="bar"><i id="ta-rsi-bar"></i></div>
+        <div class="note" id="ta-rsi-note">30 oversold / 70 overbought</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>Stochastic RSI</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Applies the Stochastic oscillator to RSI values instead of price, making it more sensitive to short-term momentum shifts. %K is the fast line, %D the smoothed signal. Both below 20 = oversold, above 80 = overbought.</span></span></div>
+        <div class="v" id="ta-stochrsi">–</div>
+        <div class="note" id="ta-stochrsi-note">%K / %D · 20 oversold / 80 overbought</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>Rate of change · 14d</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Percentage price change over the last 14 days. Positive = upward momentum, negative = downward. Larger absolute values = stronger momentum in that direction.</span></span></div>
+        <div class="v" id="ta-roc">–</div>
+        <div class="note" id="ta-roc-note">14-day price momentum</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>Momentum score</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Combined momentum reading: aggregates RSI, Stochastic RSI and Rate of Change into a single bullish/bearish/neutral verdict.</span></span></div>
+        <div class="v" id="ta-mom-score">–</div>
+        <div class="note" id="ta-mom-note">combined momentum indicators</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VOLATILITY -->
+  <section class="panel" data-tab="technical" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Volatility</h2>
+    <div class="grid" style="margin-top:0">
+      <div class="tile">
+        <div class="h"><span>Bollinger Bands (20,2)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A 20-day SMA with bands at ±2 standard deviations. Price near the upper band = stretched high, near lower = stretched low. A "squeeze" (narrow bands) often precedes a big move. %B shows where price sits: 0 = lower band, 1 = upper band.</span></span></div>
+        <div class="v" id="ta-bb">–</div>
+        <div class="note" id="ta-bb-note">price position within bands</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>BB width</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bollinger Band width as a percentage of the middle band. Narrow = low volatility ("squeeze"), wide = high volatility. A squeeze often precedes a breakout in either direction.</span></span></div>
+        <div class="v" id="ta-bbw">–</div>
+        <div class="note" id="ta-bbw-note">narrow = squeeze, wide = volatile</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>ATR (14)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Average True Range — the average daily price swing over 14 days, shown as a percentage of the current price. Higher = more volatile day-to-day. Useful for setting stop-losses or gauging risk.</span></span></div>
+        <div class="v" id="ta-atr">–</div>
+        <div class="note" id="ta-atr-note">average daily swing</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>Volatility · 30d</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Annualised standard deviation of daily returns over the last 30 days. Higher = choppier. Crypto typically runs 60–120%; stocks sit around 15–20%.</span></span></div>
+        <div class="v" id="ta-vol">–</div>
+        <div class="note">annualised · higher = choppier</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KEY LEVELS -->
+  <section class="panel" data-tab="technical" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Key levels</h2>
+    <div class="grid" style="margin-top:0">
+      <div class="tile span2">
+        <div class="h"><span>Support / Resistance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Key price levels derived from recent local lows (support — where buyers stepped in) and highs (resistance — where sellers appeared). The more times price bounced off a level, the stronger it is.</span></span></div>
+        <div id="ta-sr" style="margin-top:8px;font-family:var(--mono);font-size:13px;line-height:1.8">–</div>
+      </div>
+      <div class="tile span2">
+        <div class="h"><span>Fibonacci retracement</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Fibonacci levels between the 90-day high and low. Traders watch these as potential support/resistance zones where price may pause or reverse. The 0.618 level ("golden ratio") is considered the most significant.</span></span></div>
+        <div id="ta-fib" style="margin-top:8px;font-family:var(--mono);font-size:13px;line-height:1.8">–</div>
+      </div>
     </div>
   </section>
 
@@ -954,7 +1070,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.29.2";
+  const APP_VERSION = "v2.30.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1047,6 +1163,7 @@
       emission_curve:"Emission curve",
       live_feed:"Live block feed",
       top_exc:"Top exchanges",
+      technical:"Technical analysis",
       price_eur:"Price · EUR",
       reddit:"Network age",
       orphan:"Blocks per day",
@@ -1118,6 +1235,7 @@
       emission_curve:"Uitgiftecurve",
       live_feed:"Live blokkenfeed",
       top_exc:"Topbeurzen",
+      technical:"Technische analyse",
       price_eur:"Prijs · EUR",
       reddit:"Netwerkleeftijd",
       orphan:"Blokken per dag",
@@ -2547,6 +2665,234 @@
     return (da>0&&db>0) ? num/Math.sqrt(da*db) : NaN;
   }
 
+  // ---- Technical Analysis helpers ----
+  function _ema(arr,n){
+    if(arr.length<n) return [];
+    const k=2/(n+1);
+    const out=[_sma(arr.slice(0,n),n)];
+    for(let i=n;i<arr.length;i++) out.push(arr[i]*k+out[out.length-1]*(1-k));
+    return out;
+  }
+  function _emaLast(arr,n){ const e=_ema(arr,n); return e.length?e[e.length-1]:NaN; }
+  function _macd(prices,fast,slow,sig){
+    fast=fast||12; slow=slow||26; sig=sig||9;
+    if(prices.length<slow+sig) return {line:NaN,signal:NaN,hist:NaN};
+    const eFast=_ema(prices,fast), eSlow=_ema(prices,slow);
+    const offset=slow-fast;
+    const macdLine=[]; for(let i=0;i<eSlow.length;i++) macdLine.push(eFast[i+offset]-eSlow[i]);
+    const sigLine=_ema(macdLine,sig);
+    const ml=macdLine[macdLine.length-1], sl=sigLine.length?sigLine[sigLine.length-1]:NaN;
+    return {line:ml, signal:sl, hist:ml-sl, prevHist:macdLine.length>1&&sigLine.length>1?macdLine[macdLine.length-2]-sigLine[sigLine.length-2]:NaN};
+  }
+  function _bollinger(prices,period,mult){
+    period=period||20; mult=mult||2;
+    if(prices.length<period) return {upper:NaN,middle:NaN,lower:NaN,pctB:NaN,width:NaN};
+    const slice=prices.slice(-period);
+    const mid=slice.reduce((a,b)=>a+b,0)/period;
+    const sd=Math.sqrt(slice.reduce((a,b)=>a+(b-mid)*(b-mid),0)/period);
+    const upper=mid+mult*sd, lower=mid-mult*sd;
+    const last=prices[prices.length-1];
+    return {upper,middle:mid,lower,pctB:sd>0?(last-lower)/(upper-lower):0.5,width:(upper-lower)/mid*100};
+  }
+  function _stochRsi(prices,rsiP,stochP,kSmooth,dSmooth){
+    rsiP=rsiP||14; stochP=stochP||14; kSmooth=kSmooth||3; dSmooth=dSmooth||3;
+    if(prices.length<rsiP+stochP+kSmooth+dSmooth) return {k:NaN,d:NaN};
+    const rsis=[];
+    for(let end=rsiP+1;end<=prices.length;end++) rsis.push(_rsi(prices.slice(0,end),rsiP));
+    if(rsis.length<stochP) return {k:NaN,d:NaN};
+    const stoch=[];
+    for(let i=stochP-1;i<rsis.length;i++){
+      const win=rsis.slice(i-stochP+1,i+1);
+      const hi=Math.max(...win), lo=Math.min(...win);
+      stoch.push(hi===lo?50:(rsis[i]-lo)/(hi-lo)*100);
+    }
+    const kLine=_ema(stoch,kSmooth);
+    const dLine=_ema(kLine,dSmooth);
+    return {k:kLine.length?kLine[kLine.length-1]:NaN, d:dLine.length?dLine[dLine.length-1]:NaN};
+  }
+  function _atr(prices,period){
+    period=period||14;
+    if(prices.length<period+1) return NaN;
+    const trs=[];
+    for(let i=1;i<prices.length;i++) trs.push(Math.abs(prices[i]-prices[i-1]));
+    let atr=trs.slice(0,period).reduce((a,b)=>a+b,0)/period;
+    for(let i=period;i<trs.length;i++) atr=(atr*(period-1)+trs[i])/period;
+    return atr;
+  }
+  function _pivots(prices,win){
+    win=win||5;
+    const supports=[],resistances=[];
+    for(let i=win;i<prices.length-win;i++){
+      const slice=prices.slice(i-win,i+win+1);
+      if(prices[i]===Math.min(...slice)) supports.push(prices[i]);
+      if(prices[i]===Math.max(...slice)) resistances.push(prices[i]);
+    }
+    // deduplicate close levels (within 3%)
+    const dedup=(arr)=>{
+      arr.sort((a,b)=>a-b);
+      const out=[];
+      for(const v of arr){ if(!out.length||Math.abs(v-out[out.length-1])/out[out.length-1]>0.03) out.push(v); else out[out.length-1]=(out[out.length-1]+v)/2; }
+      return out;
+    };
+    return {supports:dedup(supports).slice(-3),resistances:dedup(resistances).slice(-3)};
+  }
+  function _fib(high,low){
+    const d=high-low;
+    return {0:high, 0.236:high-d*0.236, 0.382:high-d*0.382, 0.5:high-d*0.5, 0.618:high-d*0.618, 0.786:high-d*0.786, 1:low};
+  }
+
+  function loadTechnical(prices){
+    if(!prices||prices.length<50) return;
+    const px=prices.map(p=>+p[1]).filter(isFinite);
+    const last=px[px.length-1];
+    let bulls=0, bears=0, neutrals=0;
+    const vote=(b)=>{ if(b>0) bulls++; else if(b<0) bears++; else neutrals++; };
+    const priceFmt=(v)=>v<0.01?v.toPrecision(3):v<1?"$"+v.toFixed(4):"$"+v.toFixed(3);
+    const status=$("ta-status");
+
+    // MACD
+    const macd=_macd(px,12,26,9);
+    if(isFinite(macd.line)&&isFinite(macd.signal)){
+      const cross=macd.line>=macd.signal;
+      $("ta-macd").innerHTML=(macd.line>=0?"+":"")+macd.line.toFixed(6);
+      $("ta-macd").classList.remove("up","down"); $("ta-macd").classList.add(cross?"up":"down");
+      $("ta-macd-note").textContent=cross?"MACD above signal · bullish":"MACD below signal · bearish";
+      vote(cross?1:-1);
+    }
+    if(isFinite(macd.hist)){
+      const hDir=isFinite(macd.prevHist)&&Math.abs(macd.hist)>Math.abs(macd.prevHist);
+      $("ta-macd-hist").innerHTML=(macd.hist>=0?"+":"")+macd.hist.toFixed(6);
+      $("ta-macd-hist").classList.remove("up","down"); $("ta-macd-hist").classList.add(macd.hist>=0?"up":"down");
+      $("ta-macd-hist-note").textContent=macd.hist>=0?(hDir?"growing · strengthening up":"shrinking · weakening up"):(hDir?"growing · strengthening down":"shrinking · weakening down");
+    }
+
+    // EMAs
+    const ema12=_emaLast(px,12), ema26=_emaLast(px,26);
+    if(isFinite(ema12)&&isFinite(ema26)){
+      $("ta-emas").innerHTML=priceFmt(ema12)+' <small>/</small> '+priceFmt(ema26);
+      const cross=ema12>=ema26;
+      $("ta-emas").classList.remove("up","down"); $("ta-emas").classList.add(cross?"up":"down");
+      $("ta-emas-note").textContent=cross?"EMA 12 above EMA 26 · bullish":"EMA 12 below EMA 26 · bearish";
+    }
+
+    // SMAs
+    const sma50=_sma(px,50), sma200=_sma(px,200);
+    if(isFinite(sma50)){
+      let txt=priceFmt(sma50);
+      if(isFinite(sma200)) txt+=' <small>/</small> '+priceFmt(sma200);
+      $("ta-sma").innerHTML=txt;
+      if(isFinite(sma200)){
+        const gc=sma50>=sma200;
+        const aboveBoth=last>=sma50&&last>=sma200;
+        $("ta-sma").classList.remove("up","down"); $("ta-sma").classList.add(gc?"up":"down");
+        $("ta-sma-note").textContent=gc?(aboveBoth?"price above both · golden cross · bullish":"golden cross · price below 50d"):(aboveBoth?"death cross but price above both":"death cross · bearish");
+        vote(gc?1:-1);
+      }
+    }
+
+    // RSI
+    const rsi=_rsi(px,14);
+    if(isFinite(rsi)){
+      $("ta-rsi").textContent=rsi.toFixed(1);
+      $("ta-rsi-bar").style.width=Math.min(100,rsi).toFixed(0)+"%";
+      $("ta-rsi-bar").style.background=rsi>70?"var(--coral)":rsi<30?"var(--teal)":"var(--teal-dim)";
+      const lbl=rsi<30?"oversold · bullish signal":rsi>70?"overbought · bearish signal":"neutral";
+      $("ta-rsi-note").textContent="RSI "+rsi.toFixed(0)+" · "+lbl;
+      vote(rsi<30?1:rsi>70?-1:0);
+    }
+
+    // Stochastic RSI
+    const srsi=_stochRsi(px,14,14,3,3);
+    if(isFinite(srsi.k)&&isFinite(srsi.d)){
+      $("ta-stochrsi").innerHTML=srsi.k.toFixed(1)+' <small>%K</small> / '+srsi.d.toFixed(1)+' <small>%D</small>';
+      const sig=srsi.k<20&&srsi.d<20?"oversold":srsi.k>80&&srsi.d>80?"overbought":"neutral";
+      $("ta-stochrsi").classList.remove("up","down"); $("ta-stochrsi").classList.add(sig==="oversold"?"up":sig==="overbought"?"down":"");
+      $("ta-stochrsi-note").textContent=sig==="oversold"?"%K & %D below 20 · oversold":sig==="overbought"?"%K & %D above 80 · overbought":srsi.k>=srsi.d?"%K above %D · bullish momentum":"%K below %D · bearish momentum";
+      vote(sig==="oversold"?1:sig==="overbought"?-1:0);
+    }
+
+    // Rate of Change (14d)
+    if(px.length>=15){
+      const roc=(last/px[px.length-15]-1)*100;
+      $("ta-roc").innerHTML=(roc>=0?"+":"")+roc.toFixed(2)+'<small>%</small>';
+      $("ta-roc").classList.remove("up","down"); $("ta-roc").classList.add(roc>=0?"up":"down");
+      $("ta-roc-note").textContent=Math.abs(roc)>10?"strong momentum "+(roc>0?"up":"down"):Math.abs(roc)>3?"moderate momentum "+(roc>0?"up":"down"):"low momentum";
+      vote(roc>3?1:roc<-3?-1:0);
+    }
+
+    // Momentum score
+    const momBull=(rsi<30?1:0)+(srsi.k<20?1:0)+(px.length>=15&&last/px[px.length-15]>1.03?1:0);
+    const momBear=(rsi>70?1:0)+(srsi.k>80?1:0)+(px.length>=15&&last/px[px.length-15]<0.97?1:0);
+    const momVerdict=momBull>momBear?"Bullish":momBear>momBull?"Bearish":"Neutral";
+    $("ta-mom-score").textContent=momVerdict;
+    $("ta-mom-score").classList.remove("up","down"); $("ta-mom-score").classList.add(momVerdict==="Bullish"?"up":momVerdict==="Bearish"?"down":"");
+    $("ta-mom-note").textContent=momBull+" bullish / "+momBear+" bearish / "+(3-momBull-momBear)+" neutral signals";
+
+    // Bollinger Bands
+    const bb=_bollinger(px,20,2);
+    if(isFinite(bb.pctB)){
+      const pctBpct=(bb.pctB*100).toFixed(0);
+      $("ta-bb").innerHTML=pctBpct+'<small>% B</small>';
+      $("ta-bb").classList.remove("up","down"); $("ta-bb").classList.add(bb.pctB>0.8?"down":bb.pctB<0.2?"up":"");
+      $("ta-bb-note").textContent="lower "+priceFmt(bb.lower)+" · mid "+priceFmt(bb.middle)+" · upper "+priceFmt(bb.upper);
+      vote(bb.pctB<0.2?1:bb.pctB>0.8?-1:0);
+    }
+    if(isFinite(bb.width)){
+      $("ta-bbw").innerHTML=bb.width.toFixed(1)+'<small>%</small>';
+      $("ta-bbw-note").textContent=bb.width<10?"tight squeeze · breakout likely":bb.width>30?"wide · high volatility":"moderate width";
+    }
+
+    // ATR
+    const atr=_atr(px,14);
+    if(isFinite(atr)){
+      const atrPct=(atr/last*100).toFixed(2);
+      $("ta-atr").innerHTML=priceFmt(atr)+' <small>('+atrPct+'%)</small>';
+      $("ta-atr-note").textContent="average daily range · "+(atrPct>5?"high":"moderate")+" volatility";
+    }
+
+    // Volatility 30d
+    const vol=_annVol(px,30);
+    if(isFinite(vol)) $("ta-vol").textContent=vol.toFixed(0)+"%";
+
+    // Support / Resistance
+    const sr=_pivots(px.slice(-90),5);
+    const renderLevels=(arr,label,cls)=>arr.map(v=>'<span style="color:var(--'+(cls==="up"?"teal":"coral")+')">'+label+'</span> '+priceFmt(v)+' <span style="color:var(--muted)">('+((v/last-1)*100>=0?"+":"")+((v/last-1)*100).toFixed(1)+'%)</span>').join('<br>');
+    if(sr.supports.length||sr.resistances.length){
+      $("ta-sr").innerHTML=(sr.resistances.length?'<div style="margin-bottom:6px">'+renderLevels(sr.resistances.reverse(),"R","down")+'</div>':'')+
+        '<div style="color:var(--text);font-weight:500">▸ Price '+priceFmt(last)+'</div>'+
+        (sr.supports.length?'<div style="margin-top:6px">'+renderLevels(sr.supports.reverse(),"S","up")+'</div>':'');
+    }
+
+    // Fibonacci
+    const px90=px.slice(-90);
+    const hi90=Math.max(...px90), lo90=Math.min(...px90);
+    if(hi90>lo90){
+      const fib=_fib(hi90,lo90);
+      const fibLevels=[0,0.236,0.382,0.5,0.618,0.786,1];
+      const fibHTML=fibLevels.map(l=>{
+        const v=fib[l];
+        const dist=((v/last-1)*100);
+        const isClose=Math.abs(dist)<3;
+        return '<span style="color:var(--muted)">'+l.toFixed(3)+'</span> '+priceFmt(v)+
+          ' <span style="color:var(--'+(isClose?"teal":"muted")+')">('+(dist>=0?"+":"")+dist.toFixed(1)+'%'+(isClose?" ◀":"")+')</span>';
+      }).join('<br>');
+      $("ta-fib").innerHTML=fibHTML;
+    }
+
+    // Overall verdict
+    const total=bulls+bears+neutrals;
+    let verdict="Neutral", vClass="";
+    if(bulls>bears+neutrals){ verdict="Strong buy"; vClass="up"; }
+    else if(bulls>bears){ verdict="Buy"; vClass="up"; }
+    else if(bears>bulls+neutrals){ verdict="Strong sell"; vClass="down"; }
+    else if(bears>bulls){ verdict="Sell"; vClass="down"; }
+    $("ta-verdict").textContent=verdict;
+    $("ta-verdict").classList.remove("up","down"); if(vClass) $("ta-verdict").classList.add(vClass);
+    $("ta-verdict-note").textContent=bulls+" bullish · "+bears+" bearish · "+neutrals+" neutral of "+total+" indicators";
+
+    if(status){ status.textContent="updated"; status.classList.remove("err"); }
+  }
+
   async function loadMarketSignals(retry){
     const status=$("sig-status");
     try{
@@ -2554,6 +2900,7 @@
       const kprices = (kd && Array.isArray(kd.prices)) ? kd.prices : [];
       const px = kprices.map(p=>+p[1]).filter(isFinite);
       if(px.length<30) throw new Error("thin");
+      try{ loadTechnical(kd.prices); }catch(e){ /* technical tab optional */ }
 
       // RSI (14)
       const rsi=_rsi(px,14);
