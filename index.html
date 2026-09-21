@@ -631,6 +631,17 @@
         <div class="v" id="ta-sma">–</div>
         <div class="note" id="ta-sma-note">golden cross / death cross</div>
       </div>
+      <div class="tile">
+        <div class="h"><span>ADX (14)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Average Directional Index — measures trend STRENGTH, not direction. Below 20 = weak/no trend (ranging market). 20–25 = emerging trend. Above 25 = strong trend. Above 50 = very strong. +DI vs −DI shows direction: +DI above = bullish trend, −DI above = bearish trend.</span></span></div>
+        <div class="v" id="ta-adx">–</div>
+        <div class="bar"><i id="ta-adx-bar"></i></div>
+        <div class="note" id="ta-adx-note">trend strength · +DI vs −DI for direction</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>Aroon (25)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Measures how recently the highest and lowest close occurred within the last 25 days. Aroon Up near 100 = recent new high (uptrend). Aroon Down near 100 = recent new low (downtrend). Both low = consolidation. Crossovers signal trend changes.</span></span></div>
+        <div class="v" id="ta-aroon">–</div>
+        <div class="note" id="ta-aroon-note">time since high / low · trend timing</div>
+      </div>
     </div>
   </section>
 
@@ -670,6 +681,16 @@
         <div class="v" id="ta-cci">–</div>
         <div class="note" id="ta-cci-note">±100 breakout thresholds</div>
       </div>
+      <div class="tile">
+        <div class="h"><span>TRIX (15)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Triple-smoothed EMA rate of change (in basis points). Filters out noise better than simple ROC by applying three rounds of exponential smoothing. Positive = bullish momentum, negative = bearish. Zero-line crossovers are trade signals.</span></span></div>
+        <div class="v" id="ta-trix">–</div>
+        <div class="note" id="ta-trix-note">triple-smoothed · noise-filtered momentum</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>DPO (20)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Detrended Price Oscillator — removes the trend to reveal underlying cycles. Positive = price above the detrended mean (stretched up), negative = below (stretched down). Useful for mean-reversion timing and identifying cycle peaks/troughs.</span></span></div>
+        <div class="v" id="ta-dpo">–</div>
+        <div class="note" id="ta-dpo-note">cycle position · mean-reversion signal</div>
+      </div>
     </div>
   </section>
 
@@ -702,6 +723,11 @@
         <div class="v" id="ta-keltner">–</div>
         <div class="note" id="ta-keltner-note">EMA ± ATR envelope · squeeze detection</div>
       </div>
+      <div class="tile span2">
+        <div class="h"><span>Donchian Channel (20)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The highest and lowest close over 20 days — the purest breakout channel. Price at the upper band = 20-day high (strong uptrend), at the lower = 20-day low (strong downtrend). Originally designed for commodity trend-following (Turtle Traders).</span></span></div>
+        <div class="v" id="ta-donchian">–</div>
+        <div class="note" id="ta-donchian-note">20-day high / low channel</div>
+      </div>
     </div>
   </section>
 
@@ -709,10 +735,15 @@
   <section class="panel" data-tab="technical" style="margin-top:16px">
     <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Volume</h2>
     <div class="grid" style="margin-top:0">
-      <div class="tile span2">
+      <div class="tile">
         <div class="h"><span>OBV (On-Balance Volume)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Cumulative volume indicator — adds volume on up-days and subtracts on down-days. When OBV rises with price, the trend is confirmed. OBV diverging from price warns of a potential reversal. Compared against its own 20-day SMA.</span></span></div>
         <div class="v" id="ta-obv">–</div>
         <div class="note" id="ta-obv-note">cumulative volume momentum vs SMA 20</div>
+      </div>
+      <div class="tile">
+        <div class="h"><span>Volume ROC (14d)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Volume Rate of Change — percentage change in trading volume compared to 14 days ago. Rising volume on a price uptrend confirms strength. Falling volume on a rally warns of weakening conviction. Spikes often precede big moves.</span></span></div>
+        <div class="v" id="ta-vroc">–</div>
+        <div class="note" id="ta-vroc-note">volume momentum · confirms trend strength</div>
       </div>
     </div>
   </section>
@@ -1098,7 +1129,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.32.0";
+  const APP_VERSION = "v2.33.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2812,6 +2843,84 @@
     return {value:obv,trend:isFinite(sma20)?(obv>sma20?1:-1):0};
   }
 
+  // ---- New indicator helpers (v2.33) ----
+  function _adx(prices,period){
+    period=period||14;
+    if(prices.length<period*2+1) return {adx:NaN,pdi:NaN,mdi:NaN};
+    // close-only approximation: +DM = max(0, close[i]-close[i-1]), -DM = max(0, close[i-1]-close[i])
+    const trs=[],pdms=[],mdms=[];
+    for(let i=1;i<prices.length;i++){
+      trs.push(Math.abs(prices[i]-prices[i-1])||0.000001);
+      const up=prices[i]-prices[i-1], dn=prices[i-1]-prices[i];
+      pdms.push(up>dn&&up>0?up:0);
+      mdms.push(dn>up&&dn>0?dn:0);
+    }
+    // Wilder smoothing
+    let atr=trs.slice(0,period).reduce((a,b)=>a+b,0);
+    let pdi=pdms.slice(0,period).reduce((a,b)=>a+b,0);
+    let mdi=mdms.slice(0,period).reduce((a,b)=>a+b,0);
+    const dxArr=[];
+    for(let i=period;i<trs.length;i++){
+      atr=atr-atr/period+trs[i];
+      pdi=pdi-pdi/period+pdms[i];
+      mdi=mdi-mdi/period+mdms[i];
+      const pdiV=atr>0?pdi/atr*100:0, mdiV=atr>0?mdi/atr*100:0;
+      const sum=pdiV+mdiV;
+      dxArr.push(sum>0?Math.abs(pdiV-mdiV)/sum*100:0);
+    }
+    if(dxArr.length<period) return {adx:NaN,pdi:NaN,mdi:NaN};
+    let adx=dxArr.slice(0,period).reduce((a,b)=>a+b,0)/period;
+    for(let i=period;i<dxArr.length;i++) adx=(adx*(period-1)+dxArr[i])/period;
+    const lastATR=atr, lastPDI=atr>0?pdi/atr*100:0, lastMDI=atr>0?mdi/atr*100:0;
+    return {adx,pdi:lastPDI,mdi:lastMDI};
+  }
+  function _aroon(prices,period){
+    period=period||25;
+    if(prices.length<period+1) return {up:NaN,down:NaN};
+    const slice=prices.slice(-(period+1));
+    let hiIdx=0,loIdx=0;
+    for(let i=1;i<=period;i++){
+      if(slice[i]>=slice[hiIdx]) hiIdx=i;
+      if(slice[i]<=slice[loIdx]) loIdx=i;
+    }
+    return {up:hiIdx/period*100, down:loIdx/period*100};
+  }
+  function _trix(prices,period){
+    period=period||15;
+    const e1=_ema(prices,period);
+    if(e1.length<period) return NaN;
+    const e2=_ema(e1,period);
+    if(e2.length<period) return NaN;
+    const e3=_ema(e2,period);
+    if(e3.length<2) return NaN;
+    const cur=e3[e3.length-1], prev=e3[e3.length-2];
+    return prev!==0?(cur-prev)/prev*10000:0; // basis points
+  }
+  function _dpo(prices,period){
+    period=period||20;
+    const shift=Math.floor(period/2)+1;
+    if(prices.length<period+shift) return NaN;
+    const smaIdx=prices.length-1-shift;
+    const smaSlice=prices.slice(smaIdx-period+1,smaIdx+1);
+    const sma=smaSlice.reduce((a,b)=>a+b,0)/period;
+    return prices[prices.length-1]-sma;
+  }
+  function _donchian(prices,period){
+    period=period||20;
+    if(prices.length<period) return {upper:NaN,lower:NaN,mid:NaN,pct:NaN};
+    const slice=prices.slice(-period);
+    const hi=Math.max(...slice), lo=Math.min(...slice);
+    const mid=(hi+lo)/2;
+    const last=prices[prices.length-1];
+    return {upper:hi,lower:lo,mid,pct:(hi-lo)>0?(last-lo)/(hi-lo):0.5};
+  }
+  function _volRoc(volumes,period){
+    period=period||14;
+    if(!volumes||volumes.length<period+1) return NaN;
+    const cur=volumes[volumes.length-1], prev=volumes[volumes.length-1-period];
+    return prev>0?(cur/prev-1)*100:NaN;
+  }
+
   function loadTechnical(prices,volumes){
     if(!prices||prices.length<50) return;
     const px=prices.map(p=>+p[1]).filter(isFinite);
@@ -2992,6 +3101,58 @@
       }
     }catch(e){ console.warn("TA Keltner:",e); }
 
+    try{ // ADX (14)
+      const adx=_adx(px,14);
+      if(isFinite(adx.adx)){
+        const strong=adx.adx>=25;
+        const dir=adx.pdi>=adx.mdi;
+        const el=_s("ta-adx"); if(el){ el.innerHTML=adx.adx.toFixed(1)+'<small> ('+( dir?"+DI":"−DI")+')</small>'; el.classList.remove("up","down"); if(strong) el.classList.add(dir?"up":"down"); }
+        const bar=_s("ta-adx-bar"); if(bar){ bar.style.width=Math.min(100,adx.adx).toFixed(0)+"%"; bar.style.background=adx.adx>=25?(dir?"var(--teal)":"var(--coral)"):"var(--teal-dim)"; }
+        const lbl=adx.adx<20?"weak/no trend":adx.adx<25?"emerging trend":adx.adx<50?"strong trend":"very strong trend";
+        const n=_s("ta-adx-note"); if(n) n.textContent=lbl+" · "+(dir?"+DI above −DI · bullish":"−DI above +DI · bearish");
+        if(strong) vote(dir?1:-1); else vote(0);
+      }
+    }catch(e){ console.warn("TA ADX:",e); }
+
+    try{ // Aroon (25)
+      const ar=_aroon(px,25);
+      if(isFinite(ar.up)&&isFinite(ar.down)){
+        const el=_s("ta-aroon"); if(el){ el.innerHTML='<span style="color:var(--teal)">↑'+ar.up.toFixed(0)+'</span> <small>/</small> <span style="color:var(--coral)">↓'+ar.down.toFixed(0)+'</span>'; }
+        const bullish=ar.up>70&&ar.down<30, bearish=ar.down>70&&ar.up<30;
+        const n=_s("ta-aroon-note"); if(n) n.textContent=bullish?"strong uptrend · recent new high":bearish?"strong downtrend · recent new low":ar.up>ar.down?"uptrend bias":"downtrend bias";
+        vote(bullish?1:bearish?-1:0);
+      }
+    }catch(e){ console.warn("TA Aroon:",e); }
+
+    try{ // TRIX (15)
+      const trix=_trix(px,15);
+      if(isFinite(trix)){
+        const el=_s("ta-trix"); if(el){ el.innerHTML=(trix>=0?"+":"")+trix.toFixed(2)+'<small> bp</small>'; el.classList.remove("up","down"); el.classList.add(trix>=0?"up":"down"); }
+        const n=_s("ta-trix-note"); if(n) n.textContent=trix>0?"positive · bullish filtered momentum":"negative · bearish filtered momentum";
+        vote(trix>0?1:trix<0?-1:0);
+      }
+    }catch(e){ console.warn("TA TRIX:",e); }
+
+    try{ // DPO (20)
+      const dpo=_dpo(px,20);
+      if(isFinite(dpo)){
+        const dpoPct=(dpo/last*100);
+        const el=_s("ta-dpo"); if(el){ el.innerHTML=priceFmt(Math.abs(dpo))+' <small>('+(dpoPct>=0?"+":"")+dpoPct.toFixed(1)+'%)</small>'; el.classList.remove("up","down"); el.classList.add(dpo>=0?"up":"down"); }
+        const n=_s("ta-dpo-note"); if(n) n.textContent=dpo>0?"above detrended mean · stretched up":"below detrended mean · stretched down";
+        vote(dpo>0?1:dpo<0?-1:0);
+      }
+    }catch(e){ console.warn("TA DPO:",e); }
+
+    try{ // Donchian Channel (20)
+      const dc=_donchian(px,20);
+      if(isFinite(dc.upper)&&isFinite(dc.lower)){
+        const el=_s("ta-donchian"); if(el) el.innerHTML=priceFmt(dc.lower)+' <small>—</small> '+priceFmt(dc.upper);
+        const pos=dc.pct>0.95?"at 20d high":dc.pct<0.05?"at 20d low":dc.pct>0.8?"near upper":dc.pct<0.2?"near lower":"mid-channel";
+        const n=_s("ta-donchian-note"); if(n) n.textContent="price "+pos+" · mid "+priceFmt(dc.mid);
+        vote(dc.pct>0.8?1:dc.pct<0.2?-1:0);
+      }
+    }catch(e){ console.warn("TA Donchian:",e); }
+
     try{ // OBV (On-Balance Volume)
       if(vx.length>=20&&px.length>=20){
         const obvLen=Math.min(px.length,vx.length);
@@ -3011,13 +3172,26 @@
       }
     }catch(e){ console.warn("TA OBV:",e); }
 
-    // Update momentum score to include Williams %R and CCI
+    try{ // Volume ROC (14d)
+      if(vx.length>=15){
+        const vroc=_volRoc(vx,14);
+        if(isFinite(vroc)){
+          const el=_s("ta-vroc"); if(el){ el.innerHTML=(vroc>=0?"+":"")+vroc.toFixed(0)+'<small>%</small>'; el.classList.remove("up","down"); el.classList.add(vroc>=0?"up":"down"); }
+          const n=_s("ta-vroc-note"); if(n) n.textContent=Math.abs(vroc)>100?"volume spike · "+(vroc>0?"surging":"drying up"):vroc>30?"rising volume · conviction":"declining volume · fading interest";
+          // Volume ROC doesn't directly vote — it's contextual
+        }
+      }
+    }catch(e){ console.warn("TA VROC:",e); }
+
+    // Update momentum score (7 oscillators: RSI, StochRSI, ROC, Williams %R, CCI, TRIX, DPO)
     try{
       const wr=_williamsR(px,14);
       const cci=_cci(px,20);
-      const momCount=5; // RSI, StochRSI, ROC, Williams %R, CCI
-      const momBull=(isFinite(rsi)&&rsi<30?1:0)+(isFinite(srsi.k)&&srsi.k<20?1:0)+(px.length>=15&&last/px[px.length-15]>1.03?1:0)+(isFinite(wr)&&wr<-80?1:0)+(isFinite(cci)&&cci<-100?1:0);
-      const momBear=(isFinite(rsi)&&rsi>70?1:0)+(isFinite(srsi.k)&&srsi.k>80?1:0)+(px.length>=15&&last/px[px.length-15]<0.97?1:0)+(isFinite(wr)&&wr>-20?1:0)+(isFinite(cci)&&cci>100?1:0);
+      const trix=_trix(px,15);
+      const dpo=_dpo(px,20);
+      const momCount=7;
+      const momBull=(isFinite(rsi)&&rsi<30?1:0)+(isFinite(srsi.k)&&srsi.k<20?1:0)+(px.length>=15&&last/px[px.length-15]>1.03?1:0)+(isFinite(wr)&&wr<-80?1:0)+(isFinite(cci)&&cci<-100?1:0)+(isFinite(trix)&&trix>0?1:0)+(isFinite(dpo)&&dpo>0?1:0);
+      const momBear=(isFinite(rsi)&&rsi>70?1:0)+(isFinite(srsi.k)&&srsi.k>80?1:0)+(px.length>=15&&last/px[px.length-15]<0.97?1:0)+(isFinite(wr)&&wr>-20?1:0)+(isFinite(cci)&&cci>100?1:0)+(isFinite(trix)&&trix<0?1:0)+(isFinite(dpo)&&dpo<0?1:0);
       const momVerdict=momBull>momBear?"Bullish":momBear>momBull?"Bearish":"Neutral";
       const el=_s("ta-mom-score"); if(el){ el.textContent=momVerdict; el.classList.remove("up","down"); el.classList.add(momVerdict==="Bullish"?"up":momVerdict==="Bearish"?"down":""); }
       const n=_s("ta-mom-note"); if(n) n.textContent=momBull+" bullish / "+momBear+" bearish / "+(momCount-momBull-momBear)+" neutral of "+momCount;
