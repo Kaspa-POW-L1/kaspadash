@@ -464,6 +464,18 @@
       <div class="note" id="m-mined-today-note">new KAS since midnight UTC</div>
     </div>
     <div class="tile">
+      <div class="h"><span>Live emission rate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Real-time emission speed: how many new KAS are being created every second, minute and hour at the current block reward × 10 blocks/sec.</span></span></div>
+      <div class="v" id="m-emrate">–</div>
+      <div class="note" id="m-emrate-note">KAS/sec · KAS/min · KAS/hour</div>
+    </div>
+
+    <div class="tile">
+      <div class="h"><span>Emission pressure</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Annual new emission as percentage of remaining (unmined) supply. Lower = scarcer. Drops every month as the block reward decreases — Kaspa becomes harder money over time.</span></span></div>
+      <div class="v" id="m-empressure">–</div>
+      <div class="note" id="m-empressure-note">annual emission ÷ remaining supply</div>
+    </div>
+
+    <div class="tile">
       <div class="h"><span>Network age</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Days since Kaspa's genesis block on 7 November 2021 — a fair launch with no premine. Shows how mature the network is and gives context to the total block count.</span></span></div>
       <div class="v" id="m-netage">–</div>
       <div class="note" id="m-netage-note">days since genesis · 7 Nov 2021</div>
@@ -937,7 +949,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.28.0";
+  const APP_VERSION = "v2.29.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1016,6 +1028,8 @@
       total_headers:"Total headers",
       median_time:"Median block time",
       emission:"Emission today",
+      emrate:"Live emission rate",
+      empressure:"Emission pressure",
       range_24h:"24h range",
       dev_activity:"Developer activity",
       fng_crypto:"Fear & Greed · Crypto",
@@ -1085,6 +1099,8 @@
       total_headers:"Totaal headers",
       median_time:"Mediane bloktijd",
       emission:"Uitgifte vandaag",
+      emrate:"Live uitgiftesnelheid",
+      empressure:"Uitgiftedruk",
       range_24h:"24u bereik",
       dev_activity:"Ontwikkelaarsactiviteit",
       fng_crypto:"Angst & Hebzucht · Crypto",
@@ -1483,12 +1499,26 @@
         // emission: 10 blocks/sec × 86400 sec/day × reward
         const perDay = 10 * 86400 * r;
         $("m-emit").innerHTML = compact(Math.round(perDay))+' <small>KAS</small>';
+        // live emission rate
+        const perSec = 10 * r;
+        const perMin = perSec * 60;
+        const perHour = perMin * 60;
+        $("m-emrate").innerHTML = perSec.toFixed(2)+' <small>KAS/sec</small>';
+        $("m-emrate-note").textContent = compact(Math.round(perMin))+" KAS/min · "+compact(Math.round(perHour))+" KAS/hour";
         // annual inflation vs circulating supply
         const circ = window.__circ;
         if(isFinite(circ) && circ>0){
           const annual = perDay * 365;
           const pct = (annual/circ*100).toFixed(2);
           $("m-emit-note").textContent = "new KAS per day · "+pct+"% annual inflation";
+          // emission pressure: annual emission ÷ remaining supply
+          const MAX_SUPPLY = 28704026601;
+          const remaining = MAX_SUPPLY - circ;
+          if(remaining>0){
+            const pressure = (annual/remaining*100).toFixed(2);
+            $("m-empressure").innerHTML = pressure+'<small>%</small>';
+            $("m-empressure-note").textContent = compact(Math.round(annual))+" KAS/yr ÷ "+compact(Math.round(remaining))+" remaining";
+          }
         }
       } else setErr("reward");
     }catch(e){ setErr("reward"); }
