@@ -222,7 +222,12 @@
   .tip-wrap:last-child .tip-box,
   .tile .h .tip-wrap:only-of-type .tip-box{left:auto;right:0}
   .tip-wrap:hover .tip-box,.tip-wrap:focus-within .tip-box,.tip-wrap.open .tip-box{opacity:1;transform:none;pointer-events:auto}
-  @media(max-width:480px){.tip-box{width:180px;left:auto;right:0}}
+  @media(max-width:600px){
+    .tip-wrap .tip-box,.tip-wrap:last-child .tip-box,.tile .h .tip-wrap:only-of-type .tip-box{
+      position:fixed;left:12px !important;right:12px !important;top:auto !important;bottom:12px;
+      width:auto;max-width:none;border-radius:12px;font-size:13px;padding:14px 16px;
+      box-shadow:0 -4px 32px rgba(0,0,0,.6)}
+  }
 
   /* Security budget */
   .sec-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;flex-wrap:wrap;gap:6px}
@@ -949,7 +954,7 @@
   const nf = new Intl.NumberFormat("en-US");
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.29.0";
+  const APP_VERSION = "v2.29.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
