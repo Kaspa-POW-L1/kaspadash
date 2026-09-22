@@ -286,7 +286,7 @@
   .tab-btn{appearance:none;background:transparent;border:1px solid var(--line);border-radius:99px;
     color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:500;
     padding:7px 16px;cursor:pointer;transition:border-color .15s,color .15s,background .15s;
-    white-space:nowrap;flex:0 0 auto}
+    white-space:nowrap;flex:1 1 0}
   .tab-btn:hover{border-color:var(--teal-dim);color:var(--text)}
   .tab-btn.active{background:var(--teal);color:#062018;border-color:var(--teal);font-weight:600}
   [data-tab]{display:none}
@@ -1967,7 +1967,7 @@
   // Requires "Allow adding visitor counts on your website" enabled in GoatCounter
   async function loadViews(){
     try{
-      const d = await getJSON("https://zandkorrel.goatcounter.com/counter//.json");
+      const d = await getJSON("https://zandkorrel.goatcounter.com/counter/%2F.json");
       if(d && isFinite(d.count_unique)){
         $("about-views").textContent = nf.format(d.count_unique);
       } else if(d && isFinite(d.count)){
