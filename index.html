@@ -1151,8 +1151,12 @@
   const nf = new Intl.NumberFormat("en-US");
   const MAX_SUPPLY = 28704026601; // ~28.7B KAS hard cap — single source of truth
 
+  // Shared live state — replaces former window.__ globals
+  const S = { price:null, circ:null, reward:null, vol24h:null, eurPrice:null,
+              headerCount:null, blockCount:null, daaScore:null };
+
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.37.0";
+  const APP_VERSION = "v2.38.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1645,9 +1649,9 @@
       const diff = num(pick(dag,["difficulty"]));
       const hc   = num(pick(dag,["headerCount"]));
       const pmt  = num(pick(dag,["pastMedianTime"]));
-      if(isFinite(hc))  window.__headerCount = hc;
-      if(isFinite(bc))  window.__blockCount  = bc;
-      if(isFinite(daa)) window.__daaScore    = daa;
+      if(isFinite(hc))  S.headerCount = hc;
+      if(isFinite(bc))  S.blockCount  = bc;
+      if(isFinite(daa)) S.daaScore    = daa;
       if(isFinite(tips)) $("tips").textContent = tips;
       if(isFinite(daa))  $("daa").textContent  = compact(daa);
       if(isFinite(bc))   $("blockcount").textContent = compact(bc);
@@ -1691,7 +1695,7 @@
           $("minted-pct").classList.remove("skeleton");
         }
       } else setErr("supply");
-      window.__circ = circ; maybeMcap();
+      S.circ = circ; maybeMcap();
     }catch(e){ setErr("supply"); }
   }
 
@@ -1724,7 +1728,7 @@
       const r = num(pick(d,["blockreward","blockReward"]));
       if(isFinite(r)){
         $("reward").innerHTML = r.toFixed(2)+' <small>KAS</small>';
-        window.__reward = r;
+        S.reward = r;
         // emission: 10 blocks/sec × 86400 sec/day × reward
         const perDay = 10 * 86400 * r;
         $("m-emit").innerHTML = compact(Math.round(perDay))+' <small>KAS</small>';
@@ -1735,7 +1739,7 @@
         $("m-emrate").innerHTML = perSec.toFixed(2)+' <small>KAS/sec</small>';
         $("m-emrate-note").textContent = compact(Math.round(perMin))+" KAS/min · "+compact(Math.round(perHour))+" KAS/hour";
         // annual inflation vs circulating supply
-        const circ = window.__circ;
+        const circ = S.circ;
         if(isFinite(circ) && circ>0){
           const annual = perDay * 365;
           const pct = (annual/circ*100).toFixed(2);
@@ -1774,12 +1778,12 @@
     try{
       const d = await getJSON(KAS+"/info/price?stringOnly=false");
       const p = num(pick(d,["price"]));
-      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); window.__price=p; maybeMcap(); }
+      if(isFinite(p)){ $("price").innerHTML = "$"+p.toFixed(4); S.price=p; maybeMcap(); }
       else setErr("price");
     }catch(e){ setErr("price"); }
   }
   function maybeMcap(){
-    const p=window.__price, c=window.__circ;
+    const p=S.price, c=S.circ;
     if(isFinite(p)&&isFinite(c)) $("mcap").textContent = "market cap $"+compact(p*c);
   }
 
@@ -1941,7 +1945,7 @@
 
   function renderMarket(byId){
     const k = byId["kaspa"]; if(!k) return;
-    if(isFinite(k.total_volume)){ $("m-vol").textContent = "$"+compact(k.total_volume); window.__vol24h = k.total_volume; }
+    if(isFinite(k.total_volume)){ $("m-vol").textContent = "$"+compact(k.total_volume); S.vol24h = k.total_volume; }
     if(k.market_cap_rank!=null) $("m-rank").textContent = "#"+k.market_cap_rank;
     if(isFinite(k.ath)){
       $("m-ath").textContent = "$"+(+k.ath).toFixed(4);
@@ -2063,7 +2067,7 @@
 
   // ---- Halving calendar ----
   function renderHalvingCalendar(){
-    const reward = window.__reward;
+    const reward = S.reward;
     if(!isFinite(reward)) return;
     const cal = $("halving-cal");
     if(!cal) return;
@@ -2107,7 +2111,7 @@
   }
 
   function renderSupplyBreakdown(){
-    const circ = window.__circ;
+    const circ = S.circ;
     if(!isFinite(circ)) return;
     const pct = circ / MAX_SUPPLY * 100;
     const rem = MAX_SUPPLY - circ;
@@ -2323,10 +2327,10 @@
 
   // ---- Security budget ----
   // Derived entirely from data already fetched (reward + price + supply).
-  // Call after loadReward and loadPeers/renderMarket have populated window.__reward
-  // and window.__price and window.__circ. Wired into refresh() so it stays current.
+  // Call after loadReward and loadPeers/renderMarket have populated S.reward
+  // and S.price and S.circ. Wired into refresh() so it stays current.
   function renderSecurityBudget(){
-    const reward = window.__reward, price = window.__price, circ = window.__circ;
+    const reward = S.reward, price = S.price, circ = S.circ;
     if(!isFinite(reward)||!isFinite(price)) return;
     const kasPerDay  = 10 * 86400 * reward;
     const usdPerDay  = kasPerDay * price;
@@ -2351,7 +2355,7 @@
   // We project from a known recent anchor (reward + supply from the live API) to avoid
   // accumulating drift from the genesis approximation.
   function renderEmissionCurve(){
-    const reward0 = window.__reward, circ0 = window.__circ;
+    const reward0 = S.reward, circ0 = S.circ;
     if(!isFinite(reward0)||!isFinite(circ0)) return;
 
     const BPS   = 10;               // blocks per second
@@ -2513,7 +2517,7 @@
       const d = await cgJSON(CG+"/coins/kaspa/tickers?include_exchange_logo=false&order=volume_desc&depth=false");
       const tickers = (d && d.tickers) ? d.tickers : [];
       if(!tickers.length) throw new Error("empty");
-      const mcap = window.__circ && window.__price ? window.__circ * window.__price : null;
+      const mcap = S.circ && S.price ? S.circ * S.price : null;
       const body = $("exc-body");
       if(!body) return;
 
@@ -2592,7 +2596,7 @@
       if(!kas) return;
       const eur = num(kas.eur);
       const chg = num(kas.eur_24h_change);
-      if(isFinite(eur)){ $("m-eur").textContent = "€"+eur.toFixed(4); window.__eurPrice = eur; }
+      if(isFinite(eur)){ $("m-eur").textContent = "€"+eur.toFixed(4); S.eurPrice = eur; }
       if(isFinite(chg)){
         const el = $("m-eur-note");
         if(el){ el.innerHTML = "24h <span class='"+(chg>=0?"up":"down")+"'>"+(chg>=0?"+":"")+chg.toFixed(2)+"%</span>"; }
@@ -2604,7 +2608,7 @@
   function renderNetAge(){
     const GENESIS = new Date("2021-11-07T00:00:00Z").getTime();
     const days = Math.floor((Date.now() - GENESIS) / 86400000);
-    const hc = window.__headerCount;
+    const hc = S.headerCount;
     const bpd = isFinite(hc) && days > 0 ? Math.round(hc / days) : null;
     // tile
     const el = $("m-netage");
@@ -2620,8 +2624,8 @@
   let _lastDaa = null, _lastDaaTime = null;
 
   function renderDailyStats(){
-    const daa    = window.__daaScore;
-    const reward = window.__reward;
+    const daa    = S.daaScore;
+    const reward = S.reward;
     const now    = Date.now();
 
     // Blocks per day from DAA delta between refreshes
@@ -2647,7 +2651,7 @@
       const secsSinceMidnight = (now - midnight.getTime()) / 1000;
       const minedToday = secsSinceMidnight * 10 * reward;
       $("m-mined-today").textContent = compact(Math.round(minedToday))+" KAS";
-      const usd = window.__price;
+      const usd = S.price;
       if(isFinite(usd)){
         $("m-mined-today-note").textContent = "≈ $"+compact(Math.round(minedToday*usd))+" · new KAS since midnight UTC";
       }
@@ -2658,7 +2662,7 @@
   // Reads from data/roi.json (written daily by collect-roi.js in the Action).
   // Zero CoinGecko calls from the browser — no more rate-limit pressure.
   async function loadROI(){
-    const currentPrice = window.__price;
+    const currentPrice = S.price;
     if(!isFinite(currentPrice)) return;
     const body = $("ret-body");
     if(!body) return;
