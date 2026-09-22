@@ -28,11 +28,17 @@ jobs:
           OANOR_KEY: ${{ secrets.OANOR_KEY }}
         run: node scripts/snapshot.mjs
 
+      - name: Collect ROI prices
+        run: node collect-roi.js
+
+      - name: Collect DeFi protocols
+        run: node collect-defi.js
+
       - name: Commit if changed
         run: |
           git config user.name  "kaspa-snapshot-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/history.json data/tokens-daily.json data/fng-history.json
+          git add data/history.json data/tokens-daily.json data/fng-history.json data/roi.json data/defi-protocols.json
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
