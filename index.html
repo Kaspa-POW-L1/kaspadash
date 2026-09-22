@@ -632,7 +632,7 @@
         <div class="note" id="ta-sma-note">golden cross / death cross</div>
       </div>
       <div class="tile">
-        <div class="h"><span>ADX (14)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Average Directional Index — measures trend STRENGTH, not direction. Below 20 = weak/no trend (ranging market). 20–25 = emerging trend. Above 25 = strong trend. Above 50 = very strong. +DI vs −DI shows direction: +DI above = bullish trend, −DI above = bearish trend.</span></span></div>
+        <div class="h"><span>ADX (14)</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Average Directional Index — measures trend STRENGTH, not direction. Below 20 = weak/no trend (ranging market). 20–25 = emerging trend. Above 25 = strong trend. Above 50 = very strong. +DI vs −DI shows direction: +DI above = bullish trend, −DI above = bearish trend. Note: computed from closing prices only (no intraday high/low), so readings may differ slightly from charting platforms.</span></span></div>
         <div class="v" id="ta-adx">–</div>
         <div class="bar"><i id="ta-adx-bar"></i></div>
         <div class="note" id="ta-adx-note">trend strength · +DI vs −DI for direction</div>
@@ -1127,6 +1127,7 @@
 
   const $ = id => document.getElementById(id);
   const nf = new Intl.NumberFormat("en-US");
+  const MAX_SUPPLY = 28704026601; // ~28.7B KAS hard cap — single source of truth
 
   // Bump this on each update so changes are traceable in the corner label.
   const APP_VERSION = "v2.33.0";
@@ -1694,7 +1695,6 @@
           const pct = (annual/circ*100).toFixed(2);
           $("m-emit-note").textContent = "new KAS per day · "+pct+"% annual inflation";
           // emission pressure: annual emission ÷ remaining supply
-          const MAX_SUPPLY = 28704026601;
           const remaining = MAX_SUPPLY - circ;
           if(remaining>0){
             const pressure = (annual/remaining*100).toFixed(2);
@@ -1818,7 +1818,7 @@
       body.innerHTML='<tr><td colspan="7" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
     }
   }
-  function esc(s){ return String(s).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
+  function esc(s){ return String(s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 
   // ---- KRC-20 price data via CoinGecko ----
   // ⚠️  MAINTAINER NOTE (also for AI assistants editing this file):
@@ -2035,7 +2035,7 @@
         <div class="hcal-n">${isNext?"▶ next":"#"+(found+1)}</div>
         <div class="hcal-date">${d.getDate()} ${mos[d.getMonth()]} ${d.getFullYear()}</div>
         <div class="hcal-reward">${nextR.toFixed(3)} KAS/block</div>
-        <div class="hcal-days">${daysAway}d away</div>
+        <div class="hcal-days">${daysAway}d away · approx.</div>
       </div>`;
       r = nextR; found++;
     }
@@ -2062,10 +2062,9 @@
 
   function renderSupplyBreakdown(){
     const circ = window.__circ;
-    const MAX  = 28_700_000_000;
     if(!isFinite(circ)) return;
-    const pct = circ / MAX * 100;
-    const rem = MAX - circ;
+    const pct = circ / MAX_SUPPLY * 100;
+    const rem = MAX_SUPPLY - circ;
     $("supply-bk-pct").textContent = pct.toFixed(2)+"%";
     const bar = $("supply-bk-bar"); if(bar) bar.style.width = Math.min(100,pct).toFixed(2)+"%";
     $("supply-bk-circ").textContent = compact(circ);
@@ -2323,7 +2322,6 @@
     const reward0 = window.__reward, circ0 = window.__circ;
     if(!isFinite(reward0)||!isFinite(circ0)) return;
 
-    const MAX   = 28_700_000_000;   // ~28.7B KAS hard cap
     const BPS   = 10;               // blocks per second
     const MONTH = 30.4375 * 86400;  // seconds per average month
     const FACTOR= Math.pow(0.5, 1/12); // chromatic halving factor per month
@@ -2334,19 +2332,19 @@
 
     let r = reward0, s = circ0;
     for(let m=0; m<=months; m++){
-      pts.push({t:m, s: Math.min(s, MAX)});
+      pts.push({t:m, s: Math.min(s, MAX_SUPPLY)});
       // advance one month
       const secs = MONTH;
       s += BPS * secs * r;
       r *= FACTOR;
-      if(s>=MAX){ pts.push({t:m+1, s:MAX}); break; }
+      if(s>=MAX_SUPPLY){ pts.push({t:m+1, s:MAX_SUPPLY}); break; }
     }
 
     // Draw SVG
     const svg=$("ecurve-svg"); if(!svg) return;
     const W=300,H=80,pad=4;
     const tmax=pts[pts.length-1].t;
-    const smax=MAX;
+    const smax=MAX_SUPPLY;
     const X=t=>pad+((t/tmax)*(W-2*pad));
     const Y=s=>H-pad-((s/smax)*(H-2*pad));
 
@@ -2362,7 +2360,7 @@
         '</linearGradient>'+
       '</defs>'+
       // asymptote
-      '<line x1="'+pad+'" y1="'+Y(MAX).toFixed(1)+'" x2="'+(W-pad)+'" y2="'+Y(MAX).toFixed(1)+
+      '<line x1="'+pad+'" y1="'+Y(MAX_SUPPLY).toFixed(1)+'" x2="'+(W-pad)+'" y2="'+Y(MAX_SUPPLY).toFixed(1)+
         '" stroke="#183129" stroke-width="1" stroke-dasharray="3 3"/>'+
       '<path d="'+area+'" fill="url(#ecg)"/>'+
       '<path d="'+d+'" fill="none" stroke="#49eacb" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -2385,8 +2383,8 @@
     // note
     const yearsLeft = (tmax/12).toFixed(0);
     $("ecurve-note").textContent =
-      compact(circ0)+" KAS in circulation · "+compact(MAX)+" max · ~"+yearsLeft+"y to hard cap";
-    $("ecurve-cap").textContent = compact(circ0)+" / "+compact(MAX);
+      compact(circ0)+" KAS in circulation · "+compact(MAX_SUPPLY)+" max · ~"+yearsLeft+"y to hard cap";
+    $("ecurve-cap").textContent = compact(circ0)+" / "+compact(MAX_SUPPLY);
   }
 
   // ---- Live block feed ----
@@ -2880,8 +2878,8 @@
     const slice=prices.slice(-(period+1));
     let hiIdx=0,loIdx=0;
     for(let i=1;i<=period;i++){
-      if(slice[i]>=slice[hiIdx]) hiIdx=i;
-      if(slice[i]<=slice[loIdx]) loIdx=i;
+      if(slice[i]>slice[hiIdx]) hiIdx=i;
+      if(slice[i]<slice[loIdx]) loIdx=i;
     }
     return {up:hiIdx/period*100, down:loIdx/period*100};
   }
@@ -3486,7 +3484,13 @@
   // ---- feedback popup ----
   const fbToggle=$("fb-toggle"), fbPopup=$("fb-popup"), fbClose=$("fb-close");
   if(fbToggle && fbPopup){
-    fbToggle.addEventListener("click",()=>fbPopup.classList.toggle("open"));
+    // Stop pulse animation for returning visitors
+    if(localStorage.getItem("kaspadash-fb-seen")){
+      fbToggle.style.animation="none";
+    } else {
+      setTimeout(()=>{ fbToggle.style.animation="none"; localStorage.setItem("kaspadash-fb-seen","1"); }, 15000);
+    }
+    fbToggle.addEventListener("click",()=>{ fbPopup.classList.toggle("open"); fbToggle.style.animation="none"; localStorage.setItem("kaspadash-fb-seen","1"); });
     fbClose && fbClose.addEventListener("click",()=>fbPopup.classList.remove("open"));
     document.addEventListener("click",e=>{
       if(!fbPopup.contains(e.target) && e.target!==fbToggle && !fbToggle.contains(e.target))
@@ -3558,7 +3562,7 @@
   setInterval(loadROI,       60*60000);
   setInterval(loadMarketSignals, 60*60000);
   setInterval(loadKrc20Prices,  10*60000);
-  setInterval(renderHalving,     1000);
+  setInterval(renderHalving,    60000);
 
   document.addEventListener("visibilitychange", ()=>{
     if(!document.hidden){
