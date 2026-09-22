@@ -1150,7 +1150,7 @@
   const MAX_SUPPLY = 28704026601; // ~28.7B KAS hard cap — single source of truth
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.35.0";
+  const APP_VERSION = "v2.36.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2227,31 +2227,16 @@
       $("defi-chains").innerHTML='<div class="err" style="font-size:13px">Chain TVL unavailable right now.</div>';
     }
 
-    // 2) protocols deployed on Kaspa chains
+    // 2) protocols deployed on Kaspa chains — from data/defi-protocols.json
+    //    (written by collect-defi.js in the Action, avoids fetching the full
+    //    DefiLlama /protocols list (~1 MB) in every visitor's browser)
     try{
-      const protos = await getJSON("https://api.llama.fi/protocols");
-      if(!Array.isArray(protos)) throw new Error("bad");
-      const mapped = protos
-        .filter(p=>Array.isArray(p.chains) && p.chains.some(isKaspaChain))
-        .filter(p=>String(p.category||"").toLowerCase()!=="cex") // exchanges aren't L2 DeFi
-        .map(p=>{
-          // sum only exact Kaspa-chain keys, skipping "Chain-staking"/"-borrowed" splits,
-          // and keep the per-chain breakdown (Igra vs Kasplex) for the Chain column.
-          let tvl=0;
-          const ct=p.chainTvls||{}, perChain={};
-          for(const k in ct){
-            if(isKaspaChain(k) && isFinite(+ct[k])){ tvl+=+ct[k]; perChain[String(k).toLowerCase()]=+ct[k]; }
-          }
-          return {name:p.name, category:p.category, tvl, perChain, staking:/stak/i.test(p.category||""),
-                  c1:num(pick(p,["change_1d"])), c7:num(pick(p,["change_7d"]))};
-        })
-        .filter(p=>isFinite(p.tvl) && p.tvl>0);
+      const d = await getJSON("./data/defi-protocols.json?t="+Date.now());
+      if(!d || !Array.isArray(d.protocols)) throw new Error("bad");
+      const mapped = d.protocols;
 
-      // Staking pools are listed separately: DefiLlama keeps them out of the headline
-      // chain TVL (to avoid double-counting), so counting them in the main table would
-      // make it sum to more than the chain cards above.
       const staking = mapped.filter(p=>p.staking);
-      const stakingTotal = staking.reduce((s,p)=>s+p.tvl,0);
+      const stakingTotal = staking.reduce((s,p)=>s+(p.tvl||0),0);
       defiProtoData = mapped.filter(p=>!p.staking);
       renderDefiProto();
 
@@ -2267,7 +2252,7 @@
 
       if(status) status.textContent = defiProtoData.length+" protocol"+(defiProtoData.length===1?"":"s");
     }catch(e){
-      $("defi-proto").innerHTML='<tr><td colspan="7" class="err">Protocol data unavailable right now.</td></tr>';
+      $("defi-proto").innerHTML='<tr><td colspan="7" class="err">Protocol data not yet available — run collect-defi.js in your Action to seed it.</td></tr>';
     }
 
     // 3) stablecoins on Kaspa chains (separate host — optional, fails silently)
@@ -2307,8 +2292,8 @@
   const DATA_SOURCES = [
     {name:"Kaspa REST",    host:"api.kaspa.org",                        use:"Network, supply, hashrate, rewards, halving, live block feed"},
     {name:"Kasplex",       host:"api.kasplex.org",                      use:"KRC-20 token list"},
-    {name:"CoinGecko",     host:"api.coingecko.com · via proxy",         use:"Price, market cap, volume, ROI, exchanges, peer coins"},
-    {name:"DefiLlama",     host:"api.llama.fi · stablecoins.llama.fi",  use:"L2 TVL, DeFi protocols, stablecoins"},
+    {name:"CoinGecko",     host:"api.coingecko.com · via proxy",         use:"Price, market cap, volume, exchanges, peer coins · ROI via collector"},
+    {name:"DefiLlama",     host:"api.llama.fi · stablecoins.llama.fi",  use:"L2 chain TVL, stablecoins (live) · protocols via collector"},
     {name:"GitHub",        host:"api.github.com",                       use:"rusty-kaspa developer activity"},
     {name:"Alternative.me",host:"api.alternative.me",                   use:"Crypto Fear & Greed index"}
   ];
@@ -2327,7 +2312,8 @@
       "CoinGecko is fetched through a small Cloudflare Worker that caches responses at the edge "+
       "and keeps its Demo API key server-side, so no key is ever exposed in the page and all "+
       "visitors share the same cached data. Every other source is fetched straight from your browser. "+
-      "Plus an hourly collector (GitHub Actions) that snapshots the live APIs into the history charts "+
+      "Plus an hourly collector (GitHub Actions) that snapshots the live APIs into the history charts, "+
+      "pre-fetches ROI prices and DeFi protocol data from CoinGecko and DefiLlama, "+
       "and pulls CNN's index for stock-market sentiment, and "+
       '<a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a> '+
       "for privacy-friendly, cookie-free view counts. No tracking cookies, no login.";
@@ -2667,58 +2653,42 @@
   }
 
   // ---- Return on investment ----
+  // Reads from data/roi.json (written daily by collect-roi.js in the Action).
+  // Zero CoinGecko calls from the browser — no more rate-limit pressure.
   async function loadROI(){
     const currentPrice = window.__price;
     if(!isFinite(currentPrice)) return;
     const body = $("ret-body");
     if(!body) return;
 
-    const periods = [
-      {label:"1 week ago",  days:7},
-      {label:"1 month ago", days:30},
-      {label:"3 months ago",days:90},
-      {label:"6 months ago",days:180},
-      {label:"1 year ago",  days:365},
-      {label:"2 years ago", days:730},
-    ];
-
-    const fmt = d => { const dt=new Date(Date.now()-d*86400000); return `${String(dt.getDate()).padStart(2,"0")}-${String(dt.getMonth()+1).padStart(2,"0")}-${dt.getFullYear()}`; };
-
     body.innerHTML = '<tr><td colspan="4" class="skeleton">loading…</td></tr>';
 
-    // Serieel met een korte pauze i.p.v. 6 calls tegelijk: een burst tript
-    // de gratis CoinGecko-tier direct op een 429, wat daarna o.a. het
-    // Market signals-paneel uithongert.
-    const results = [];
-    for(const p of periods){
-      try{
-        const v = await cgJSON(CG+"/coins/kaspa/history?date="+fmt(p.days)+"&localization=false");
-        results.push({status:"fulfilled", value:v});
-      }catch(e){
-        results.push({status:"rejected", reason:e});
-      }
-      await sleep(350);
-    }
+    try{
+      const d = await getJSON("./data/roi.json?t="+Date.now());
+      if(!d || !Array.isArray(d.periods) || !d.periods.length) throw new Error("empty");
 
-    let rows = "";
-    results.forEach((r,i)=>{
-      const p = periods[i];
-      let priceStr = "–", valStr = "–", retStr = "–", cls = "";
-      if(r.status==="fulfilled"){
-        const hist = r.value;
-        const hp = hist && hist.market_data && hist.market_data.current_price && hist.market_data.current_price.usd;
-        if(isFinite(hp) && hp > 0){
-          const val = (100 / hp) * currentPrice;
-          const ret = ((currentPrice - hp) / hp * 100);
-          priceStr = "$"+hp.toFixed(4);
+      // stale check: warn if data is older than 36 hours
+      const age = Date.now() - (d.t || 0);
+      const stale = age > 36*3600000;
+
+      let rows = "";
+      d.periods.forEach(p=>{
+        let priceStr = "–", valStr = "–", retStr = "–", cls = "";
+        if(isFinite(p.price) && p.price > 0){
+          const val = (100 / p.price) * currentPrice;
+          const ret = ((currentPrice - p.price) / p.price * 100);
+          priceStr = "$"+p.price.toFixed(4);
           valStr = "$"+val.toFixed(2);
           retStr = (ret>=0?"+":"")+ret.toFixed(1)+"%";
           cls = ret>=0?"ret-pos":"ret-neg";
         }
-      }
-      rows += `<tr><td>${p.label}</td><td>${priceStr}</td><td>${valStr}</td><td class="${cls}">${retStr}</td></tr>`;
-    });
-    body.innerHTML = rows;
+        rows += '<tr><td>'+esc(p.label)+'</td><td>'+priceStr+'</td><td>'+valStr+'</td><td class="'+cls+'">'+retStr+'</td></tr>';
+      });
+      if(stale) rows += '<tr><td colspan="4" style="font-size:11px;color:var(--muted)">historical prices '+Math.round(age/3600000)+'h old — collector may need attention</td></tr>';
+      body.innerHTML = rows;
+    }catch(e){
+      body.innerHTML = '<tr><td colspan="4" class="err">ROI data not yet available — run collect-roi.js in your Action to seed it.</td></tr>';
+    }
   }
 
   // ---- Market signals (technical indicators from CoinGecko daily history) ----
@@ -3586,19 +3556,19 @@
   loadDefiEcosystem();
   loadBlockFeed();
   loadGitHub();
+  loadROI();
   initToolbar();
   initExpand();
   renderAbout();
 
   // CoinGecko calls: gespreid over 30s om rate-limiting te voorkomen
   // loadAllCoinGecko doet intern al 3 stappen met pauzes (markets → 3s → global → 2s → kaspa)
-  // Daarna: exchanges (+10s), EUR prijs (+20s), ROI (+30s)
+  // Daarna: exchanges (+10s), EUR prijs (+20s), market signals (+30s)
   loadAllCoinGecko();
   setTimeout(loadExchanges,  10000);
   setTimeout(loadEurPrice,   20000);
-  setTimeout(loadROI,        30000);
-  setTimeout(loadMarketSignals, 40000);
-  setTimeout(loadKrc20Prices,   50000);
+  setTimeout(loadMarketSignals, 30000);
+  setTimeout(loadKrc20Prices,   40000);
 
   // Intervals
   setInterval(refresh,          60000);
@@ -3611,7 +3581,6 @@
   setInterval(loadExchanges,  10*60000);
   setInterval(loadGitHub,     30*60000);
   setInterval(loadEurPrice,   5*60000);
-  setInterval(loadROI,       60*60000);
   setInterval(loadMarketSignals, 60*60000);
   setInterval(loadKrc20Prices,  10*60000);
   setInterval(renderHalving,    60000);
