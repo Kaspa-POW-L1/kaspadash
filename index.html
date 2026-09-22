@@ -1102,6 +1102,7 @@
       <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
       <div><span class="k" style="font-size:26px">3,600</span><span class="t"> lines · single file</span></div>
       <div><span class="k" style="font-size:26px">4</span><span class="t"> languages · HTML CSS JS SVG</span></div>
+      <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views"> dashboard views</span></div>
     </div>
 
     <div id="about-sources" style="margin-top:14px"></div>
@@ -1160,7 +1161,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.40.0";
+  const APP_VERSION = "v2.41.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1964,6 +1965,17 @@
 
   // ---- GoatCounter dashboard views ----
   // Requires "Allow adding visitor counts on your website" enabled in GoatCounter
+  async function loadViews(){
+    try{
+      const d = await getJSON("https://zandkorrel.goatcounter.com/counter//.json");
+      if(d && isFinite(d.count_unique)){
+        $("about-views").textContent = nf.format(d.count_unique);
+      } else if(d && isFinite(d.count)){
+        $("about-views").textContent = nf.format(d.count);
+      }
+    }catch(e){ /* GoatCounter counter endpoint not available or not enabled */ }
+  }
+
   // ---- All CoinGecko data in one coordinated load ----
   // Previously loadPeers, loadGlobal and loadSentiment each fired a separate
   // CoinGecko request almost simultaneously, reliably triggering a 429 on the
@@ -3503,6 +3515,7 @@
   loadBlockFeed();
   loadGitHub();
   loadROI();
+  loadViews();
   initToolbar();
   initExpand();
   renderAbout();
