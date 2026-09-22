@@ -1967,12 +1967,9 @@
   // Requires "Allow adding visitor counts on your website" enabled in GoatCounter
   async function loadViews(){
     try{
-      const d = await getJSON("https://zandkorrel.goatcounter.com/counter/%2F.json");
-      if(d && isFinite(d.count_unique)){
-        $("about-views").textContent = nf.format(d.count_unique);
-      } else if(d && isFinite(d.count)){
-        $("about-views").textContent = nf.format(d.count);
-      }
+      const d = await getJSON("https://zandkorrel.goatcounter.com/counter/%2Fkaspadash%2F.json");
+      const v = Number(d && (d.count_unique || d.count));
+      if(isFinite(v)) $("about-views").textContent = nf.format(v);
     }catch(e){ /* GoatCounter counter endpoint not available or not enabled */ }
   }
 
