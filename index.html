@@ -264,6 +264,21 @@
     scrollbar-width:none;padding:2px 0;position:sticky;top:0;z-index:40;
     background:var(--bg);border-bottom:1px solid var(--line);padding-bottom:8px;padding-top:8px}
   .tab-bar::-webkit-scrollbar{display:none}
+  /* gradient fade to hint at scrollable tabs */
+  .tab-bar-wrap{position:relative}
+  .tab-bar-wrap::after{content:"";position:absolute;right:0;top:0;bottom:0;width:36px;
+    background:linear-gradient(90deg,transparent,var(--bg));pointer-events:none;z-index:41;
+    transition:opacity .2s}
+  .tab-bar-wrap.scrolled-end::after{opacity:0}
+
+  /* tooltip scrim overlay on mobile */
+  .tip-scrim{display:none}
+  @media(max-width:600px){
+    .tip-scrim{display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.4);
+      backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+    .tip-scrim.visible{display:block}
+    .tip-wrap.open .tip-box{z-index:100}
+  }
   .tab-btn{appearance:none;background:transparent;border:1px solid var(--line);border-radius:99px;
     color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:500;
     padding:7px 16px;cursor:pointer;transition:border-color .15s,color .15s,background .15s;
@@ -360,6 +375,7 @@
 
 
   <!-- TAB NAVIGATION -->
+  <div class="tab-bar-wrap" id="tab-bar-wrap">
   <nav class="tab-bar" id="tab-bar" role="tablist">
     <button class="tab-btn active" data-target="overview" role="tab" aria-selected="true">Overview</button>
     <button class="tab-btn" data-target="market" role="tab">Market</button>
@@ -370,6 +386,10 @@
     <button class="tab-btn" data-target="community" role="tab">Community</button>
     <button class="tab-btn" data-target="about" role="tab">About</button>
   </nav>
+  </div>
+
+  <!-- tooltip scrim (mobile) -->
+  <div class="tip-scrim" id="tip-scrim"></div>
 
   <!-- METRICS -->
   <div class="grid tab-visible" data-tab="overview">
@@ -1130,7 +1150,7 @@
   const MAX_SUPPLY = 28704026601; // ~28.7B KAS hard cap — single source of truth
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.33.0";
+  const APP_VERSION = "v2.35.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1140,6 +1160,23 @@
     }
   }
 
+  // #10 — tab-bar: hide gradient when scrolled to the end
+  (function(){
+    const bar=$("tab-bar"), wrap=$("tab-bar-wrap");
+    if(!bar||!wrap) return;
+    function checkScroll(){
+      const atEnd = bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4;
+      wrap.classList.toggle("scrolled-end", atEnd);
+    }
+    bar.addEventListener("scroll", checkScroll, {passive:true});
+    checkScroll();
+  })();
+
+  // #11 — tooltip scrim (mobile)
+  const tipScrim = $("tip-scrim");
+  function showScrim(){ if(tipScrim) tipScrim.classList.add("visible"); }
+  function hideScrim(){ if(tipScrim) tipScrim.classList.remove("visible"); }
+
   // mobile tap-toggle for tooltips
   document.addEventListener("click", e=>{
     const icon = e.target.closest(".tip-icon");
@@ -1148,10 +1185,17 @@
       const wrap = icon.closest(".tip-wrap");
       const wasOpen = wrap.classList.contains("open");
       document.querySelectorAll(".tip-wrap.open").forEach(w=>w.classList.remove("open"));
-      if(!wasOpen) wrap.classList.add("open");
+      if(!wasOpen){ wrap.classList.add("open"); showScrim(); }
+      else { hideScrim(); }
       return;
     }
     document.querySelectorAll(".tip-wrap.open").forEach(w=>w.classList.remove("open"));
+    hideScrim();
+  });
+  // scrim tap also closes tooltip
+  if(tipScrim) tipScrim.addEventListener("click", ()=>{
+    document.querySelectorAll(".tip-wrap.open").forEach(w=>w.classList.remove("open"));
+    hideScrim();
   });
 
   // ---- accessible tooltips ----
