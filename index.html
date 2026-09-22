@@ -398,149 +398,149 @@
   <!-- METRICS -->
   <div class="grid tab-visible" data-tab="overview">
     <div class="tile span2">
-      <div class="h"><span>Circulating supply</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The amount of KAS currently in circulation out of the maximum ~28.7 billion ever. Kaspa had a fair launch — no premine, no founder allocation.</span></span><span id="minted-pct" class="skeleton">–</span></div>
+      <div class="h"><span data-i18n="circ_supply">Circulating supply</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The amount of KAS currently in circulation out of the maximum ~28.7 billion ever. Kaspa had a fair launch — no premine, no founder allocation.</span></span><span id="minted-pct" data-i18n="n_minted" class="skeleton">–</span></div>
       <div class="v" id="supply">–</div>
       <div class="bar"><i id="supply-bar"></i></div>
-      <div class="note" id="supply-note">of max ~28.7B KAS · fair launch, no premine</div>
+      <div class="note" id="supply-note" data-i18n="n_supply">of max ~28.7B KAS · fair launch, no premine</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Hashrate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total computing power miners are spending on Kaspa right now (in PH/s = petahashes per second). Higher = more secure network, harder to attack. The trend arrow shows whether hashrate is rising or falling over this session.</span></span></div>
+      <div class="h"><span data-i18n="hashrate">Hashrate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The total computing power miners are spending on Kaspa right now (in PH/s = petahashes per second). Higher = more secure network, harder to attack. The trend arrow shows whether hashrate is rising or falling over this session.</span></span></div>
       <div class="v" id="hashrate">–<span class="hash-trend" id="hash-trend"></span></div>
       <svg class="spark" id="hash-spark" viewBox="0 0 120 34" preserveAspectRatio="none"></svg>
       <div class="note" id="hash-note">live session (since page opened) · higher = more secure</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Price · USD</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Current KAS price in USD with 24h and 7d change. Green = up, amber = down vs the previous period.</span></span></div>
+      <div class="h"><span data-i18n="price">Price · USD</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Current KAS price in USD with 24h and 7d change. Green = up, amber = down vs the previous period.</span></span></div>
       <div class="v" id="price">–</div>
       <div class="note" id="price-chg">24h – · 7d –</div>
       <div class="note" id="mcap">market cap –</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Price · EUR</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">KAS price in Euro — relevant for European investors. Movements differ from USD when the EUR/USD exchange rate shifts.</span></span></div>
+      <div class="h"><span data-i18n="price_eur">Price · EUR</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">KAS price in Euro — relevant for European investors. Movements differ from USD when the EUR/USD exchange rate shifts.</span></span></div>
       <div class="v" id="m-eur">–</div>
       <div class="note" id="m-eur-note">24h change –</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Block reward</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How many new KAS a miner earns per block found. Kaspa uses a "chromatic halving" — the reward drops smoothly every month instead of a sudden halving like Bitcoin.</span></span></div>
+      <div class="h"><span data-i18n="block_reward">Block reward</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How many new KAS a miner earns per block found. Kaspa uses a "chromatic halving" — the reward drops smoothly every month instead of a sudden halving like Bitcoin.</span></span></div>
       <div class="v" id="reward">–</div>
-      <div class="note">drops monthly (chromatic halving)</div>
+      <div class="note" data-i18n="n_reward">drops monthly (chromatic halving)</div>
     </div>
 
     <div class="tile span2">
-      <div class="h"><span>Next reward reduction</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Countdown to the next monthly emission reduction. Unlike Bitcoin's 4-year halving, Kaspa reduces the block reward by ~1/12th root of 2 every month — a smooth, predictable decrease.</span></span></div>
+      <div class="h"><span data-i18n="next_reduction">Next reward reduction</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Countdown to the next monthly emission reduction. Unlike Bitcoin's 4-year halving, Kaspa reduces the block reward by ~1/12th root of 2 every month — a smooth, predictable decrease.</span></span></div>
       <div class="v" id="halving">–</div>
       <div class="note" id="halving-note">emission halves ~1/2^(1/12) per month</div>
     </div>
 
     <div class="tile span2">
-      <div class="h"><span>Halving calendar</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The next 6 monthly reward reductions. Each month the block reward is multiplied by ½^(1/12) ≈ 0.9439. Dates are approximate — based on the current reward and the chromatic halving formula.</span></span></div>
+      <div class="h"><span data-i18n="halving_calendar">Halving calendar</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The next 6 monthly reward reductions. Each month the block reward is multiplied by ½^(1/12) ≈ 0.9439. Dates are approximate — based on the current reward and the chromatic halving formula.</span></span></div>
       <div id="halving-cal" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px"></div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Difficulty</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How hard it is for miners to find a valid block. The network adjusts this automatically to keep ~10 blocks per second regardless of how much mining power is active. Rising difficulty = more miners joining.</span></span></div>
+      <div class="h"><span data-i18n="difficulty">Difficulty</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How hard it is for miners to find a valid block. The network adjusts this automatically to keep ~10 blocks per second regardless of how much mining power is active. Rising difficulty = more miners joining.</span></span></div>
       <div class="v" id="difficulty">–</div>
-      <div class="note">network difficulty · rises with hashrate, auto-adjusts</div>
+      <div class="note" data-i18n="n_difficulty">network difficulty · rises with hashrate, auto-adjusts</div>
     </div>
   </div>
 
   <div class="grid" data-tab="market">
     <div class="tile">
-      <div class="h"><span>24h volume</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total USD value of KAS traded across all exchanges in the last 24 hours. The % of market cap shows how "active" the market is — higher % means more turnover relative to the coin's size.</span></span></div>
+      <div class="h"><span data-i18n="vol_24h">24h volume</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total USD value of KAS traded across all exchanges in the last 24 hours. The % of market cap shows how "active" the market is — higher % means more turnover relative to the coin's size.</span></span></div>
       <div class="v" id="m-vol">–</div>
       <div class="note" id="vol-note">traded last 24h</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Market cap rank</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Kaspa's position in the global crypto market ranked by market capitalisation (price × supply). Lower number = larger market.</span></span></div>
+      <div class="h"><span data-i18n="mcap_rank">Market cap rank</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Kaspa's position in the global crypto market ranked by market capitalisation (price × supply). Lower number = larger market.</span></span></div>
       <div class="v" id="m-rank">–</div>
-      <div class="note">by market cap · lower rank = more adopted</div>
+      <div class="note" data-i18n="n_mcap_rank">by market cap · lower rank = more adopted</div>
     </div>
     <div class="tile">
-      <div class="h"><span>All-time high</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The highest price KAS has ever reached. The percentage below shows how far the current price is from that peak — a large negative % means significant room to recover (or it may never return).</span></span></div>
+      <div class="h"><span data-i18n="ath">All-time high</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The highest price KAS has ever reached. The percentage below shows how far the current price is from that peak — a large negative % means significant room to recover (or it may never return).</span></span></div>
       <div class="v" id="m-ath">–</div>
       <div class="note" id="m-ath-note">from ATH</div>
       <div class="note" id="m-ath-date" style="margin-top:2px"></div>
     </div>
     <div class="tile">
-      <div class="h"><span>Price · BTC</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much Bitcoin one KAS costs. Rising = KAS outperforms BTC; falling = KAS underperforms. Useful because BTC is the reference currency most crypto traders benchmark against.</span></span></div>
+      <div class="h"><span data-i18n="btc_price">Price · BTC</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much Bitcoin one KAS costs. Rising = KAS outperforms BTC; falling = KAS underperforms. Useful because BTC is the reference currency most crypto traders benchmark against.</span></span></div>
       <div class="v" id="m-btc">–</div>
-      <div class="note">vs Bitcoin · rising = KAS outperforms BTC</div>
+      <div class="note" data-i18n="n_btc">vs Bitcoin · rising = KAS outperforms BTC</div>
     </div>
   </div>
 
   <div class="grid" data-tab="network">
     <div class="tile">
-      <div class="h"><span>Total headers</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total block headers the network has ever processed — including red blocks not selected as the main chain. Always larger than blockCount and shows the true scale of Kaspa's BlockDAG activity.</span></span></div>
+      <div class="h"><span data-i18n="total_headers">Total headers</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total block headers the network has ever processed — including red blocks not selected as the main chain. Always larger than blockCount and shows the true scale of Kaspa's BlockDAG activity.</span></span></div>
       <div class="v" id="m-tps">–</div>
-      <div class="note">all headers ever seen · includes red (non-selected) blocks</div>
+      <div class="note" data-i18n="n_headers">all headers ever seen · includes red (non-selected) blocks</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Median block time</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The median timestamp of the last 2,641 blocks — Kaspa's internal clock for ordering the DAG. If this matches real time closely, the network is healthy and producing blocks on schedule.</span></span></div>
+      <div class="h"><span data-i18n="median_time">Median block time</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The median timestamp of the last 2,641 blocks — Kaspa's internal clock for ordering the DAG. If this matches real time closely, the network is healthy and producing blocks on schedule.</span></span></div>
       <div class="v" id="m-txall" style="font-size:18px">–</div>
-      <div class="note">network median time · should be close to now</div>
+      <div class="note" data-i18n="n_median">network median time · should be close to now</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Emission today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">New KAS created today via block rewards (10 blocks/sec × 86,400 sec × reward). The annual inflation % shows how much the supply grows per year — it shrinks each month as the reward decreases.</span></span></div>
+      <div class="h"><span data-i18n="emission">Emission today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">New KAS created today via block rewards (10 blocks/sec × 86,400 sec × reward). The annual inflation % shows how much the supply grows per year — it shrinks each month as the reward decreases.</span></span></div>
       <div class="v" id="m-emit">–</div>
       <div class="note" id="m-emit-note">new KAS per day · inflation –</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Mined today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated new KAS created since midnight UTC today. Calculated from the block reward and blocks produced today. Shows the daily emission in practice.</span></span></div>
+      <div class="h"><span data-i18n="blocktime">Mined today</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated new KAS created since midnight UTC today. Calculated from the block reward and blocks produced today. Shows the daily emission in practice.</span></span></div>
       <div class="v" id="m-mined-today">–</div>
       <div class="note" id="m-mined-today-note">new KAS since midnight UTC</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Live emission rate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Real-time emission speed: how many new KAS are being created every second, minute and hour at the current block reward × 10 blocks/sec.</span></span></div>
+      <div class="h"><span data-i18n="emrate">Live emission rate</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Real-time emission speed: how many new KAS are being created every second, minute and hour at the current block reward × 10 blocks/sec.</span></span></div>
       <div class="v" id="m-emrate">–</div>
       <div class="note" id="m-emrate-note">KAS/sec · KAS/min · KAS/hour</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Emission pressure</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Annual new emission as percentage of remaining (unmined) supply. Lower = scarcer. Drops every month as the block reward decreases — Kaspa becomes harder money over time.</span></span></div>
+      <div class="h"><span data-i18n="empressure">Emission pressure</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Annual new emission as percentage of remaining (unmined) supply. Lower = scarcer. Drops every month as the block reward decreases — Kaspa becomes harder money over time.</span></span></div>
       <div class="v" id="m-empressure">–</div>
       <div class="note" id="m-empressure-note">annual emission ÷ remaining supply</div>
     </div>
 
     <div class="tile">
-      <div class="h"><span>Network age</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Days since Kaspa's genesis block on 7 November 2021 — a fair launch with no premine. Shows how mature the network is and gives context to the total block count.</span></span></div>
+      <div class="h"><span data-i18n="reddit">Network age</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Days since Kaspa's genesis block on 7 November 2021 — a fair launch with no premine. Shows how mature the network is and gives context to the total block count.</span></span></div>
       <div class="v" id="m-netage">–</div>
       <div class="note" id="m-netage-note">days since genesis · 7 Nov 2021</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Blocks per day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated number of blocks the network produces per day, based on the DAA score delta between refreshes. At 10 blocks per second the target is 864,000 blocks/day. A lower number means the network is slightly slower than target.</span></span></div>
+      <div class="h"><span data-i18n="orphan">Blocks per day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Estimated number of blocks the network produces per day, based on the DAA score delta between refreshes. At 10 blocks per second the target is 864,000 blocks/day. A lower number means the network is slightly slower than target.</span></span></div>
       <div class="v" id="m-bpd-live">–</div>
       <div class="note" id="m-bpd-note">target: 864,000 · based on DAA score</div>
     </div>
     <div class="tile span2">
-      <div class="h"><span>Developer activity</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Live stats from the kaspanet/rusty-kaspa GitHub repository — the main Kaspa node implementation. Last push date shows how recently the codebase was updated. Stars and forks reflect developer interest in the project.</span></span></div>
+      <div class="h"><span data-i18n="dev_activity">Developer activity</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Live stats from the kaspanet/rusty-kaspa GitHub repository — the main Kaspa node implementation. Last push date shows how recently the codebase was updated. Stars and forks reflect developer interest in the project.</span></span></div>
       <div class="sec-row" style="margin-top:4px">
         <div><span class="k" id="gh-commits" style="font-size:18px">–</span><span class="t" id="gh-ago" style="margin-left:6px"></span></div>
         <div><span class="k" id="gh-stars">–</span><span class="t"> stars</span></div>
         <div><span class="k" id="gh-forks">–</span><span class="t"> forks</span></div>
         <div><span class="k" id="gh-issues">–</span><span class="t"> open issues</span></div>
       </div>
-      <div class="note">last push to kaspanet/rusty-kaspa · via GitHub API</div>
+      <div class="note" data-i18n="n_github">last push to kaspanet/rusty-kaspa · via GitHub API</div>
     </div>
   </div>
 
   <!-- SECURITY BUDGET & EMISSION CURVE -->
   <div class="grid" data-tab="network" style="margin-top:0">
     <div class="tile span2">
-      <div class="h"><span>Security budget</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What miners earn per day securing the network (block reward × 10 blocks/s × 86,400 s × KAS price). The annualised figure as % of market cap shows how much the network "spends" on security — higher = harder and costlier to attack.</span></span></div>
+      <div class="h"><span data-i18n="sec_budget">Security budget</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What miners earn per day securing the network (block reward × 10 blocks/s × 86,400 s × KAS price). The annualised figure as % of market cap shows how much the network "spends" on security — higher = harder and costlier to attack.</span></span></div>
       <div class="v" id="sec-usd">–</div>
       <div class="sec-row">
-        <div><span class="k" id="sec-annual">–</span><span class="t"> annualised</span></div>
-        <div><span class="k" id="sec-pct">–</span><span class="t"> of market cap</span></div>
-        <div><span class="k" id="sec-kas">–</span><span class="t"> KAS/day</span></div>
+        <div><span class="k" id="sec-annual">–</span><span class="t" data-i18n-sec="n_sec_annual"> annualised</span></div>
+        <div><span class="k" id="sec-pct">–</span><span class="t" data-i18n-sec="n_sec_mcap"> of market cap</span></div>
+        <div><span class="k" id="sec-kas">–</span><span class="t" data-i18n-sec="n_sec_kas"> KAS/day</span></div>
       </div>
     </div>
     <!-- EMISSION CURVE -->
     <div class="tile span2">
-      <div class="h"><span>Emission curve</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Kaspa's chromatic halving: the block reward drops by ½^(1/12) every month. The curve shows projected circulating supply to ~2037; the teal line marks today. The asymptote is ~28.7B KAS — no more will ever be created.</span></span><span id="ecurve-cap" style="font-family:var(--mono);font-size:12px;color:var(--muted)"></span></div>
+      <div class="h"><span data-i18n="emission_curve">Emission curve</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Kaspa's chromatic halving: the block reward drops by ½^(1/12) every month. The curve shows projected circulating supply to ~2037; the teal line marks today. The asymptote is ~28.7B KAS — no more will ever be created.</span></span><span id="ecurve-cap" style="font-family:var(--mono);font-size:12px;color:var(--muted)"></span></div>
       <div class="ecurve-wrap">
         <svg id="ecurve-svg" viewBox="0 0 300 80" preserveAspectRatio="none" aria-hidden="true"></svg>
         <div class="ecurve-now" id="ecurve-now" style="left:0"></div>
@@ -552,17 +552,17 @@
 
   <div class="grid" data-tab="market">
     <div class="tile">
-      <div class="h"><span>Fear &amp; Greed · Crypto</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A 0–100 score for the overall crypto market mood. 0–24: Extreme Fear. 25–49: Fear. 50–74: Greed. 75–100: Extreme Greed (market may be overheated). Not Kaspa-specific.</span></span></div>
+      <div class="h"><span data-i18n="fng_crypto">Fear &amp; Greed · Crypto</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">A 0–100 score for the overall crypto market mood. 0–24: Extreme Fear. 25–49: Fear. 50–74: Greed. 75–100: Extreme Greed (market may be overheated). Not Kaspa-specific.</span></span></div>
       <div class="v" id="s-fng">–</div>
-      <div class="note" id="s-fng-note">market-wide crypto</div>
+      <div class="note" id="s-fng-note" data-i18n="n_fng">market-wide crypto</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Fear &amp; Greed · Stocks</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">CNN's Fear & Greed Index for traditional stock markets (S&P 500). Useful to compare stock vs crypto sentiment — when both are in greed, risk appetite is high across all markets.</span></span></div>
+      <div class="h"><span data-i18n="fng_stocks">Fear &amp; Greed · Stocks</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">CNN's Fear & Greed Index for traditional stock markets (S&P 500). Useful to compare stock vs crypto sentiment — when both are in greed, risk appetite is high across all markets.</span></span></div>
       <div class="v" id="s-fng-stock">–</div>
       <div class="note" id="s-fng-stock-note">stock market · CNN</div>
     </div>
     <div class="tile">
-      <div class="h"><span>Supply breakdown</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much of the total KAS supply has already been mined. The hard cap is ~28.7B KAS — no more will ever be created. The remaining supply will be mined gradually over the coming years via the chromatic halving schedule.</span></span></div>
+      <div class="h"><span data-i18n="community">Supply breakdown</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How much of the total KAS supply has already been mined. The hard cap is ~28.7B KAS — no more will ever be created. The remaining supply will be mined gradually over the coming years via the chromatic halving schedule.</span></span></div>
       <div class="v" id="supply-bk-pct" style="font-size:28px">–</div>
       <div class="bar" style="margin:8px 0 4px"><i id="supply-bk-bar" style="width:0%"></i></div>
       <div class="sec-row" style="margin-top:4px">
@@ -573,7 +573,7 @@
       <div class="note">hard cap · fair launch · no premine</div>
     </div>
     <div class="tile">
-      <div class="h"><span>24h range</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The lowest and highest price KAS reached in the last 24 hours. Gives context for where the current price sits relative to today's trading range.</span></span></div>
+      <div class="h"><span data-i18n="range_24h">24h range</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The lowest and highest price KAS reached in the last 24 hours. Gives context for where the current price sits relative to today's trading range.</span></span></div>
       <div class="v" id="m-52lo">–</div>
       <div class="note" id="m-52hi">high –</div>
     </div>
@@ -582,7 +582,7 @@
   <!-- RENDEMENT & BTC DOMINANCE -->
   <div class="grid" data-tab="market" style="margin-top:0">
     <div class="tile span2">
-      <div class="h"><span>Return on investment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What $100 invested in KAS at various points in the past would be worth today. Based on historical closing prices via CoinGecko. Not financial advice.</span></span></div>
+      <div class="h"><span data-i18n="roi">Return on investment</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">What $100 invested in KAS at various points in the past would be worth today. Based on historical closing prices via CoinGecko. Not financial advice.</span></span></div>
       <div class="table-scroll"><table class="ret-table">
         <thead><tr>
           <th>Bought</th>
@@ -594,7 +594,7 @@
       </table></div>
     </div>
     <div class="tile span2">
-      <div class="h"><span>Bitcoin dominance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bitcoin's share of the total crypto market cap. Falling dominance often means capital is rotating from BTC into altcoins (like KAS); rising dominance means money is concentrating back into Bitcoin.</span></span></div>
+      <div class="h"><span data-i18n="btc_dom">Bitcoin dominance</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Bitcoin's share of the total crypto market cap. Falling dominance often means capital is rotating from BTC into altcoins (like KAS); rising dominance means money is concentrating back into Bitcoin.</span></span></div>
       <div class="v" id="m-btcdom">–</div>
       <div class="bar"><i id="btcdom-bar"></i></div>
       <div class="note" id="m-btcdom-note">BTC share of total crypto market · rising = risk-off</div>
@@ -604,7 +604,7 @@
   <!-- LIVE BLOCK FEED -->
   <section class="panel" data-tab="network" style="margin-top:0;margin-bottom:16px">
     <div class="h" style="margin-bottom:0">
-      <h2 style="margin:0;font-size:15px;font-weight:600">Live block feed</h2>
+      <h2 style="margin:0;font-size:15px;font-weight:600" data-i18n="live_feed">Live block feed</h2>
       <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">The most recent blocks added to the Kaspa BlockDAG, refreshed every 10 seconds. Blue score is Kaspa's internal ordering metric. Tx = transactions in that block.</span></span>
       <span id="bf-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
     </div>
@@ -1160,7 +1160,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.39.0";
+  const APP_VERSION = "v2.40.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1276,6 +1276,7 @@
       sec_budget:"Security budget",
       emission_curve:"Emission curve",
       live_feed:"Live block feed",
+      halving_calendar:"Halving calendar",
       top_exc:"Top exchanges",
       technical:"Technical analysis",
       price_eur:"Price · EUR",
@@ -1348,6 +1349,7 @@
       sec_budget:"Veiligheidsbudget",
       emission_curve:"Uitgiftecurve",
       live_feed:"Live blokkenfeed",
+      halving_calendar:"Halveringskalender",
       top_exc:"Topbeurzen",
       technical:"Technische analyse",
       price_eur:"Prijs · EUR",
@@ -1390,113 +1392,53 @@
 
   let currentLang = (navigator.language||"en").startsWith("nl") ? "nl" : "en";
 
-  // map of translation key → element selector(s)
-  const TRANS_MAP = [
-    ["bps_label",  ()=>{ const el=document.querySelector(".label"); if(el) el.textContent=T[currentLang].bps_label; }],
-    ["bps_sub",    ()=>{ const el=document.querySelector(".sub");   if(el) el.textContent=T[currentLang].bps_sub;   }],
-  ];
-
   function applyLang(lang){
     currentLang = lang;
     localStorage.setItem("kaspadash-lang", lang);
-    // update toolbar buttons
     $("tb-lang-en").classList.toggle("active", lang==="en");
     $("tb-lang-nl").classList.toggle("active", lang==="nl");
-    // apply simple text translations
     const t = T[lang];
-    const set = (id, val) => { const el=$(id); if(el&&val) el.textContent=val; };
-    // labels via querySelector on first child span of .h elements
-    document.querySelectorAll(".h > span:first-child").forEach(el=>{
-      const txt = el.textContent.trim();
-      // match English → translation
-      const map = {
-        [T.en.circ_supply]:t.circ_supply,[T.en.hashrate]:t.hashrate,[T.en.price]:t.price,
-        [T.en.block_reward]:t.block_reward,[T.en.next_reduction]:t.next_reduction,
-        [T.en.difficulty]:t.difficulty,[T.en.vol_24h]:t.vol_24h,[T.en.mcap_rank]:t.mcap_rank,
-        [T.en.ath]:t.ath,[T.en.btc_price]:t.btc_price,[T.en.total_headers]:t.total_headers,
-        [T.en.median_time]:t.median_time,[T.en.emission]:t.emission,[T.en.range_24h]:t.range_24h,
-        [T.en.dev_activity]:t.dev_activity,[T.en.fng_crypto]:t.fng_crypto,
-        [T.en.fng_stocks]:t.fng_stocks,[T.en.community]:t.community,
-        [T.en.dash_views]:t.dash_views,[T.en.btc_dom]:t.btc_dom,[T.en.igra_tvl]:t.igra_tvl,
-        [T.en.sec_budget]:t.sec_budget,[T.en.emission_curve]:t.emission_curve,
-        [T.en.live_feed]:t.live_feed,
-        // reverse: NL → EN (for switching back)
-        [T.nl.circ_supply]:t.circ_supply,[T.nl.hashrate]:t.hashrate,[T.nl.price]:t.price,
-        [T.nl.block_reward]:t.block_reward,[T.nl.next_reduction]:t.next_reduction,
-        [T.nl.difficulty]:t.difficulty,[T.nl.vol_24h]:t.vol_24h,[T.nl.mcap_rank]:t.mcap_rank,
-        [T.nl.ath]:t.ath,[T.nl.btc_price]:t.btc_price,[T.nl.total_headers]:t.total_headers,
-        [T.nl.median_time]:t.median_time,[T.nl.emission]:t.emission,[T.nl.range_24h]:t.range_24h,
-        [T.nl.dev_activity]:t.dev_activity,[T.nl.fng_crypto]:t.fng_crypto,
-        [T.nl.fng_stocks]:t.fng_stocks,[T.nl.community]:t.community,
-        [T.nl.dash_views]:t.dash_views,[T.nl.btc_dom]:t.btc_dom,[T.nl.igra_tvl]:t.igra_tvl,
-        [T.nl.sec_budget]:t.sec_budget,[T.nl.emission_curve]:t.emission_curve,
-        [T.nl.live_feed]:t.live_feed,
-      };
-      if(map[txt]) el.textContent = map[txt];
+
+    // 1) All elements with data-i18n — the core of the translation system.
+    //    Each key maps straight to T[lang][key]. No string-matching needed.
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
+      const key = el.dataset.i18n;
+      if(!t[key]) return;
+      // special case: n_minted contains {pct} placeholder
+      if(key==="n_minted"){
+        const pct = el.textContent.match(/[\d.]+/)?.[0];
+        if(pct) el.textContent = t.n_minted.replace("{pct}", pct);
+        return;
+      }
+      el.textContent = t[key];
     });
-    // BPS label, subtitle and small
+
+    // 2) BPS hero — these use class selectors, not tile .h spans
     const lbl = document.querySelector(".label");
     if(lbl) lbl.textContent = t.bps_label;
     const sub = document.querySelector(".sub");
     if(sub) sub.textContent = t.bps_sub;
     const bpsSmall = document.querySelector(".bps small");
     if(bpsSmall) bpsSmall.textContent = t.bps_small;
-    // static notes
-    const sn = (id, val) => { const el=$(id); if(el&&val) el.textContent=val; };
-    sn("supply-note",   t.n_supply);
-    sn("s-fng-note",    t.n_fng);
-    // dynamic notes — re-render with current lang
-    // reward/halving note is set by renderHalving/loadReward; just update static part
-    const rwd = document.querySelector(".tile .note:not([id])");
-    // difficulty note
-    document.querySelectorAll(".tile .note:not([id])").forEach(el=>{
-      const txt = el.textContent.trim();
-      const map = {
-        "drops monthly (chromatic halving)":t.n_reward,
-        "daalt maandelijks (chromatische halvering)":t.n_reward,
-        "network difficulty · rises with hashrate, auto-adjusts":t.n_difficulty,
-        "netwerkmoeilijkheid · stijgt met hashrate, past zich aan":t.n_difficulty,
-        "by market cap · lower rank = more adopted":t.n_mcap_rank,
-        "op marktkapitalisatie · lagere rang = meer adoptie":t.n_mcap_rank,
-        "vs Bitcoin · rising = KAS outperforms BTC":t.n_btc,
-        "vs Bitcoin · stijgend = KAS presteert beter dan BTC":t.n_btc,
-        "all headers ever seen · includes red (non-selected) blocks":t.n_headers,
-        "alle headers ooit gezien · inclusief rode (niet-geselecteerde) blokken":t.n_headers,
-        "network median time · should be close to now":t.n_median,
-        "netwerkmediantijd · zou dicht bij nu moeten zijn":t.n_median,
-        "last push to kaspanet/rusty-kaspa · via GitHub API":t.n_github,
-        "laatste push naar kaspanet/rusty-kaspa · via GitHub API":t.n_github,
-        "bullish votes · > 60% positive, < 40% bearish":t.n_community,
-        "optimistische stemmen · > 60% positief, < 40% negatief":t.n_community,
-      };
-      if(map[txt]) el.textContent = map[txt];
-    });
-    // minted pct
-    const mp = $("minted-pct");
-    if(mp && mp.textContent.includes("%")){
-      const pct = mp.textContent.match(/[\d.]+/)?.[0];
-      if(pct) mp.textContent = t.n_minted.replace("{pct}", pct);
-    }
-    // security budget labels
-    const secNote = document.querySelector("#sec-usd small");
-    if(secNote) secNote.textContent = t.n_sec_note;
-    document.querySelectorAll(".sec-row .t").forEach(el=>{
-      const txt = el.textContent.trim();
-      const map = {
-        " annualised":t.n_sec_annual," geannualiseerd":t.n_sec_annual,
-        " of market cap":t.n_sec_mcap," van marktkapitalisatie":t.n_sec_mcap,
-        " KAS/day":t.n_sec_kas," KAS/dag":t.n_sec_kas,
-      };
-      if(map[txt]!==undefined) el.textContent = " "+map[txt.trim()]||txt;
-    });
-    // Top exchanges h2
-    const excH2 = document.querySelector("#exc-body")?.closest("section")?.querySelector("h2");
-    if(excH2){ const first=excH2.firstChild; if(first&&first.nodeType===3) first.textContent=t.top_exc+" "; }
-    // hero-stats labels
+
+    // 3) Hero-stats labels (DAG tips, DAA score, etc.)
     const statsLabels = document.querySelectorAll(".hero-stats .t");
     const statKeys = ["dag_tips","daa_score","total_blocks","consensus"];
     statsLabels.forEach((el,i)=>{ if(statKeys[i]){ const child=el.firstChild; if(child&&child.nodeType===3) child.textContent=t[statKeys[i]]+" "; } });
-    // document language
+
+    // 4) Security budget labels
+    const secNote = document.querySelector("#sec-usd small");
+    if(secNote) secNote.textContent = t.n_sec_note;
+    document.querySelectorAll("[data-i18n-sec]").forEach(el=>{
+      const key = el.dataset.i18nSec;
+      if(t[key]) el.textContent = " "+t[key];
+    });
+
+    // 5) Top exchanges h2
+    const excH2 = document.querySelector("#exc-body")?.closest("section")?.querySelector("h2");
+    if(excH2){ const first=excH2.firstChild; if(first&&first.nodeType===3) first.textContent=t.top_exc+" "; }
+
+    // 6) Document language
     document.documentElement.lang = lang;
   }
 
