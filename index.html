@@ -3309,14 +3309,22 @@
     try{
       const d = await getJSON("./data/fng-history.json?t="+Date.now());
       if(Array.isArray(d) && d.length){
-        const latest = d[d.length-1];
-        if(latest.stock!=null && isFinite(latest.stock)){
-          $("s-fng-stock").textContent = latest.stock;
-          const lbl = latest.stock<=24?"Extreme Fear":latest.stock<=49?"Fear":latest.stock<=74?"Greed":"Extreme Greed";
-          $("s-fng-stock-note").textContent = lbl+" · stock market · CNN";
-          const sv=Number(latest.stock);
+        // Find the most recent record with a stock value (may not be the latest)
+        let stockRec = null, stale = false;
+        for(let i=d.length-1; i>=0; i--){
+          if(d[i].stock!=null && isFinite(d[i].stock)){ stockRec = d[i]; stale = (i < d.length-1); break; }
+        }
+        if(stockRec){
+          const sv = Number(stockRec.stock);
+          $("s-fng-stock").textContent = sv + (stale ? " *" : "");
+          const lbl = sv<=24?"Extreme Fear":sv<=49?"Fear":sv<=74?"Greed":"Extreme Greed";
+          const age = stale ? Math.round((d[d.length-1].t - stockRec.t) / 86400000) : 0;
+          $("s-fng-stock-note").textContent = lbl+" · stock market · CNN" + (stale ? " · "+age+"d stale" : "");
           $("s-fng-stock").classList.remove("sig-good","sig-warn","sig-bad");
           if(isFinite(sv)) $("s-fng-stock").classList.add(sv>=75?"sig-warn":sv>=50?"sig-good":sv>=25?"sig-warn":"sig-bad");
+        } else {
+          $("s-fng-stock").textContent = "n/a";
+          $("s-fng-stock-note").textContent = "CNN data not yet collected";
         }
       }
     }catch(e){ /* not yet available */ }
