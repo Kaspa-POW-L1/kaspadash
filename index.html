@@ -118,6 +118,10 @@
   tr.kas td:first-child{box-shadow:inset 3px 0 0 var(--teal);color:var(--teal);font-weight:600}
   .mini{width:56px;height:6px;border-radius:99px;background:var(--bg-2);display:inline-block;vertical-align:middle;overflow:hidden;border:1px solid var(--line)}
   .mini>i{display:block;height:100%;background:var(--teal-dim)}
+  .state-badge{display:inline-block;font-family:var(--sans);font-size:10px;font-weight:600;
+    letter-spacing:.3px;padding:2px 7px;border-radius:99px;
+    background:var(--bg-2);color:var(--muted);border:1px solid var(--line)}
+  .state-badge.minting{background:rgba(73,234,203,.1);color:var(--teal-dim);border-color:rgba(73,234,203,.25)}
 
   /* History */
   .hist-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
@@ -1156,7 +1160,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.38.0";
+  const APP_VERSION = "v2.39.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1808,29 +1812,23 @@
       const el=$("sort-"+c); if(!el) return;
       el.textContent = col===c ? (dir<0?"▼":"▲") : "";
     });
-    // split deployed vs finished for clarity
-    const deployed = sorted.filter(t=>t.state==="deployed");
-    const finished = sorted.filter(t=>t.state!=="deployed");
-    const rows = (list, label) => {
-      if(!list.length) return "";
-      const header = '<tr><td colspan="7" style="font-size:11px;letter-spacing:.5px;color:var(--muted);padding:10px 10px 4px;border-bottom:1px solid var(--line)">'+label+'</td></tr>';
-      return header + list.map(t=>{
-        const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
-        const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
-        const stColor = t.state==="deployed" ? "var(--teal-dim)" : "var(--muted)";
-        const price = isFinite(t.price) ? "$"+t.price.toFixed(t.price>=0.01?4:t.price>=0.0001?6:8) : '<span style="color:var(--muted)">–</span>';
-        const c24 = isFinite(t.c24) ? fmtPct(t.c24) : '<span style="color:var(--muted)">–</span>';
-        const mcap = isFinite(t.mcap)&&t.mcap>0 ? "$"+compact(t.mcap) : '<span style="color:var(--muted)">–</span>';
-        return '<tr><td class="tick">'+esc(t.tick)+'</td>'+
-               '<td>'+price+'</td>'+
-               '<td>'+c24+'</td>'+
-               '<td>'+mcap+'</td>'+
-               '<td>'+bar+pctTxt+'</td>'+
-               '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
-               '<td><span style="color:'+stColor+'">'+esc(t.state)+'</span></td></tr>';
-      }).join("");
-    };
-    body.innerHTML = rows(deployed, "STILL MINTING") + rows(finished, "FULLY MINTED");
+    body.innerHTML = sorted.map(t=>{
+      const pctTxt = t.pct!=null ? t.pct.toFixed(t.pct>=99.95?0:1)+"%" : "–";
+      const bar = t.pct!=null ? '<span class="mini"><i style="width:'+t.pct.toFixed(0)+'%"></i></span> ' : "";
+      const isMinting = t.state==="deployed";
+      const badge = '<span class="state-badge'+(isMinting?" minting":"")+'">'+
+                    (isMinting?"minting":"minted")+'</span>';
+      const price = isFinite(t.price) ? "$"+t.price.toFixed(t.price>=0.01?4:t.price>=0.0001?6:8) : '<span style="color:var(--muted)">–</span>';
+      const c24 = isFinite(t.c24) ? fmtPct(t.c24) : '<span style="color:var(--muted)">–</span>';
+      const mcap = isFinite(t.mcap)&&t.mcap>0 ? "$"+compact(t.mcap) : '<span style="color:var(--muted)">–</span>';
+      return '<tr><td class="tick">'+esc(t.tick)+'</td>'+
+             '<td>'+price+'</td>'+
+             '<td>'+c24+'</td>'+
+             '<td>'+mcap+'</td>'+
+             '<td>'+bar+pctTxt+'</td>'+
+             '<td>'+(isFinite(t.maxh)?compact(t.maxh):"–")+'</td>'+
+             '<td>'+badge+'</td></tr>';
+    }).join("");
   }
 
   async function loadKrc20(){
