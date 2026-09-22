@@ -358,6 +358,8 @@
       <button class="tb-btn" id="tb-theme" title="Toggle light/dark mode">🌙</button>
       <button class="tb-btn" id="tb-lang-en">EN</button>
       <button class="tb-btn" id="tb-lang-nl">NL</button>
+      <button class="tb-btn" id="tb-lang-de">DE</button>
+      <button class="tb-btn" id="tb-lang-es">ES</button>
       <button class="tb-btn" id="tb-share">⎘ Share</button>
       <span class="tb-share-ok" id="tb-share-ok">✓ Copied!</span>
     </div>
@@ -1161,7 +1163,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.41.0";
+  const APP_VERSION = "v2.42.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1388,6 +1390,150 @@
       n_sec_annual:"geannualiseerd",
       n_sec_mcap:"van marktkapitalisatie",
       n_sec_note:"USD/dag aan miners",
+    },
+    de:{
+      bps_label:"BLÖCKE PRO SEKUNDE",
+      bps_small:"parallele Blöcke · GHOSTDAG BlockDAG",
+      bps_sub:"Kaspa bestätigt viele Blöcke gleichzeitig statt in einer einzelnen Kette. Jedes Kästchen unten ist ein Block, den das Netzwerk gerade erzeugt hat.",
+      dag_tips:"DAG-Tips jetzt",
+      daa_score:"DAA-Score",
+      total_blocks:"Blöcke gesamt",
+      consensus:"Konsens",
+      circ_supply:"Umlaufversorgung",
+      hashrate:"Hashrate",
+      price:"Preis · USD",
+      block_reward:"Blockbelohnung",
+      next_reduction:"Nächste Belohnungskürzung",
+      difficulty:"Schwierigkeitsgrad",
+      vol_24h:"24h-Volumen",
+      mcap_rank:"Marktkapitalisierungsrang",
+      ath:"Allzeithoch",
+      btc_price:"Preis · BTC",
+      total_headers:"Headers gesamt",
+      median_time:"Mediane Blockzeit",
+      emission:"Emission heute",
+      emrate:"Live-Emissionsrate",
+      empressure:"Emissionsdruck",
+      range_24h:"24h-Spanne",
+      dev_activity:"Entwickleraktivität",
+      fng_crypto:"Angst & Gier · Krypto",
+      fng_stocks:"Angst & Gier · Aktien",
+      community:"Supply-Aufschlüsselung",
+      dash_views:"Dashboard-Aufrufe",
+      btc_dom:"Bitcoin-Dominanz",
+      igra_tvl:"Igra L2 · TVL",
+      sec_budget:"Sicherheitsbudget",
+      emission_curve:"Emissionskurve",
+      live_feed:"Live-Blockfeed",
+      halving_calendar:"Halbierungskalender",
+      top_exc:"Top-Börsen",
+      technical:"Technische Analyse",
+      price_eur:"Preis · EUR",
+      reddit:"Netzwerkalter",
+      orphan:"Blöcke pro Tag",
+      blocktime:"Heute geschürft",
+      roi:"Kapitalrendite",
+      kaspa_unique:"Was macht Kaspa einzigartig?",
+      roi_bought:"Gekauft",
+      roi_price:"Preis damals",
+      roi_val:"100 $ → heute",
+      roi_ret:"Rendite",
+      expand_more:"Mehr lesen",
+      expand_less:"Weniger anzeigen",
+      n_supply:"von max ~28,7 Mrd. KAS · fairer Start, kein Premine",
+      n_reward:"sinkt monatlich (chromatische Halbierung)",
+      n_halving:"Belohnung sinkt auf {amt} KAS · chromatische Halbierung",
+      n_difficulty:"Netzwerk-Schwierigkeit · steigt mit Hashrate, passt sich an",
+      n_vol:"gehandelt in 24h · {ratio}% der Marktkapitalisierung",
+      n_mcap_rank:"nach Marktkapitalisierung · niedrigerer Rang = mehr Verbreitung",
+      n_btc:"vs Bitcoin · steigend = KAS übertrifft BTC",
+      n_headers:"alle je gesehenen Headers · inkl. roter (nicht-ausgewählter) Blöcke",
+      n_median:"Netzwerk-Medianzeit · sollte nah an jetzt sein",
+      n_emit:"neue KAS pro Tag · {pct}% jährliche Inflation",
+      n_fng:"marktweites Krypto",
+      n_fng_stock:"Aktienmarkt · CNN",
+      n_btcdom:"BTC-Anteil am Gesamtmarkt · ETH {eth}% · steigend = risikoavers",
+      n_github:"letzter Push auf kaspanet/rusty-kaspa · via GitHub API",
+      n_community:"bullische Stimmen · > 60% positiv, < 40% bärisch",
+      n_minted:"{pct}% geschürft",
+      n_today:"heute",
+      n_ago:"{n}d her",
+      n_sec_kas:"KAS/Tag",
+      n_sec_annual:"annualisiert",
+      n_sec_mcap:"der Marktkapitalisierung",
+      n_sec_note:"USD/Tag an Miner",
+    },
+    es:{
+      bps_label:"BLOQUES POR SEGUNDO",
+      bps_small:"bloques paralelos · GHOSTDAG BlockDAG",
+      bps_sub:"Kaspa confirma muchos bloques en paralelo en lugar de en una sola cadena. Cada cuadro abajo es un bloque que la red acaba de producir.",
+      dag_tips:"DAG tips ahora",
+      daa_score:"Puntuación DAA",
+      total_blocks:"bloques totales",
+      consensus:"consenso",
+      circ_supply:"Suministro circulante",
+      hashrate:"Hashrate",
+      price:"Precio · USD",
+      block_reward:"Recompensa de bloque",
+      next_reduction:"Próxima reducción",
+      difficulty:"Dificultad",
+      vol_24h:"Volumen 24h",
+      mcap_rank:"Rango capitalización",
+      ath:"Máximo histórico",
+      btc_price:"Precio · BTC",
+      total_headers:"Headers totales",
+      median_time:"Tiempo medio de bloque",
+      emission:"Emisión hoy",
+      emrate:"Tasa de emisión en vivo",
+      empressure:"Presión de emisión",
+      range_24h:"Rango 24h",
+      dev_activity:"Actividad de desarrollo",
+      fng_crypto:"Miedo & Codicia · Cripto",
+      fng_stocks:"Miedo & Codicia · Acciones",
+      community:"Desglose de suministro",
+      dash_views:"Visitas al dashboard",
+      btc_dom:"Dominancia de Bitcoin",
+      igra_tvl:"Igra L2 · TVL",
+      sec_budget:"Presupuesto de seguridad",
+      emission_curve:"Curva de emisión",
+      live_feed:"Feed de bloques en vivo",
+      halving_calendar:"Calendario de halvings",
+      top_exc:"Principales exchanges",
+      technical:"Análisis técnico",
+      price_eur:"Precio · EUR",
+      reddit:"Edad de la red",
+      orphan:"Bloques por día",
+      blocktime:"Minado hoy",
+      roi:"Retorno de inversión",
+      kaspa_unique:"¿Qué hace único a Kaspa?",
+      roi_bought:"Compra",
+      roi_price:"Precio entonces",
+      roi_val:"$100 → hoy",
+      roi_ret:"Retorno",
+      expand_more:"Leer más",
+      expand_less:"Mostrar menos",
+      n_supply:"de máx. ~28,7B KAS · lanzamiento justo, sin preminado",
+      n_reward:"baja mensualmente (halving cromático)",
+      n_halving:"recompensa baja a {amt} KAS · halving cromático",
+      n_difficulty:"dificultad de red · sube con hashrate, se autoajusta",
+      n_vol:"negociado en 24h · {ratio}% de capitalización",
+      n_mcap_rank:"por capitalización · rango menor = más adoptado",
+      n_btc:"vs Bitcoin · subiendo = KAS supera a BTC",
+      n_headers:"todos los headers vistos · incluye bloques rojos (no seleccionados)",
+      n_median:"tiempo mediano de red · debería estar cerca de ahora",
+      n_emit:"nuevos KAS por día · {pct}% inflación anual",
+      n_fng:"cripto de todo el mercado",
+      n_fng_stock:"mercado de acciones · CNN",
+      n_btcdom:"cuota BTC del mercado total · ETH {eth}% · subiendo = aversión al riesgo",
+      n_github:"último push a kaspanet/rusty-kaspa · vía GitHub API",
+      n_community:"votos alcistas · > 60% positivo, < 40% bajista",
+      n_minted:"{pct}% minado",
+      n_today:"hoy",
+      n_ago:"hace {n}d",
+      n_sec_kas:"KAS/día",
+      n_sec_annual:"anualizado",
+      n_sec_mcap:"de capitalización",
+      n_sec_note:"USD/día a mineros",
     }
   };
 
@@ -1396,8 +1542,7 @@
   function applyLang(lang){
     currentLang = lang;
     localStorage.setItem("kaspadash-lang", lang);
-    $("tb-lang-en").classList.toggle("active", lang==="en");
-    $("tb-lang-nl").classList.toggle("active", lang==="nl");
+    ["en","nl","de","es"].forEach(l=>$("tb-lang-"+l).classList.toggle("active", lang===l));
     const t = T[lang];
 
     // 1) All elements with data-i18n — the core of the translation system.
@@ -1462,10 +1607,9 @@
     });
     // language
     const savedLang = localStorage.getItem("kaspadash-lang") ||
-                      ((navigator.language||"en").startsWith("nl") ? "nl" : "en");
+                      (()=>{ const b=(navigator.language||"en").slice(0,2); return ["nl","de","es"].includes(b)?b:"en"; })();
     applyLang(savedLang);
-    $("tb-lang-en").addEventListener("click", ()=>applyLang("en"));
-    $("tb-lang-nl").addEventListener("click", ()=>applyLang("nl"));
+    ["en","nl","de","es"].forEach(l=>$("tb-lang-"+l).addEventListener("click", ()=>applyLang(l)));
     // share
     $("tb-share").addEventListener("click", async ()=>{
       try{
