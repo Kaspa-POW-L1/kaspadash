@@ -1111,18 +1111,18 @@
 
   <section class="panel" data-tab="about" style="margin-top:16px">
     <div class="h" style="margin-bottom:2px">
-      <h2 style="margin:0;font-size:15px;font-weight:600">About this dashboard <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How this dashboard is built and where its numbers come from. Figures are pulled live from public APIs — CoinGecko runs through a lightweight caching proxy that keeps its API key server-side and is shared across all visitors; everything else is fetched straight from your browser. No login, no cookies.</span></span></h2>
+      <h2 style="margin:0;font-size:15px;font-weight:600">About this dashboard <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How this dashboard is built and where its numbers come from. Figures are pulled live from public APIs — CoinGecko and GoatCounter run through lightweight caching proxies that keep their API keys server-side and are shared across all visitors; everything else is fetched straight from your browser. No login, no cookies.</span></span></h2>
     </div>
     <div class="cap">Built by one person together with Claude (Anthropic) · live since 10 Sep 2026</div>
 
-    <div class="sec-row" style="margin-top:12px">
-      <div><span class="k" id="about-count" style="font-size:26px">–</span><span class="t"> live API sources</span></div>
-      <div><span class="k" style="font-size:26px">2</span><span class="t"> caching proxies · no cookies</span></div>
-      <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
-      <div><span class="k" style="font-size:26px">4,000</span><span class="t"> lines · single file</span></div>
-      <div><span class="k" style="font-size:26px">4</span><span class="t"> code languages · HTML CSS JS SVG</span></div>
-      <div><span class="k" style="font-size:26px">6</span><span class="t"> interface languages</span></div>
-      <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views" style="margin-inline-start:.3em">dashboard views</span></div>
+    <div class="grid" style="margin:14px 0 0">
+      <div class="tile"><div class="h"><span>Live API sources</span></div><div class="v" id="about-count">–</div><div class="note">fetched straight from public APIs</div></div>
+      <div class="tile"><div class="h"><span>Caching proxies</span></div><div class="v">2</div><div class="note">Cloudflare Workers · no cookies</div></div>
+      <div class="tile"><div class="h"><span>Base refresh</span></div><div class="v">60s</div><div class="note">most figures update every minute</div></div>
+      <div class="tile"><div class="h"><span>Lines of code</span></div><div class="v">4,000</div><div class="note">one single HTML file</div></div>
+      <div class="tile"><div class="h"><span>Code languages</span></div><div class="v">4</div><div class="note">HTML · CSS · JS · SVG</div></div>
+      <div class="tile"><div class="h"><span>Interface languages</span></div><div class="v">6</div><div class="note">EN · NL · DE · ES · NO · HE</div></div>
+      <div class="tile"><div class="h"><span data-i18n="dash_views">Dashboard views</span></div><div class="v" id="about-views">–</div><div class="note">cookie-free, via GoatCounter</div></div>
     </div>
 
   </section>
@@ -1193,7 +1193,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.44.4";
+  const APP_VERSION = "v2.45.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
