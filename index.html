@@ -1055,8 +1055,8 @@
 
   <section class="panel" data-tab="outlook" style="margin-top:16px">
     <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Exchanges · not yet listed for spot <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Major exchanges where KAS can't be bought for spot yet. Checked live against CoinGecko's KAS markets on every visit — when one of them lists KAS it lights up here. "Futures" means the exchange already offers KAS derivatives. Exchanges that already list KAS are shown under Market.</span></span></h2>
-    <div class="grid" id="out-exc" style="margin:0"></div>
-    <div class="note" id="out-exc-note" style="font-size:12px;color:var(--muted)">loading…</div>
+    <div class="out-pills" id="out-exc"></div>
+    <div class="note" id="out-exc-note" style="font-size:12px;color:var(--muted);margin-top:12px">loading…</div>
   </section>
 
   <section class="panel" data-tab="outlook" style="margin-top:16px">
@@ -1281,7 +1281,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.49.1";
+  const APP_VERSION = "v2.49.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2958,6 +2958,7 @@
     {name:"Upbit",      id:"upbit"}
   ];
   const MILESTONES = [10e6, 25e6, 50e6, 100e6, 250e6, 500e6, 1e9];
+  const usdShort = v => v>=1e6 ? "$"+compact(v) : v>=1e3 ? "$"+Math.round(v/1e3)+"K" : "$"+Math.round(v);
   const msFmt = m => m>=1e9 ? "$"+(m/1e9)+"B" : "$"+(m/1e6)+"M";   // round milestone labels: $10M, $1B
 
   // Exchange logos: CoinGecko's own images, fetched once and cached for a week.
@@ -2995,11 +2996,16 @@
   function renderMilestone(elId, value, label, extra){
     const el = $(elId); if(!el) return;
     if(!isFinite(value)){ el.innerHTML = '<div class="err" style="font-size:13px">Data unavailable right now.</div>'; return; }
+    if(value <= 0){   // nothing there yet — say so instead of showing an empty bar
+      el.innerHTML = '<div style="font-size:15px;margin:2px 0 6px">None yet — the first one will show up here.</div>'+
+        '<div class="note" style="font-size:12px;color:var(--muted)">'+label+' · first milestone '+msFmt(MILESTONES[0])+'</div>';
+      return;
+    }
     const next = MILESTONES.find(m => m > value);
     const pct  = next ? Math.min(100, value/next*100) : 100;
     const chips = MILESTONES.map(m => '<span class="out-chip'+(value>=m?" hit":"")+'">'+(value>=m?"✓ ":"")+msFmt(m)+'</span>').join("");
     el.innerHTML =
-      '<div class="out-row"><span class="out-big">$'+compact(value)+'</span>'+
+      '<div class="out-row"><span class="out-big">'+usdShort(value)+'</span>'+
       '<span class="out-goal">'+(next ? pct.toFixed(0)+"% of the way to "+msFmt(next) : "all milestones reached 🎉")+'</span></div>'+
       '<div class="bar"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
       '<div class="note" style="font-size:12px;color:var(--muted);margin-top:8px">'+label+(extra?" · "+extra:"")+'</div>'+
@@ -3034,7 +3040,7 @@
         .sort((a,b)=>b.tvl-a.tvl);
       kaspaTotal = mine.reduce((s,c)=>s+(c.tvl||0),0);
       renderMilestone("out-l2", kaspaTotal, "Kaspa L2 total value locked · live via DefiLlama",
-        mine.map(c=>esc(c.name)+" $"+compact(c.tvl)).join(" · "));
+        mine.map(c=>esc(c.name)+" "+usdShort(c.tvl)).join(" · "));
       const wrap=$("defi-chains");
       if(mine.length){
         wrap.innerHTML = mine.map(c=>
@@ -3096,8 +3102,7 @@
             if(isFinite(n)){ total+=n; found=true; }
           }
         });
-        renderMilestone("out-stable", total, "Stablecoins on Kaspa layers · live via DefiLlama",
-          found ? "" : "none tracked yet");
+        renderMilestone("out-stable", total, "Stablecoins on Kaspa layers · live via DefiLlama");
         if(found && total>0){
           $("defi-stable").textContent="$"+compact(total);
           if(kaspaTotal>0) $("defi-stable-share").textContent=(total/kaspaTotal*100).toFixed(0)+"%";
