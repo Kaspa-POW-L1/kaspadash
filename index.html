@@ -438,6 +438,14 @@
   <!-- tooltip scrim (mobile) -->
   <div class="tip-scrim" id="tip-scrim"></div>
 
+  <!-- KASPA vs BITCOIN — live DAG illustration -->
+  <section class="panel tab-visible" data-tab="overview" id="dag-panel" style="margin-bottom:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px"><span data-i18n="dag_title">Kaspa vs Bitcoin · last 30 seconds</span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Both lanes share the same 30-second time scale. Kaspa produces ~10 blocks per second in parallel; each new block points to several earlier blocks, forming a BlockDAG instead of a chain. The highlighted path is the selected chain GHOSTDAG uses to order everything. Bitcoin adds one block roughly every 10 minutes to a single chain — on this scale its lane is almost always empty. The Kaspa lane is an illustration whose pace follows the live blocks-per-second; the Bitcoin lane shows real blocks from mempool.space.</span></span></h2>
+    <canvas id="dag-canvas" style="display:block;width:100%;height:240px"></canvas>
+    <div class="note" id="dag-count" style="margin-top:8px">–</div>
+    <div class="note" data-i18n="dag_illus" style="margin-top:2px;opacity:.8">Kaspa lane is an illustration driven by live network data · Bitcoin blocks via mempool.space</div>
+  </section>
+
   <!-- METRICS -->
   <div class="grid tab-visible" data-tab="overview">
     <div class="tile span2">
@@ -1143,7 +1151,7 @@
       <div class="tile"><div class="h"><span>Live API sources</span></div><div class="v" id="about-count">–</div><div class="note">fetched straight from public APIs</div></div>
       <div class="tile"><div class="h"><span>Caching proxies</span></div><div class="v">2</div><div class="note">Cloudflare Workers · no cookies</div></div>
       <div class="tile"><div class="h"><span>Base refresh</span></div><div class="v">60s</div><div class="note">most figures update every minute</div></div>
-      <div class="tile"><div class="h"><span>Lines of code</span></div><div class="v">4,100</div><div class="note">one single HTML file</div></div>
+      <div class="tile"><div class="h"><span>Lines of code</span></div><div class="v">4,300</div><div class="note">one single HTML file</div></div>
       <div class="tile"><div class="h"><span>Code languages</span></div><div class="v">4</div><div class="note">HTML · CSS · JS · SVG</div></div>
       <div class="tile"><div class="h"><span>Interface languages</span></div><div class="v">6</div><div class="note">EN · NL · DE · ES · NO · HE</div></div>
       <div class="tile"><div class="h"><span data-i18n="dash_views">Dashboard views</span></div><div class="v" id="about-views">–</div><div class="note">cookie-free, via GoatCounter</div></div>
@@ -1217,7 +1225,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.47.0";
+  const APP_VERSION = "v2.48.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1371,6 +1379,12 @@
       n_sec_annual:"annualised",
       n_sec_mcap:"of market cap",
       n_sec_note:"USD/day to miners",
+      dag_title:"Kaspa vs Bitcoin · last 30 seconds",
+      dag_kas_lane:"KASPA · BlockDAG · ~{bps} blocks/s",
+      dag_btc_lane:"BITCOIN · single chain · ~1 block / 10 min",
+      dag_count:"{k} Kaspa blocks · {b} Bitcoin blocks in this window",
+      dag_btc_ago:"last Bitcoin block {t} ago",
+      dag_illus:"Kaspa lane is an illustration driven by live network data · Bitcoin blocks via mempool.space",
       data_sources:"Data sources",
       visitors_by_cont:"Visitors by continent",
       cont_AF:"Africa",
@@ -1455,6 +1469,12 @@
       n_sec_annual:"geannualiseerd",
       n_sec_mcap:"van marktkapitalisatie",
       n_sec_note:"USD/dag aan miners",
+      dag_title:"Kaspa vs Bitcoin · laatste 30 seconden",
+      dag_kas_lane:"KASPA · BlockDAG · ~{bps} blokken/s",
+      dag_btc_lane:"BITCOIN · enkele keten · ~1 blok / 10 min",
+      dag_count:"{k} Kaspa-blokken · {b} Bitcoin-blokken in dit venster",
+      dag_btc_ago:"laatste Bitcoin-blok {t} geleden",
+      dag_illus:"Kaspa-strook is een illustratie op basis van live netwerkdata · Bitcoin-blokken via mempool.space",
       data_sources:"Databronnen",
       visitors_by_cont:"Bezoekers per continent",
       cont_AF:"Afrika",
@@ -1538,6 +1558,12 @@
       n_sec_annual:"annualisiert",
       n_sec_mcap:"der Marktkapitalisierung",
       n_sec_note:"USD/Tag an Miner",
+      dag_title:"Kaspa vs. Bitcoin · letzte 30 Sekunden",
+      dag_kas_lane:"KASPA · BlockDAG · ~{bps} Blöcke/s",
+      dag_btc_lane:"BITCOIN · einzelne Kette · ~1 Block / 10 Min.",
+      dag_count:"{k} Kaspa-Blöcke · {b} Bitcoin-Blöcke in diesem Fenster",
+      dag_btc_ago:"letzter Bitcoin-Block vor {t}",
+      dag_illus:"Kaspa-Spur ist eine Illustration auf Basis von Live-Netzwerkdaten · Bitcoin-Blöcke via mempool.space",
       data_sources:"Datenquellen",
       visitors_by_cont:"Besucher nach Kontinent",
       cont_AF:"Afrika",
@@ -1621,6 +1647,12 @@
       n_sec_annual:"anualizado",
       n_sec_mcap:"de capitalización",
       n_sec_note:"USD/día a mineros",
+      dag_title:"Kaspa vs Bitcoin · últimos 30 segundos",
+      dag_kas_lane:"KASPA · BlockDAG · ~{bps} bloques/s",
+      dag_btc_lane:"BITCOIN · cadena única · ~1 bloque / 10 min",
+      dag_count:"{k} bloques de Kaspa · {b} bloques de Bitcoin en esta ventana",
+      dag_btc_ago:"último bloque de Bitcoin hace {t}",
+      dag_illus:"La franja de Kaspa es una ilustración basada en datos de red en vivo · bloques de Bitcoin vía mempool.space",
       data_sources:"Fuentes de datos",
       visitors_by_cont:"Visitantes por continente",
       cont_AF:"África",
@@ -1705,6 +1737,12 @@
       n_sec_annual:"בחישוב שנתי",
       n_sec_mcap:"משווי השוק",
       n_sec_note:"USD ליום לכורים",
+      dag_title:"Kaspa מול ביטקוין · 30 השניות האחרונות",
+      dag_kas_lane:"KASPA · BlockDAG · ~{bps} בלוקים/ש׳",
+      dag_btc_lane:"BITCOIN · שרשרת אחת · ~בלוק אחד / 10 דק׳",
+      dag_count:"{k} בלוקים של Kaspa · {b} בלוקים של ביטקוין בחלון זה",
+      dag_btc_ago:"בלוק הביטקוין האחרון לפני {t}",
+      dag_illus:"מסלול Kaspa הוא המחשה המבוססת על נתוני רשת חיים · בלוקי ביטקוין דרך mempool.space",
       data_sources:"מקורות נתונים",
       visitors_by_cont:"מבקרים לפי יבשת",
       cont_AF:"אפריקה",
@@ -1789,6 +1827,12 @@
       n_sec_annual:"årlig",
       n_sec_mcap:"av markedsverdi",
       n_sec_note:"USD/dag til minere",
+      dag_title:"Kaspa mot Bitcoin · siste 30 sekunder",
+      dag_kas_lane:"KASPA · BlockDAG · ~{bps} blokker/s",
+      dag_btc_lane:"BITCOIN · én kjede · ~1 blokk / 10 min",
+      dag_count:"{k} Kaspa-blokker · {b} Bitcoin-blokker i dette vinduet",
+      dag_btc_ago:"siste Bitcoin-blokk for {t} siden",
+      dag_illus:"Kaspa-feltet er en illustrasjon basert på live nettverksdata · Bitcoin-blokker via mempool.space",
       data_sources:"Datakilder",
       visitors_by_cont:"Besøkende per kontinent",
       cont_AF:"Afrika",
@@ -1993,6 +2037,184 @@
     const interval = Math.max(70, 1000/Math.min(bpsRate, 14));
     blkTimer = setInterval(tickBlock, interval);
   }
+
+  // ---- Kaspa vs Bitcoin: live DAG illustration ----
+  // Kaspa lane: simulated BlockDAG whose pace follows the live BPS (bpsRate).
+  // Bitcoin lane: real blocks from mempool.space (polled once a minute).
+  (function(){
+    const cv = $("dag-canvas"); if(!cv) return;
+    const ctx = cv.getContext("2d");
+    const WIN = 30;            // seconds shown
+    const DELAY = [0.4, 1.2];  // propagation: each miner only "sees" blocks older than 0.4–1.2 s
+    const MAXPAR = 4;          // max parents per block
+    let blocks = [];           // {t, y, parents:[idx], sp, id}
+    let nextId = 0, tips = new Set(), nextAt = 0, raf = 0, running = false, visible = false;
+    let btcBlocks = [];        // {t (detected, s), height}
+    let btcLastTs = null, btcHeight = null, btcErr = false;
+    const now = () => performance.now()/1000;
+    const col = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    const tt = k => (T[currentLang]||T.en)[k] || T.en[k];
+
+    // Poisson arrival: exponential gaps around the live rate
+    const gap = () => -Math.log(1 - Math.random()) / Math.max(1, bpsRate||10);
+
+    function addBlock(t){
+      // parents: current tips that are old enough to have propagated
+      const seen = DELAY[0] + Math.random()*(DELAY[1]-DELAY[0]);
+      // every block whose children this miner hasn't seen yet is a tip from its point of view
+      const ready = blocks.filter(b => t - b.t >= seen && t - b.t < seen + 1.5 &&
+                                     !b.kids.some(k => t - byId.get(k).t >= seen)).map(b => b.id);
+      let parents = ready.sort(()=>Math.random()-.5).slice(0, MAXPAR);
+      if(!parents.length && blocks.length) parents = [blocks[blocks.length-1].id];
+      // selected parent = the parent with the highest "blue work" (here: longest chain depth)
+      let sp = null, best = -1;
+      parents.forEach(p => { const d = byId.get(p).depth; if(d > best){ best = d; sp = p; } });
+      // height: parallel blocks spread around the middle (gaussian), so the DAG reads as a braid
+      const g = (Math.random()+Math.random()+Math.random()-1.5)/1.5;
+      const b = { id: nextId++, t, y: Math.min(1, Math.max(0, .5 + g*.5)), parents, sp, depth: best + 1, kids: [] };
+      blocks.push(b); byId.set(b.id, b);
+      parents.forEach(p => { tips.delete(p); const q = byId.get(p); if(q) q.kids.push(b.id); });
+      tips.add(b.id);
+    }
+    const byId = new Map();
+    function prune(t){
+      while(blocks.length && blocks[0].t < t - WIN - 2){ const b = blocks.shift(); byId.delete(b.id); tips.delete(b.id); }
+    }
+    function backfill(t){
+      blocks = []; byId.clear(); tips.clear();
+      let x = t - WIN - 1;
+      while(x < t){ addBlock(x); x += gap(); }
+      nextAt = x;
+    }
+
+    function size(){
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const w = cv.clientWidth, h = cv.clientHeight;
+      if(cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){
+        cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+      }
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      return {w, h};
+    }
+
+    function draw(t){
+      const {w, h} = size();
+      const teal = col("--teal"), dim = col("--teal-dim"), muted = col("--muted"), line = col("--line"), amber = col("--amber"), text = col("--text");
+      ctx.clearRect(0,0,w,h);
+      const pad = 8, kTop = 22, kH = h*0.58, bTop = kTop + kH + 30, bY = bTop + 22;
+      const X = bt => w - pad - (t - bt)/WIN*(w - 2*pad);
+      const Y = b => kTop + 8 + b.y*(kH - 16);
+
+      // lane labels
+      ctx.font = "600 11px " + col("--sans");
+      ctx.textBaseline = "top"; ctx.textAlign = "left";
+      ctx.fillStyle = muted;
+      ctx.fillText(tt("dag_kas_lane").replace("{bps}", (bpsRate||10).toFixed(0)), pad, 2);
+      ctx.fillText(tt("dag_btc_lane"), pad, bTop - 2);
+
+      // lane separator
+      ctx.strokeStyle = line; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(pad, kTop + kH + 14); ctx.lineTo(w - pad, kTop + kH + 14); ctx.stroke();
+
+      // Kaspa links
+      ctx.lineWidth = w < 600 ? .6 : 1; ctx.strokeStyle = dim; ctx.globalAlpha = .38;
+      ctx.beginPath();
+      for(const b of blocks){
+        const x = X(b.t), y = Y(b);
+        for(const p of b.parents){ const q = byId.get(p); if(!q) continue; ctx.moveTo(x, y); ctx.lineTo(X(q.t), Y(q)); }
+      }
+      ctx.stroke(); ctx.globalAlpha = 1;
+
+      // selected chain: walk back from the newest block
+      if(blocks.length){
+        ctx.strokeStyle = teal; ctx.lineWidth = 1.6; ctx.globalAlpha = .75;
+        ctx.beginPath();
+        let b = blocks[blocks.length-1]; ctx.moveTo(X(b.t), Y(b));
+        while(b && b.sp != null){ const q = byId.get(b.sp); if(!q) break; ctx.lineTo(X(q.t), Y(q)); b = q; }
+        ctx.stroke(); ctx.globalAlpha = 1;
+      }
+      // Kaspa blocks
+      ctx.fillStyle = teal;
+      for(const b of blocks){
+        const x = X(b.t); if(x < pad - 4) continue;
+        const age = t - b.t, r0 = w < 600 ? 1.7 : 2.6, r = age < .4 ? r0 + (0.4-age)*6 : r0;
+        ctx.beginPath(); ctx.arc(x, Y(b), r, 0, 6.2832); ctx.fill();
+      }
+
+      // Bitcoin lane: single chain line
+      ctx.strokeStyle = amber; ctx.globalAlpha = .35; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(pad, bY); ctx.lineTo(w - pad, bY); ctx.stroke(); ctx.globalAlpha = 1;
+      let inWin = 0;
+      for(const bb of btcBlocks){
+        const x = X(bb.t); if(x < pad - 10) continue; inWin++;
+        ctx.fillStyle = amber; ctx.beginPath(); ctx.arc(x, bY, 9, 0, 6.2832); ctx.fill();
+        ctx.fillStyle = text; ctx.font = "10px " + col("--mono"); ctx.textAlign = "center";
+        ctx.fillText("#" + bb.height, x, bY + 13);
+      }
+      // "last block … ago" on the empty lane
+      ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.font = "12px " + col("--mono");
+      ctx.fillStyle = btcErr ? muted : amber;
+      let ago = "";
+      if(btcLastTs){
+        const sec = Math.max(0, Math.floor(Date.now()/1000 - btcLastTs));
+        ago = tt("dag_btc_ago").replace("{t}", Math.floor(sec/60) + " min " + String(sec%60).padStart(2,"0") + " s");
+      } else ago = btcErr ? "mempool.space unavailable" : "…";
+      const tw = ctx.measureText(ago).width;
+      ctx.fillStyle = col("--surface"); ctx.fillRect(w - pad - tw - 10, bY - 9, tw + 10, 18);
+      ctx.fillStyle = btcErr ? muted : amber; ctx.fillText(ago, w - pad - 4, bY);
+
+      // counts
+      const kIn = blocks.filter(b => t - b.t <= WIN).length;
+      const el = $("dag-count");
+      if(el) el.textContent = tt("dag_count").replace("{k}", nf.format(kIn)).replace("{b}", inWin);
+    }
+
+    function frame(){
+      if(!running) return;
+      const t = now();
+      while(nextAt <= t){ addBlock(nextAt); nextAt += gap(); }
+      prune(t);
+      draw(t);
+      raf = requestAnimationFrame(frame);
+    }
+    function start(){
+      if(running) return;
+      running = true; backfill(now()); raf = requestAnimationFrame(frame);
+    }
+    function stop(){ running = false; cancelAnimationFrame(raf); }
+    function update(){
+      const onScreen = visible && document.visibilityState === "visible" && cv.offsetParent !== null;
+      if(reduce){ if(onScreen){ const t = now(); backfill(t); draw(t); } return; }
+      onScreen ? start() : stop();
+    }
+
+    // Bitcoin: poll mempool.space once a minute
+    async function loadBtc(){
+      try{
+        const arr = await getJSON("https://mempool.space/api/v1/blocks");
+        if(!Array.isArray(arr) || !arr.length) throw 0;
+        const tip = arr[0];
+        btcErr = false; btcLastTs = tip.timestamp;
+        if(btcHeight != null && tip.height > btcHeight){
+          // a new block arrived while watching → drop it in at the right edge
+          btcBlocks.push({ t: now(), height: tip.height });
+          btcBlocks = btcBlocks.slice(-5);
+        }
+        btcHeight = tip.height;
+      }catch(e){ btcErr = true; }
+      if(reduce) update();
+    }
+    loadBtc(); setInterval(loadBtc, 60000);
+    if(reduce) setInterval(update, 1000);
+
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(es => { visible = es[0].isIntersecting; update(); }).observe(cv);
+    } else { visible = true; }
+    document.addEventListener("visibilitychange", update);
+    document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => setTimeout(update, 50)));
+    window.addEventListener("resize", () => { if(!running) update(); });
+    update();
+  })();
 
   // ---- hashrate sparkline (session) ----
   const hist=[]; const HMAX=40;
@@ -2718,7 +2940,8 @@
     {name:"CoinGecko",     host:"api.coingecko.com · via proxy",         use:"Price, market cap, volume, exchanges, peer coins · ROI via collector"},
     {name:"DefiLlama",     host:"api.llama.fi · stablecoins.llama.fi",  use:"L2 chain TVL, stablecoins (live) · protocols via collector"},
     {name:"GitHub",        host:"api.github.com",                       use:"rusty-kaspa developer activity"},
-    {name:"Alternative.me",host:"api.alternative.me",                   use:"Crypto Fear & Greed index"}
+    {name:"Alternative.me",host:"api.alternative.me",                   use:"Crypto Fear & Greed index"},
+    {name:"mempool.space", host:"mempool.space",                        use:"Latest Bitcoin blocks for the Kaspa vs Bitcoin comparison"}
   ];
   function renderAbout(){
     const el=$("about-sources"); if(!el) return;
