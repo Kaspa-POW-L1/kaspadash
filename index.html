@@ -636,7 +636,7 @@
   <section class="panel" data-tab="technical" style="margin-top:0">
     <div class="h" style="margin-bottom:2px">
       <h2 style="margin:0;font-size:15px;font-weight:600">Technical analysis <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Classic technical indicators computed from KAS's daily closing prices (CoinGecko, 365 days). These describe recent price behaviour — they are not predictions and not financial advice.</span></span></h2>
-      <span id="ta-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
+      <span id="ta-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto">loading…</span>
     </div>
     <div class="cap" id="ta-cap">Trend, momentum, volatility and key price levels for KAS/USD.</div>
   </section>
@@ -1119,7 +1119,7 @@
       <div><span class="k" id="about-count" style="font-size:26px">–</span><span class="t"> live API sources</span></div>
       <div><span class="k" style="font-size:26px">1</span><span class="t"> caching proxy · no cookies</span></div>
       <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
-      <div><span class="k" style="font-size:26px">3,600</span><span class="t"> lines · single file</span></div>
+      <div><span class="k" style="font-size:26px">4,000</span><span class="t"> lines · single file</span></div>
       <div><span class="k" style="font-size:26px">4</span><span class="t"> languages · HTML CSS JS SVG</span></div>
       <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views" style="margin-inline-start:.3em">dashboard views</span></div>
     </div>
@@ -1186,7 +1186,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.42.0";
+  const APP_VERSION = "v2.43.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -3596,8 +3596,17 @@
     if(status){ status.textContent="updated"; status.classList.remove("err"); }
   }
 
+  // Status voor beide panelen (Market signals + Technical tab)
+  function setSigStatus(txt, err){
+    ["sig-status","ta-status"].forEach(id=>{ const el=$(id); if(!el) return;
+      el.textContent=txt; el.classList.toggle("err", !!err); });
+  }
+  var sigState = "idle";   // idle → loading → done
   async function loadMarketSignals(retry){
+    if(sigState==="loading" && retry!==true) return;   // niet dubbel starten
+    sigState = "loading";
     const status=$("sig-status");
+    setSigStatus("loading…");
     try{
       const kd = await cgJSON(CG+"/coins/kaspa/market_chart?vs_currency=usd&days=365");
       const kprices = (kd && Array.isArray(kd.prices)) ? kd.prices : [];
@@ -3652,18 +3661,21 @@
         }
       }catch(e){ /* correlation optional */ }
 
-      if(status){ status.textContent="updated"; status.classList.remove("err"); }
+      sigState = "done";
+      setSigStatus("updated");
     }catch(e){
       // Staat CoinGecko net in backoff (429)? Dan niet tot de volgende
       // uurlijkse run wachten, maar één keer opnieuw proberen zodra het
       // venster voorbij is. Andere fouten → direct 'unavailable'.
       const wait = cgBlockUntil - Date.now();
       if(!retry && wait > 0){
-        if(status){ status.textContent="retrying…"; status.classList.remove("err"); }
+        setSigStatus("retrying…");
         setTimeout(()=>loadMarketSignals(true), wait + 2000);
         return;
       }
-      if(status){ status.textContent="unavailable"; status.classList.add("err"); }
+      sigState = "idle";
+      setSigStatus("unavailable", true);
+      return;
     }
   }
 
@@ -3943,7 +3955,10 @@
   loadAllCoinGecko();
   setTimeout(loadExchanges,  10000);
   setTimeout(loadEurPrice,   20000);
-  setTimeout(loadMarketSignals, 30000);
+  setTimeout(()=>{ if(sigState==="idle") loadMarketSignals(); }, 30000);
+  // Technical/Market-tab geopend vóór die 30s? Dan meteen laden i.p.v. lege tegels tonen.
+  document.querySelectorAll('.tab-btn[data-target="technical"], .tab-btn[data-target="market"]').forEach(b=>
+    b.addEventListener("click", ()=>{ if(sigState==="idle") loadMarketSignals(); }));
   setTimeout(loadKrc20Prices,   40000);
 
   // Intervals
