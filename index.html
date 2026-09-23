@@ -1120,7 +1120,8 @@
       <div><span class="k" style="font-size:26px">2</span><span class="t"> caching proxies · no cookies</span></div>
       <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
       <div><span class="k" style="font-size:26px">4,000</span><span class="t"> lines · single file</span></div>
-      <div><span class="k" style="font-size:26px">4</span><span class="t"> languages · HTML CSS JS SVG</span></div>
+      <div><span class="k" style="font-size:26px">4</span><span class="t"> code languages · HTML CSS JS SVG</span></div>
+      <div><span class="k" style="font-size:26px">6</span><span class="t"> interface languages</span></div>
       <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views" style="margin-inline-start:.3em">dashboard views</span></div>
     </div>
 
@@ -1192,7 +1193,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.44.1";
+  const APP_VERSION = "v2.44.3";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2388,7 +2389,7 @@
              '<tspan class="gname" x="'+x+'" dy="1.25em">'+name(k)+'</tspan></text>';
     }
     el.innerHTML = svg + '</svg>';
-    const since = new Date(geoData.since+"T00:00:00Z").toLocaleDateString(currentLang==="no"?"nb":currentLang,{year:"numeric",month:"short",timeZone:"UTC"});
+    const since = LAUNCH_DATE.toLocaleDateString(currentLang==="no"?"nb":currentLang,{year:"numeric",month:"short",timeZone:"UTC"});
     let note = (t.n_geo || T.en.n_geo)
       .replace("{total}", nf.format(geoData.total))
       .replace("{countries}", geoData.countries)
