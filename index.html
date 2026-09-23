@@ -93,6 +93,18 @@
   @media (max-width:620px){ #tv-bar .tv-hint{display:none} #tv-bar .tv-tab{min-width:0} }
   html.tv-mode{cursor:none}
   .stale-badge{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--amber);border:1px solid var(--amber);border-radius:99px;padding:1px 8px;margin-left:8px;vertical-align:middle;opacity:.85}
+  /* ---- Outlook tab ---- */
+  .out-yes{color:var(--teal)} .out-no{color:var(--muted)}
+  .out-ms .out-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .out-ms .out-big{font-family:var(--mono);font-size:26px;font-weight:600}
+  .out-ms .out-goal{font-size:13px;color:var(--muted)}
+  .out-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .out-chip{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:99px;padding:2px 9px;color:var(--muted)}
+  .out-chip.hit{border-color:var(--teal-dim);color:var(--teal)}
+  .out-list .out-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}
+  .out-list .out-item:last-child{border-bottom:none}
+  .out-list .out-ic{flex:0 0 22px;text-align:center}
+  .out-list a{color:var(--teal-dim);font-size:12px;margin-inline-start:6px;white-space:nowrap}
   .tb-share-ok{color:var(--teal);font-size:12px;opacity:0;transition:opacity .3s}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(73,234,203,.6);animation:pulse 2.4s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(73,234,203,.5)}70%{box-shadow:0 0 0 7px rgba(73,234,203,0)}100%{box-shadow:0 0 0 0 rgba(73,234,203,0)}}
@@ -431,6 +443,7 @@
     <button class="tab-btn" data-target="tokens" role="tab">Tokens &amp; DeFi</button>
     <button class="tab-btn" data-target="technical" role="tab">Technical</button>
     <button class="tab-btn" data-target="history" role="tab">History</button>
+    <button class="tab-btn" data-target="outlook" role="tab">Outlook</button>
     <button class="tab-btn" data-target="community" role="tab">Community</button>
     <button class="tab-btn" data-target="about" role="tab">About</button>
   </nav>
@@ -1027,6 +1040,42 @@
     </table></div>
   </section>
 
+
+  <!-- ===================== OUTLOOK ===================== -->
+  <section class="panel" data-tab="outlook" style="margin-top:0">
+    <h2 style="margin:0;font-size:15px;font-weight:600">Outlook <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Milestones still ahead for Kaspa. Exchange listings, L2 activity and stablecoins are checked live on every visit; the few items that can't be measured automatically are reviewed by hand and dated. No price predictions, no investment advice.</span></span></h2>
+    <div class="cap" style="margin-bottom:0">What's next for Kaspa — checked live where possible.</div>
+  </section>
+
+  <section class="panel" data-tab="outlook" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Exchanges <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Spot listings on ten major exchanges, detected live from CoinGecko's KAS markets (sorted by volume). "Futures only" means the exchange offers KAS derivatives but no spot trading. A very small listing outside CoinGecko's top markets could briefly show as "not yet".</span></span></h2>
+    <div class="grid" id="out-exc" style="margin:0"></div>
+    <div class="note" id="out-exc-note" style="font-size:12px;color:var(--muted)">loading…</div>
+  </section>
+
+  <section class="panel" data-tab="outlook" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">L2 &amp; DeFi <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Total value locked on Kaspa's layer-2 networks (Igra, Kasplex L2) from DefiLlama. The bar runs to the next milestone on a fixed ladder: $10M → $25M → $50M → $100M → $250M → $500M → $1B.</span></span></h2>
+    <div id="out-l2" class="out-ms"><div class="skeleton">loading…</div></div>
+    <div id="out-l2-manual" class="out-list" style="margin-top:14px"></div>
+  </section>
+
+  <section class="panel" data-tab="outlook" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Stablecoins <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Dollar-pegged stablecoins circulating on Kaspa layers, from DefiLlama. Same milestone ladder as L2 TVL.</span></span></h2>
+    <div id="out-stable" class="out-ms"><div class="skeleton">loading…</div></div>
+  </section>
+
+  <section class="panel" data-tab="outlook" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Institutional <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Regulated investment products for KAS. These can't be checked automatically, so they are reviewed by hand — see the date below.</span></span></h2>
+    <div id="out-inst" class="out-list"></div>
+    <div class="note" id="out-reviewed" style="font-size:12px;color:var(--muted);margin-top:10px"></div>
+  </section>
+
+  <section class="panel" data-tab="outlook" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Protocol</h2>
+    <div style="font-size:14px;line-height:1.55">Kaspa's technical plans — Toccata follow-ups, DAGKnight and higher block rates — are tracked by the core developers themselves.
+      <a href="https://kaspa.org/developments" target="_blank" rel="noopener" style="color:var(--teal);white-space:nowrap">View Kaspa developments →</a></div>
+  </section>
+
   <!-- COMMUNITY & NETWERK STATS -->
   <section class="panel" data-tab="community" style="margin-top:16px">
     <div class="h" style="margin-bottom:8px">
@@ -1152,7 +1201,7 @@
       <div class="tile"><div class="h"><span>Live API sources</span></div><div class="v" id="about-count">–</div><div class="note">fetched straight from public APIs</div></div>
       <div class="tile"><div class="h"><span>Caching proxies</span></div><div class="v">2</div><div class="note">Cloudflare Workers · no cookies</div></div>
       <div class="tile"><div class="h"><span>Base refresh</span></div><div class="v">60s</div><div class="note">most figures update every minute</div></div>
-      <div class="tile"><div class="h"><span>Lines of code</span></div><div class="v">4,300</div><div class="note">one single HTML file</div></div>
+      <div class="tile"><div class="h"><span>Lines of code</span></div><div class="v">4,500</div><div class="note">one single HTML file</div></div>
       <div class="tile"><div class="h"><span>Code languages</span></div><div class="v">4</div><div class="note">HTML · CSS · JS · SVG</div></div>
       <div class="tile"><div class="h"><span>Interface languages</span></div><div class="v">6</div><div class="note">EN · NL · DE · ES · NO · HE</div></div>
       <div class="tile"><div class="h"><span data-i18n="dash_views">Dashboard views</span></div><div class="v" id="about-views">–</div><div class="note">cookie-free, via GoatCounter</div></div>
@@ -1208,7 +1257,7 @@
     });
     // Restore tab from URL hash on load
     const hash = location.hash.replace("#","");
-    const validTabs = ["overview","market","network","tokens","technical","history","community","about"];
+    const validTabs = ["overview","market","network","tokens","technical","history","outlook","community","about"];
     if(hash && validTabs.includes(hash)) activateTab(hash);
   })();
 
@@ -1226,7 +1275,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.48.1";
+  const APP_VERSION = "v2.49.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2878,6 +2927,86 @@
     }).join("");
   }
 
+
+  // ---- Outlook tab: live milestones + a few hand-reviewed items ----
+  // Hand-reviewed items: update `reviewed` whenever you check them.
+  const OUTLOOK_MANUAL = {
+    reviewed: "2026-09-23",
+    l2: [
+      {s:"progress", t:"Kasplex KRC-20 indexer repaired and re-indexed after the 20 Sep 2026 exploit",
+       src:"https://news.bitcoin.com/security/kasplex-krc-20-indexer-signature-bypass-drains-two-token-pools/"},
+      {s:"progress", t:"Igra resumes iKAS withdrawals to Kaspa L1 and Hyperlane transfers (paused after the exploit)",
+       src:"https://www.kucoin.com/news/flash/kasplex-krc-20-signature-bypass-vulnerability-causes-99-6-loss-in-zeal-and-nacho-pools"}
+    ],
+    inst: [
+      {s:"done", t:"European exchange-traded product tracking KAS (Valour Kaspa)", src:"https://www.valour.com/en/products/valour-kaspa-sek"},
+      {s:"open", t:"US spot ETF for KAS"}
+    ]
+  };
+  // Ten major exchanges. id = CoinGecko market identifier; futures = derivatives-only today.
+  const OUTLOOK_EXCHANGES = [
+    {name:"Binance",    id:["binance"],            futures:true},
+    {name:"Coinbase",   id:["gdax"],               futures:true},
+    {name:"OKX",        id:["okex"]},
+    {name:"Crypto.com", id:["crypto_com"]},
+    {name:"Upbit",      id:["upbit"]},
+    {name:"Kraken",     id:["kraken"]},
+    {name:"Bybit",      id:["bybit_spot"]},
+    {name:"Bitget",     id:["bitget"]},
+    {name:"Gate",       id:["gate"]},
+    {name:"KuCoin",     id:["kucoin"]}
+  ];
+  const MILESTONES = [10e6, 25e6, 50e6, 100e6, 250e6, 500e6, 1e9];
+  const msFmt = m => m>=1e9 ? "$"+(m/1e9)+"B" : "$"+(m/1e6)+"M";   // round milestone labels: $10M, $1B
+
+  function renderOutlookExchanges(tickers){
+    const wrap = $("out-exc"); if(!wrap) return;
+    const vol = new Map();                       // identifier → 24h USD volume
+    tickers.forEach(t=>{
+      const id = t.market && t.market.identifier; if(!id) return;
+      vol.set(id, (vol.get(id)||0) + ((t.converted_volume && t.converted_volume.usd) || 0));
+    });
+    let listed = 0;
+    wrap.innerHTML = OUTLOOK_EXCHANGES.map(e=>{
+      const v = e.id.reduce((s,id)=> vol.has(id) ? (s||0)+vol.get(id) : s, null);
+      const yes = v !== null; if(yes) listed++;
+      const note = yes ? "spot · $"+compact(v)+" 24h" : (e.futures ? "futures only" : "no spot market");
+      return '<div class="tile"><div class="h"><span>'+esc(e.name)+'</span></div>'+
+             '<div class="v '+(yes?"out-yes":"out-no")+'" style="font-size:20px">'+(yes?"✓ Listed":"Not yet")+'</div>'+
+             '<div class="note">'+note+'</div></div>';
+    }).join("");
+    const n = $("out-exc-note");
+    if(n) n.textContent = listed+" of "+OUTLOOK_EXCHANGES.length+" listed for spot trading · live via CoinGecko";
+  }
+
+  function renderMilestone(elId, value, label, extra){
+    const el = $(elId); if(!el) return;
+    if(!isFinite(value)){ el.innerHTML = '<div class="err" style="font-size:13px">Data unavailable right now.</div>'; return; }
+    const next = MILESTONES.find(m => m > value);
+    const pct  = next ? Math.min(100, value/next*100) : 100;
+    const chips = MILESTONES.map(m => '<span class="out-chip'+(value>=m?" hit":"")+'">'+(value>=m?"✓ ":"")+msFmt(m)+'</span>').join("");
+    el.innerHTML =
+      '<div class="out-row"><span class="out-big">$'+compact(value)+'</span>'+
+      '<span class="out-goal">'+(next ? pct.toFixed(0)+"% of the way to "+msFmt(next) : "all milestones reached 🎉")+'</span></div>'+
+      '<div class="bar"><i style="width:'+pct.toFixed(1)+'%"></i></div>'+
+      '<div class="note" style="font-size:12px;color:var(--muted);margin-top:8px">'+label+(extra?" · "+extra:"")+'</div>'+
+      '<div class="out-chips">'+chips+'</div>';
+  }
+
+  function renderOutlookManual(){
+    const ic = {done:"✅", progress:"🔄", open:"⬜"};
+    const row = it => '<div class="out-item"><span class="out-ic">'+ic[it.s]+'</span><span>'+esc(it.t)+
+      (it.src ? '<a href="'+esc(it.src)+'" target="_blank" rel="noopener">source ↗</a>' : '')+'</span></div>';
+    const l2 = $("out-l2-manual"); if(l2) l2.innerHTML = OUTLOOK_MANUAL.l2.map(row).join("");
+    const inst = $("out-inst"); if(inst) inst.innerHTML = OUTLOOK_MANUAL.inst.map(row).join("");
+    const rv = $("out-reviewed");
+    if(rv){
+      const d = new Date(OUTLOOK_MANUAL.reviewed+"T00:00:00Z");
+      rv.textContent = "Hand-reviewed items last checked "+d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+    }
+  }
+  renderOutlookManual();
+
   async function loadDefiEcosystem(){
     const status=$("defi-status");
     let kaspaTotal=0;
@@ -2891,6 +3020,8 @@
         .filter(c=>isFinite(c.tvl))
         .sort((a,b)=>b.tvl-a.tvl);
       kaspaTotal = mine.reduce((s,c)=>s+(c.tvl||0),0);
+      renderMilestone("out-l2", kaspaTotal, "Kaspa L2 total value locked · live via DefiLlama",
+        mine.map(c=>esc(c.name)+" $"+compact(c.tvl)).join(" · "));
       const wrap=$("defi-chains");
       if(mine.length){
         wrap.innerHTML = mine.map(c=>
@@ -2908,6 +3039,7 @@
         wrap.innerHTML='<div class="cap">No Kaspa L2 chains indexed on DefiLlama right now.</div>';
       }
     }catch(e){
+      renderMilestone("out-l2", NaN);
       $("defi-chains").innerHTML='<div class="err" style="font-size:13px">Chain TVL unavailable right now.</div>';
     }
 
@@ -2951,13 +3083,15 @@
             if(isFinite(n)){ total+=n; found=true; }
           }
         });
+        renderMilestone("out-stable", total, "Stablecoins on Kaspa layers · live via DefiLlama",
+          found ? "" : "none tracked yet");
         if(found && total>0){
           $("defi-stable").textContent="$"+compact(total);
           if(kaspaTotal>0) $("defi-stable-share").textContent=(total/kaspaTotal*100).toFixed(0)+"%";
           $("defi-stable-row").style.display="";
         }
       }
-    }catch(e){ /* stablecoins optional — leave the row hidden */ }
+    }catch(e){ renderMilestone("out-stable", NaN); /* stablecoins optional — leave the row hidden */ }
   }
 
   // sortable TVL column header
@@ -3197,6 +3331,7 @@
       const d = await cgJSON(CG+"/coins/kaspa/tickers?include_exchange_logo=false&order=volume_desc&depth=false");
       const tickers = (d && d.tickers) ? d.tickers : [];
       if(!tickers.length) throw new Error("empty");
+      renderOutlookExchanges(tickers);
       const mcap = S.circ && S.price ? S.circ * S.price : null;
       const body = $("exc-body");
       if(!body) return;
@@ -3265,6 +3400,8 @@
     }catch(e){
       const body=$("exc-body");
       if(body) body.innerHTML='<tr><td colspan="5" class="err">Exchange data unavailable.</td></tr>';
+      const on=$("out-exc-note");
+      if(on && !$("out-exc").children.length) on.textContent="Exchange data unavailable right now — retrying in 10 minutes.";
     }
   }
 
