@@ -64,7 +64,7 @@
   [dir="rtl"] .v,[dir="rtl"] .k,[dir="rtl"] .chart,[dir="rtl"] canvas,[dir="rtl"] svg,[dir="rtl"] .toolbar{direction:ltr;unicode-bidi:isolate}
   [dir="rtl"] .tip-box{direction:ltr;text-align:left}
   .geo-map{margin-top:10px;direction:ltr}
-  .geo-map svg{display:block;width:100%;height:auto}
+  .geo-map svg{display:block;width:100%;max-width:760px;height:auto;margin:0 auto}
   .geo-map path{stroke:var(--surface);stroke-width:1.2;transition:fill-opacity .5s ease}
   .geo-map path:hover{stroke:var(--text)}
   .geo-map text{font-family:var(--sans);fill:var(--text);paint-order:stroke;stroke:var(--surface);stroke-width:6px;stroke-linejoin:round;pointer-events:none}
@@ -1121,7 +1121,7 @@
       <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
       <div><span class="k" style="font-size:26px">3,600</span><span class="t"> lines · single file</span></div>
       <div><span class="k" style="font-size:26px">4</span><span class="t"> languages · HTML CSS JS SVG</span></div>
-      <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views"> dashboard views</span></div>
+      <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views" style="margin-inline-start:.3em">dashboard views</span></div>
     </div>
 
     <div id="about-geo" style="margin-top:16px;display:none">
@@ -2376,7 +2376,7 @@
              '<tspan class="gname" x="'+x+'" dy="1.25em">'+name(k)+'</tspan></text>';
     }
     el.innerHTML = svg + '</svg>';
-    const since = new Date(geoData.since+"T00:00:00Z").toLocaleDateString(currentLang==="no"?"nb":currentLang,{year:"numeric",month:"short"});
+    const since = new Date(geoData.since+"T00:00:00Z").toLocaleDateString(currentLang==="no"?"nb":currentLang,{year:"numeric",month:"short",timeZone:"UTC"});
     let note = (t.n_geo || T.en.n_geo)
       .replace("{total}", nf.format(geoData.total))
       .replace("{countries}", geoData.countries)
