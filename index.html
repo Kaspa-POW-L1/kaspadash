@@ -63,6 +63,12 @@
   .tb-btn.active{border-color:var(--teal);color:var(--teal)}
   [dir="rtl"] .v,[dir="rtl"] .k,[dir="rtl"] .chart,[dir="rtl"] canvas,[dir="rtl"] svg,[dir="rtl"] .toolbar{direction:ltr;unicode-bidi:isolate}
   [dir="rtl"] .tip-box{direction:ltr;text-align:left}
+  .cont-list{display:grid;gap:9px;margin-top:10px}
+  .cont-row{display:grid;grid-template-columns:minmax(110px,160px) 1fr 92px;align-items:center;gap:12px;font-size:13px}
+  .cont-row .bar{margin-top:0}
+  .cont-row .bar i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .6s ease}
+  .cont-row .num{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:end;direction:ltr;unicode-bidi:isolate}
+  @media (max-width:520px){.cont-row{grid-template-columns:96px 1fr 76px;gap:8px}}
   .tb-share-ok{color:var(--teal);font-size:12px;opacity:0;transition:opacity .3s}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(73,234,203,.6);animation:pulse 2.4s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(73,234,203,.5)}70%{box-shadow:0 0 0 7px rgba(73,234,203,0)}100%{box-shadow:0 0 0 0 rgba(73,234,203,0)}}
@@ -1111,6 +1117,12 @@
       <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views"> dashboard views</span></div>
     </div>
 
+    <div id="about-geo" style="margin-top:16px;display:none">
+      <div class="h" style="margin-bottom:0"><span data-i18n="visitors_by_cont">Visitors by continent</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Where dashboard visitors come from, based on GoatCounter's country detection (no cookies, no IP addresses stored). Aggregated per continent via a small caching proxy that keeps the API key server-side. Updated hourly.</span></span></div>
+      <div class="cont-list" id="geo-list"></div>
+      <div class="note" id="geo-note" style="margin-top:8px"></div>
+    </div>
+
     <div id="about-sources" style="margin-top:14px"></div>
 
     <div class="note" id="about-extra" style="margin-top:12px"></div>
@@ -1321,6 +1333,16 @@
       n_sec_annual:"annualised",
       n_sec_mcap:"of market cap",
       n_sec_note:"USD/day to miners",
+      visitors_by_cont:"Visitors by continent",
+      cont_AF:"Africa",
+      cont_AN:"Antarctica",
+      cont_AS:"Asia",
+      cont_EU:"Europe",
+      cont_NA:"North America",
+      cont_OC:"Oceania",
+      cont_SA:"South America",
+      cont_XX:"Unknown",
+      n_geo:"{total} visitors · {countries} countries · since {since}",
     },
     nl:{
       bps_label:"BLOKKEN PER SECONDE",
@@ -1394,6 +1416,16 @@
       n_sec_annual:"geannualiseerd",
       n_sec_mcap:"van marktkapitalisatie",
       n_sec_note:"USD/dag aan miners",
+      visitors_by_cont:"Bezoekers per continent",
+      cont_AF:"Afrika",
+      cont_AN:"Antarctica",
+      cont_AS:"Azië",
+      cont_EU:"Europa",
+      cont_NA:"Noord-Amerika",
+      cont_OC:"Oceanië",
+      cont_SA:"Zuid-Amerika",
+      cont_XX:"Onbekend",
+      n_geo:"{total} bezoekers · {countries} landen · sinds {since}",
     },
     de:{
       bps_label:"BLÖCKE PRO SEKUNDE",
@@ -1466,6 +1498,16 @@
       n_sec_annual:"annualisiert",
       n_sec_mcap:"der Marktkapitalisierung",
       n_sec_note:"USD/Tag an Miner",
+      visitors_by_cont:"Besucher nach Kontinent",
+      cont_AF:"Afrika",
+      cont_AN:"Antarktis",
+      cont_AS:"Asien",
+      cont_EU:"Europa",
+      cont_NA:"Nordamerika",
+      cont_OC:"Ozeanien",
+      cont_SA:"Südamerika",
+      cont_XX:"Unbekannt",
+      n_geo:"{total} Besucher · {countries} Länder · seit {since}",
     },
     es:{
       bps_label:"BLOQUES POR SEGUNDO",
@@ -1538,6 +1580,16 @@
       n_sec_annual:"anualizado",
       n_sec_mcap:"de capitalización",
       n_sec_note:"USD/día a mineros",
+      visitors_by_cont:"Visitantes por continente",
+      cont_AF:"África",
+      cont_AN:"Antártida",
+      cont_AS:"Asia",
+      cont_EU:"Europa",
+      cont_NA:"Norteamérica",
+      cont_OC:"Oceanía",
+      cont_SA:"Sudamérica",
+      cont_XX:"Desconocido",
+      n_geo:"{total} visitantes · {countries} países · desde {since}",
     },
     he:{
       bps_label:"בלוקים לשנייה",
@@ -1611,6 +1663,16 @@
       n_sec_annual:"בחישוב שנתי",
       n_sec_mcap:"משווי השוק",
       n_sec_note:"USD ליום לכורים",
+      visitors_by_cont:"מבקרים לפי יבשת",
+      cont_AF:"אפריקה",
+      cont_AN:"אנטארקטיקה",
+      cont_AS:"אסיה",
+      cont_EU:"אירופה",
+      cont_NA:"צפון אמריקה",
+      cont_OC:"אוקיאניה",
+      cont_SA:"דרום אמריקה",
+      cont_XX:"לא ידוע",
+      n_geo:"{total} מבקרים · {countries} מדינות · מאז {since}",
     },
     no:{
       bps_label:"BLOKKER PER SEKUND",
@@ -1684,6 +1746,16 @@
       n_sec_annual:"årlig",
       n_sec_mcap:"av markedsverdi",
       n_sec_note:"USD/dag til minere",
+      visitors_by_cont:"Besøkende per kontinent",
+      cont_AF:"Afrika",
+      cont_AN:"Antarktis",
+      cont_AS:"Asia",
+      cont_EU:"Europa",
+      cont_NA:"Nord-Amerika",
+      cont_OC:"Oseania",
+      cont_SA:"Sør-Amerika",
+      cont_XX:"Ukjent",
+      n_geo:"{total} besøkende · {countries} land · siden {since}",
     },
   };
 
@@ -1737,6 +1809,7 @@
     // 6) Document language
     document.documentElement.lang = lang;
     document.documentElement.dir = lang==="he" ? "rtl" : "ltr";
+    if(typeof renderGeo==="function") renderGeo();
   }
 
   // ---- Theme toggle ----
@@ -2266,6 +2339,36 @@
       const v = Number(d && (d.count_unique || d.count));
       if(isFinite(v)) $("about-views").textContent = nf.format(v);
     }catch(e){ /* GoatCounter counter endpoint not available or not enabled */ }
+  }
+
+  // ---- GoatCounter: bezoekers per continent (via eigen Worker, zie gc-worker.js) ----
+  // >>> VERVANG door je eigen Worker-URL na deployen. <<<
+  const GC_GEO = "https://kaspa-gc-stats.pma78.workers.dev/continents";
+  var geoData = null;
+  function renderGeo(){
+    const box = $("about-geo"), list = $("geo-list");
+    if(!box || !list || !geoData || !geoData.total) return;
+    const t = T[currentLang] || T.en;
+    const max = Math.max(...geoData.continents.map(c=>c.count));
+    list.innerHTML = geoData.continents.map(c=>{
+      const pct = c.count / geoData.total * 100;
+      const name = t["cont_"+c.code] || T.en["cont_"+c.code] || c.code;
+      return '<div class="cont-row"><span>'+name+'</span>'+
+             '<div class="bar"><i style="width:'+(c.count/max*100).toFixed(1)+'%"></i></div>'+
+             '<span class="num">'+pct.toFixed(1)+'% · '+nf.format(c.count)+'</span></div>';
+    }).join("");
+    const since = new Date(geoData.since+"T00:00:00Z").toLocaleDateString(currentLang==="no"?"nb":currentLang,{year:"numeric",month:"short"});
+    $("geo-note").textContent = (t.n_geo || T.en.n_geo)
+      .replace("{total}", nf.format(geoData.total))
+      .replace("{countries}", geoData.countries)
+      .replace("{since}", since);
+    box.style.display = "";
+  }
+  async function loadGeo(){
+    try{
+      const d = await getJSON(GC_GEO);
+      if(d && Array.isArray(d.continents)){ geoData = d; renderGeo(); }
+    }catch(e){ /* Worker nog niet gedeployed of GoatCounter niet bereikbaar — blok blijft verborgen */ }
   }
 
   // ---- All CoinGecko data in one coordinated load ----
@@ -3808,6 +3911,7 @@
   loadGitHub();
   loadROI();
   loadViews();
+  loadGeo();
   initToolbar();
   initExpand();
   renderAbout();
