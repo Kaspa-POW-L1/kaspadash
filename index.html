@@ -641,7 +641,7 @@
     <div class="cap" id="ta-cap">Trend, momentum, volatility and key price levels for KAS/USD.</div>
   </section>
 
-  <div class="grid" data-tab="technical" style="margin-top:0">
+  <div class="grid" data-tab="technical" style="margin-top:16px">
     <!-- OVERALL SIGNAL -->
     <div class="tile span2">
       <div class="h"><span>Overall signal</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Aggregate of all indicators below. Counts how many lean bullish, bearish or neutral and gives a majority verdict. Not financial advice — just a snapshot of where the indicators point right now.</span></span></div>
@@ -1117,20 +1117,26 @@
 
     <div class="sec-row" style="margin-top:12px">
       <div><span class="k" id="about-count" style="font-size:26px">–</span><span class="t"> live API sources</span></div>
-      <div><span class="k" style="font-size:26px">1</span><span class="t"> caching proxy · no cookies</span></div>
+      <div><span class="k" style="font-size:26px">2</span><span class="t"> caching proxies · no cookies</span></div>
       <div><span class="k" style="font-size:26px">60s</span><span class="t"> base refresh</span></div>
       <div><span class="k" style="font-size:26px">4,000</span><span class="t"> lines · single file</span></div>
       <div><span class="k" style="font-size:26px">4</span><span class="t"> languages · HTML CSS JS SVG</span></div>
       <div><span class="k" id="about-views" style="font-size:26px">–</span><span class="t" data-i18n="dash_views" style="margin-inline-start:.3em">dashboard views</span></div>
     </div>
 
-    <div id="about-geo" style="margin-top:16px;display:none">
-      <div class="h" style="margin-bottom:0"><span data-i18n="visitors_by_cont">Visitors by continent</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Where dashboard visitors come from, based on GoatCounter's country detection (no cookies, no IP addresses stored). Aggregated per continent via a small caching proxy that keeps the API key server-side. Updated hourly.</span></span></div>
+  </section>
+
+  <!-- VISITORS BY CONTINENT -->
+  <section class="panel" id="about-geo" data-tab="about" style="margin-top:16px;display:none">
+      <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px"><span data-i18n="visitors_by_cont">Visitors by continent</span> <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Where dashboard visitors come from, based on GoatCounter's country detection (no cookies, no IP addresses stored). Aggregated per continent via a small caching proxy that keeps the API key server-side. Updated hourly.</span></span></h2>
       <div class="geo-map" id="geo-list"></div>
       <div class="note" id="geo-note" style="margin-top:8px"></div>
-    </div>
+  </section>
 
-    <div id="about-sources" style="margin-top:14px"></div>
+  <!-- DATA SOURCES -->
+  <section class="panel" data-tab="about" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px"><span data-i18n="data_sources">Data sources</span></h2>
+    <div id="about-sources"></div>
 
     <div class="note" id="about-extra" style="margin-top:12px"></div>
   </section>
@@ -1186,7 +1192,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.43.1";
+  const APP_VERSION = "v2.44.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1340,6 +1346,7 @@
       n_sec_annual:"annualised",
       n_sec_mcap:"of market cap",
       n_sec_note:"USD/day to miners",
+      data_sources:"Data sources",
       visitors_by_cont:"Visitors by continent",
       cont_AF:"Africa",
       cont_AN:"Antarctica",
@@ -1423,6 +1430,7 @@
       n_sec_annual:"geannualiseerd",
       n_sec_mcap:"van marktkapitalisatie",
       n_sec_note:"USD/dag aan miners",
+      data_sources:"Databronnen",
       visitors_by_cont:"Bezoekers per continent",
       cont_AF:"Afrika",
       cont_AN:"Antarctica",
@@ -1505,6 +1513,7 @@
       n_sec_annual:"annualisiert",
       n_sec_mcap:"der Marktkapitalisierung",
       n_sec_note:"USD/Tag an Miner",
+      data_sources:"Datenquellen",
       visitors_by_cont:"Besucher nach Kontinent",
       cont_AF:"Afrika",
       cont_AN:"Antarktis",
@@ -1587,6 +1596,7 @@
       n_sec_annual:"anualizado",
       n_sec_mcap:"de capitalización",
       n_sec_note:"USD/día a mineros",
+      data_sources:"Fuentes de datos",
       visitors_by_cont:"Visitantes por continente",
       cont_AF:"África",
       cont_AN:"Antártida",
@@ -1670,6 +1680,7 @@
       n_sec_annual:"בחישוב שנתי",
       n_sec_mcap:"משווי השוק",
       n_sec_note:"USD ליום לכורים",
+      data_sources:"מקורות נתונים",
       visitors_by_cont:"מבקרים לפי יבשת",
       cont_AF:"אפריקה",
       cont_AN:"אנטארקטיקה",
@@ -1753,6 +1764,7 @@
       n_sec_annual:"årlig",
       n_sec_mcap:"av markedsverdi",
       n_sec_note:"USD/dag til minere",
+      data_sources:"Datakilder",
       visitors_by_cont:"Besøkende per kontinent",
       cont_AF:"Afrika",
       cont_AN:"Antarktis",
@@ -2690,7 +2702,8 @@
       "pre-fetches ROI prices and DeFi protocol data from CoinGecko and DefiLlama, "+
       "and pulls CNN's index for stock-market sentiment, and "+
       '<a href="https://zandkorrel.goatcounter.com" target="_blank" rel="noopener">GoatCounter</a> '+
-      "for privacy-friendly, cookie-free view counts. No tracking cookies, no login.";
+      "for privacy-friendly, cookie-free view counts — a second small Worker turns those into the per-continent visitor map, "+
+      "again keeping the API key server-side. No tracking cookies, no login.";
   }
 
   // ---- Security budget ----
