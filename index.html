@@ -1143,7 +1143,7 @@
       <div class="tile"><div class="h"><span>Live API sources</span></div><div class="v" id="about-count">–</div><div class="note">fetched straight from public APIs</div></div>
       <div class="tile"><div class="h"><span>Caching proxies</span></div><div class="v">2</div><div class="note">Cloudflare Workers · no cookies</div></div>
       <div class="tile"><div class="h"><span>Base refresh</span></div><div class="v">60s</div><div class="note">most figures update every minute</div></div>
-      <div class="tile"><div class="h"><span>Lines of code</span></div><div class="v">4,000</div><div class="note">one single HTML file</div></div>
+      <div class="tile"><div class="h"><span>Lines of code</span></div><div class="v">4,100</div><div class="note">one single HTML file</div></div>
       <div class="tile"><div class="h"><span>Code languages</span></div><div class="v">4</div><div class="note">HTML · CSS · JS · SVG</div></div>
       <div class="tile"><div class="h"><span>Interface languages</span></div><div class="v">6</div><div class="note">EN · NL · DE · ES · NO · HE</div></div>
       <div class="tile"><div class="h"><span data-i18n="dash_views">Dashboard views</span></div><div class="v" id="about-views">–</div><div class="note">cookie-free, via GoatCounter</div></div>
@@ -1217,7 +1217,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.46.0";
+  const APP_VERSION = "v2.47.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -1880,6 +1880,18 @@
     ["en","nl","de","es","no","he"].forEach(l=>$("tb-lang-"+l).addEventListener("click", ()=>applyLang(l)));
     // share
     $("tb-share").addEventListener("click", async ()=>{
+      // Phones/tablets: open the device's own share sheet (WhatsApp, X, Telegram…).
+      // Desktop keeps copying the link to the clipboard.
+      const touch = window.matchMedia && matchMedia("(pointer:coarse)").matches;
+      if(touch && navigator.share){
+        try{
+          await navigator.share({ title: document.title, text: "Live Kaspa network dashboard", url: window.location.href });
+          return;
+        }catch(e){
+          if(e && e.name === "AbortError") return;   // user closed the menu — do nothing
+          // any other error: fall through to copying
+        }
+      }
       try{
         await navigator.clipboard.writeText(window.location.href);
         const ok = $("tb-share-ok");
