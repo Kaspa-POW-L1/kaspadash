@@ -76,6 +76,22 @@
   .cont-row .bar i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .6s ease}
   .cont-row .num{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:end;direction:ltr;unicode-bidi:isolate}
   @media (max-width:520px){.cont-row{grid-template-columns:96px 1fr 76px;gap:8px}}
+  /* ---- TV mode ---- */
+  #tv-bar{display:none}
+  html.tv-mode body{padding-top:calc(clamp(18px,4vw,44px) + 44px)}
+  html.tv-mode .top, html.tv-mode #tab-bar-wrap, html.tv-mode footer,
+  html.tv-mode #fb-toggle, html.tv-mode #fb-popup, html.tv-mode .version{display:none!important}
+  html.tv-mode #tv-bar{display:flex;position:fixed;top:0;left:0;right:0;z-index:100;height:44px;
+    align-items:center;gap:16px;padding:0 clamp(14px,3vw,32px);
+    background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);font-size:14px}
+  #tv-bar .tv-tab{font-weight:600;color:var(--teal);min-width:130px}
+  #tv-bar .tv-prog{flex:1;height:3px;border-radius:99px;background:var(--line);overflow:hidden;direction:ltr}
+  #tv-bar .tv-prog i{display:block;height:100%;width:0;background:var(--teal)}
+  #tv-bar .tv-clock{font-family:var(--mono);font-size:13px;color:var(--text);direction:ltr;unicode-bidi:isolate}
+  #tv-bar .tv-hint{font-size:11.5px;color:var(--muted)}
+  @media (max-width:620px){ #tv-bar .tv-hint{display:none} #tv-bar .tv-tab{min-width:0} }
+  html.tv-mode{cursor:none}
   .tb-share-ok{color:var(--teal);font-size:12px;opacity:0;transition:opacity .3s}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(73,234,203,.6);animation:pulse 2.4s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(73,234,203,.5)}70%{box-shadow:0 0 0 7px rgba(73,234,203,0)}100%{box-shadow:0 0 0 0 rgba(73,234,203,0)}}
@@ -360,6 +376,13 @@
 
   <div class="version" id="version" aria-hidden="true"></div>
 
+  <div id="tv-bar" aria-hidden="true">
+    <span class="tv-tab" id="tv-tab">Overview</span>
+    <span class="tv-prog"><i id="tv-prog"></i></span>
+    <span class="tv-clock" id="tv-clock"></span>
+    <span class="tv-hint">Esc / click to exit</span>
+  </div>
+
   <div class="top">
     <div class="brand">
       <svg class="glyph" viewBox="0 0 197.05 196.86" aria-hidden="true">
@@ -371,6 +394,7 @@
     <div class="status"><span class="dot"></span><span id="updated">connecting…</span></div>
     <div class="toolbar">
       <button class="tb-btn" id="tb-theme" title="Toggle light/dark mode">🌙</button>
+      <button class="tb-btn" id="tb-tv" title="TV mode" aria-label="TV mode">⛶</button>
       <button class="tb-btn" id="tb-lang-en">EN</button>
       <button class="tb-btn" id="tb-lang-nl">NL</button>
       <button class="tb-btn" id="tb-lang-de">DE</button>
@@ -1193,7 +1217,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.45.0";
+  const APP_VERSION = "v2.46.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -3902,6 +3926,86 @@
     for(const el of $("range").children) el.classList.toggle("on", el===b);
     renderHistory();
   });
+
+  // ---- TV mode: fullscreen, rotates through tabs, keeps screen awake ----
+  (function(){
+    const btn = $("tb-tv"); if(!btn) return;
+    const TABS = ["overview","market","network","tokens","technical","history"];
+    const MIN_MS = 25000, PAUSE_TOP = 6000, PAUSE_END = 4000, SPEED = 40; // px/s
+    const root = document.documentElement;
+    let on = false, idx = 0, raf = 0, timer = 0, clockT = 0, wake = null, startTab = "overview";
+
+    const tabBtn = name => document.querySelector('.tab-btn[data-target="'+name+'"]');
+    const contentTop = () => {
+      const h = document.querySelector("section.hero");   // tab content starts right below the hero
+      return h ? Math.max(0, h.getBoundingClientRect().bottom + scrollY - 56) : 0;
+    };
+
+    function clock(){
+      const d = new Date(), p = n => String(n).padStart(2,"0");
+      $("tv-clock").textContent = p(d.getHours())+":"+p(d.getMinutes())+" · "+p(d.getUTCHours())+":"+p(d.getUTCMinutes())+" UTC";
+    }
+    async function keepAwake(){
+      try{ if(on && "wakeLock" in navigator && document.visibilityState==="visible") wake = await navigator.wakeLock.request("screen"); }catch(e){}
+    }
+
+    function show(i){
+      cancelAnimationFrame(raf); clearTimeout(timer);
+      idx = i % TABS.length;
+      const name = TABS[idx], b = tabBtn(name);
+      if(b) b.click();                             // same path as a real click → lazy loaders fire too
+      $("tv-tab").textContent = b ? b.textContent : name;
+      setTimeout(()=>{
+        if(!on) return;
+        const y0 = name==="overview" ? 0 : contentTop();
+        window.scrollTo(0, y0);
+        const dist = Math.max(0, document.documentElement.scrollHeight - innerHeight - y0);
+        const scrollMs = dist / SPEED * 1000;
+        const total = Math.max(MIN_MS, PAUSE_TOP + scrollMs + (dist ? PAUSE_END : 0));
+        const t0 = performance.now();
+        const step = now => {
+          if(!on) return;
+          const t = now - t0;
+          $("tv-prog").style.width = Math.min(100, t/total*100) + "%";
+          if(dist && t > PAUSE_TOP) window.scrollTo(0, y0 + Math.min(dist, (t-PAUSE_TOP)/1000*SPEED));
+          if(t >= total) { show(idx+1); return; }
+          raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+      }, 700);                                     // let the tab render first
+    }
+
+    function start(){
+      if(on) return;
+      on = true;
+      const act = document.querySelector(".tab-btn.active");
+      startTab = act ? act.dataset.target : "overview";
+      root.classList.add("tv-mode");
+      if(root.requestFullscreen) root.requestFullscreen().catch(()=>{});
+      keepAwake(); clock(); clockT = setInterval(clock, 5000);
+      show(0);
+      // ignore the click that started TV mode itself
+      setTimeout(()=>{ if(on){ addEventListener("pointerdown", stop, true); addEventListener("keydown", onKey, true); } }, 400);
+    }
+    function stop(e){
+      if(!on) return;
+      if(e && e.type==="pointerdown"){ e.preventDefault(); e.stopPropagation(); }
+      on = false;
+      cancelAnimationFrame(raf); clearTimeout(timer); clearInterval(clockT);
+      removeEventListener("pointerdown", stop, true); removeEventListener("keydown", onKey, true);
+      root.classList.remove("tv-mode");
+      $("tv-prog").style.width = "0";
+      if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+      try{ wake && wake.release(); }catch(_){} wake = null;
+      const b = tabBtn(startTab); if(b) b.click();
+      window.scrollTo(0,0);
+    }
+    function onKey(e){ if(e.key==="Escape" || e.key===" " || e.key==="Enter"){ e.preventDefault(); stop(); } }
+
+    btn.addEventListener("click", start);
+    document.addEventListener("fullscreenchange", ()=>{ if(on && !document.fullscreenElement) stop(); });
+    document.addEventListener("visibilitychange", ()=>{ if(on && document.visibilityState==="visible") keepAwake(); });
+  })();
 
   // ---- feedback popup ----
   const fbToggle=$("fb-toggle"), fbPopup=$("fb-popup"), fbClose=$("fb-close");
