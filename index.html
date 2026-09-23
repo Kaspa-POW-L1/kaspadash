@@ -92,6 +92,7 @@
   #tv-bar .tv-hint{font-size:11.5px;color:var(--muted)}
   @media (max-width:620px){ #tv-bar .tv-hint{display:none} #tv-bar .tv-tab{min-width:0} }
   html.tv-mode{cursor:none}
+  .stale-badge{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--amber);border:1px solid var(--amber);border-radius:99px;padding:1px 8px;margin-left:8px;vertical-align:middle;opacity:.85}
   .tb-share-ok{color:var(--teal);font-size:12px;opacity:0;transition:opacity .3s}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(73,234,203,.6);animation:pulse 2.4s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(73,234,203,.5)}70%{box-shadow:0 0 0 7px rgba(73,234,203,0)}100%{box-shadow:0 0 0 0 rgba(73,234,203,0)}}
@@ -840,7 +841,7 @@
 
   <!-- KRC-20 -->
   <section class="panel" data-tab="tokens">
-    <h2>KRC-20 tokens <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Tokens built on top of Kaspa using the KRC-20 standard — similar to ERC-20 on Ethereum. Anyone can deploy a token. Most are community/meme projects; none have guaranteed value. Click a column header to sort.</span></span></h2>
+    <h2>KRC-20 tokens <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Tokens built on top of Kaspa using the KRC-20 standard — similar to ERC-20 on Ethereum. Anyone can deploy a token. Most are community/meme projects; none have guaranteed value. Click a column header to sort.</span></span> <span id="krc20-status" class="stale-badge" style="display:none"></span></h2>
     <div class="cap">Top tokens on the Kasplex layer, ranked by market cap — the emerging token ecosystem after Toccata.</div>
     <div id="krc20-wrap" class="table-scroll">
       <table id="krc20-table">
@@ -1225,7 +1226,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.48.0";
+  const APP_VERSION = "v2.48.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2383,6 +2384,10 @@
   // ---- KRC-20 with sorting ----
   let krc20Data = [];
   let krc20Sort = {col:"mcap", dir:-1}; // default: market cap desc
+  let krc20Stamp = 0;                    // when krc20Data was last fetched
+  const KRC20_CACHE = "kaspadash-krc20";
+  // Until this date an outage is explained as the post-exploit repair; after it, a generic message.
+  const KRC20_INCIDENT_UNTIL = Date.parse("2026-10-31T00:00:00Z");
 
   function renderKrc20Table(){
     const body=$("krc20"); if(!body||!krc20Data.length) return;
@@ -2441,19 +2446,53 @@
           mints: num(pick(t,["mintTotal"]))
         };
       }).filter(t=>t.tick && t.tick!=="?").slice(0,24);
+      krc20Stamp = Date.now();
       renderKrc20Table();
-      // sortable column headers
-      document.querySelectorAll("#krc20-table th.sortable").forEach(th=>{
-        th.onclick = ()=>{
-          const c = th.dataset.col;
-          if(krc20Sort.col===c) krc20Sort.dir *= -1;
-          else { krc20Sort.col=c; krc20Sort.dir=-1; }
-          renderKrc20Table();
-        };
-      });
+      bindKrc20Sort();
+      // remember the last good list so an outage doesn't blank the table
+      try{ localStorage.setItem(KRC20_CACHE, JSON.stringify({t:Date.now(), data:krc20Data})); }catch(_){}
+      setKrc20Status(null);
     }catch(e){
-      body.innerHTML='<tr><td colspan="7" class="err">KRC-20 data is unreachable right now. Try again later — the rest of the dashboard keeps working.</td></tr>';
+      // 1) data from earlier this session → keep showing it
+      if(krc20Data.length){ setKrc20Status(krc20Stamp || Date.now()); return; }
+      // 2) data from an earlier visit in this browser → show that, marked stale
+      try{
+        const c = JSON.parse(localStorage.getItem(KRC20_CACHE) || "null");
+        if(c && Array.isArray(c.data) && c.data.length){
+          // JSON turns NaN into null — restore NaN so the isFinite() checks keep working
+          const NUMS = ["maxh","price","c24","mcap","holders","transfers","mints"];
+          krc20Data = c.data.map(t => { const o = {...t}; NUMS.forEach(k => { if(o[k] === null) o[k] = NaN; }); return o; });
+          krc20Stamp = c.t;
+          renderKrc20Table(); bindKrc20Sort(); setKrc20Status(c.t); return;
+        }
+      }catch(_){}
+      // 3) nothing to show
+      const why = Date.now() < KRC20_INCIDENT_UNTIL
+        ? "The Kasplex indexer is offline — it is being repaired and re-indexed after the 20 Sep 2026 exploit. "
+        : "The Kasplex API is unreachable right now. ";
+      body.innerHTML='<tr><td colspan="7" class="err">'+why+'The table returns automatically once it is back — the rest of the dashboard keeps working.</td></tr>';
     }
+  }
+  function setKrc20Status(stamp){
+    const el = $("krc20-status"); if(!el) return;
+    if(!stamp){ el.style.display = "none"; return; }
+    const d = new Date(stamp);
+    el.textContent = "stale · last update " + d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}) + " " +
+                     d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+    el.title = Date.now() < KRC20_INCIDENT_UNTIL
+      ? "Kasplex indexer offline after the 20 Sep 2026 exploit — showing the last data we received"
+      : "Kasplex API unreachable — showing the last data we received";
+    el.style.display = "";
+  }
+  function bindKrc20Sort(){
+    document.querySelectorAll("#krc20-table th.sortable").forEach(th=>{
+      th.onclick = ()=>{
+        const c = th.dataset.col;
+        if(krc20Sort.col===c) krc20Sort.dir *= -1;
+        else { krc20Sort.col=c; krc20Sort.dir=-1; }
+        renderKrc20Table();
+      };
+    });
   }
   function esc(s){ return String(s).replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c])); }
 
