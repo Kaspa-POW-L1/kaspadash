@@ -1066,8 +1066,14 @@
   </section>
 
   <section class="panel" data-tab="outlook" style="margin-top:16px">
-    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Stablecoins <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Dollar-pegged stablecoins circulating on Kaspa layers, from DefiLlama. Same milestone ladder as L2 TVL.</span></span></h2>
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Stablecoins <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Dollar-pegged stablecoins circulating on Kaspa layers, from DefiLlama. Same milestone ladder as L2 TVL. Today these are bridged versions (via Hyperlane); natively issued USDT or USDC would be the next step.</span></span></h2>
     <div id="out-stable" class="out-ms"><div class="skeleton">loading…</div></div>
+    <div id="out-stable-manual" class="out-list" style="margin-top:14px"></div>
+  </section>
+
+  <section class="panel" data-tab="outlook" style="margin-top:16px">
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">AI &amp; agents <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">AI agents — software that acts on its own — need a way to pay for data and compute in tiny amounts without a human and a credit card. Kaspa's one-second confirmations suit that well. The x402 standard (a Linux Foundation project) lets agents pay inside an ordinary web request. Reviewed by hand, see the date under Institutional.</span></span></h2>
+    <div id="out-ai" class="out-list"></div>
   </section>
 
   <section class="panel" data-tab="outlook" style="margin-top:16px">
@@ -1281,7 +1287,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.49.2";
+  const APP_VERSION = "v2.50.0";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2944,6 +2950,17 @@
       {s:"progress", t:"Igra resumes iKAS withdrawals to Kaspa L1 and Hyperlane transfers (paused after the exploit)",
        src:"https://www.kucoin.com/news/flash/kasplex-krc-20-signature-bypass-vulnerability-causes-99-6-loss-in-zeal-and-nacho-pools"}
     ],
+    stable: [
+      {s:"done", t:"Bridged stablecoins (USDC, USDT, USDS) usable on Igra via Hyperlane", src:"https://www.kaskad.app/faq"},
+      {s:"open", t:"Natively issued USDT or USDC on a Kaspa layer (not bridged)"}
+    ],
+    ai: [
+      {s:"done", t:"Community x402 gateway: AI agents pay per call for AI compute in KAS, no account needed",
+       src:"https://github.com/kaspahttp402/kaspa-x402"},
+      {s:"progress", t:"Igra agent-native infrastructure for machine-to-machine payments, identity and orchestration (planned H2 2026)",
+       src:"https://cryptopotato.com/igra-network-launches-public-mainnet-as-decentralized-evm-layer-on-kaspas-proof-of-work-blockdag/"},
+      {s:"open", t:"A major agent-payments provider supporting KAS"}
+    ],
     inst: [
       {s:"done", t:"European exchange-traded product tracking KAS (Valour Kaspa)", src:"https://www.valour.com/en/products/valour-kaspa-sek"},
       {s:"open", t:"US spot ETF for KAS"}
@@ -2993,11 +3010,11 @@
     if(n) n.textContent = (hits ? hits+" newly listed! · " : "") + "checked live via CoinGecko · exchanges that already list KAS are under Market";
   }
 
-  function renderMilestone(elId, value, label, extra){
+  function renderMilestone(elId, value, label, extra, emptyHtml){
     const el = $(elId); if(!el) return;
     if(!isFinite(value)){ el.innerHTML = '<div class="err" style="font-size:13px">Data unavailable right now.</div>'; return; }
     if(value <= 0){   // nothing there yet — say so instead of showing an empty bar
-      el.innerHTML = '<div style="font-size:15px;margin:2px 0 6px">None yet — the first one will show up here.</div>'+
+      el.innerHTML = '<div style="font-size:15px;margin:2px 0 6px;line-height:1.45">'+(emptyHtml||"None yet — the first one will show up here.")+'</div>'+
         '<div class="note" style="font-size:12px;color:var(--muted)">'+label+' · first milestone '+msFmt(MILESTONES[0])+'</div>';
       return;
     }
@@ -3018,6 +3035,8 @@
       (it.src ? '<a href="'+esc(it.src)+'" target="_blank" rel="noopener">source ↗</a>' : '')+'</span></div>';
     const l2 = $("out-l2-manual"); if(l2) l2.innerHTML = OUTLOOK_MANUAL.l2.map(row).join("");
     const inst = $("out-inst"); if(inst) inst.innerHTML = OUTLOOK_MANUAL.inst.map(row).join("");
+    const ai = $("out-ai"); if(ai) ai.innerHTML = OUTLOOK_MANUAL.ai.map(row).join("");
+    const st = $("out-stable-manual"); if(st) st.innerHTML = OUTLOOK_MANUAL.stable.map(row).join("");
     const rv = $("out-reviewed");
     if(rv){
       const d = new Date(OUTLOOK_MANUAL.reviewed+"T00:00:00Z");
@@ -3102,7 +3121,9 @@
             if(isFinite(n)){ total+=n; found=true; }
           }
         });
-        renderMilestone("out-stable", total, "Stablecoins on Kaspa layers · live via DefiLlama");
+        renderMilestone("out-stable", total, "Stablecoins on Kaspa layers · live via DefiLlama", "",
+          "Bridged USDC, USDT and USDS are already in use on Igra (for example in Kaskad lending), "+
+          "but DefiLlama doesn't track stablecoin supply on Kaspa layers yet. The bar appears as soon as it does.");
         if(found && total>0){
           $("defi-stable").textContent="$"+compact(total);
           if(kaspaTotal>0) $("defi-stable-share").textContent=(total/kaspaTotal*100).toFixed(0)+"%";
