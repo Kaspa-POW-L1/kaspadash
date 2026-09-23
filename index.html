@@ -61,6 +61,8 @@
     padding:5px 10px;cursor:pointer;transition:border-color .15s,color .15s;white-space:nowrap}
   .tb-btn:hover{border-color:var(--teal-dim);color:var(--text)}
   .tb-btn.active{border-color:var(--teal);color:var(--teal)}
+  [dir="rtl"] .v,[dir="rtl"] .k,[dir="rtl"] .chart,[dir="rtl"] canvas,[dir="rtl"] svg,[dir="rtl"] .toolbar{direction:ltr;unicode-bidi:isolate}
+  [dir="rtl"] .tip-box{direction:ltr;text-align:left}
   .tb-share-ok{color:var(--teal);font-size:12px;opacity:0;transition:opacity .3s}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(73,234,203,.6);animation:pulse 2.4s ease-out infinite}
   @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(73,234,203,.5)}70%{box-shadow:0 0 0 7px rgba(73,234,203,0)}100%{box-shadow:0 0 0 0 rgba(73,234,203,0)}}
@@ -360,6 +362,8 @@
       <button class="tb-btn" id="tb-lang-nl">NL</button>
       <button class="tb-btn" id="tb-lang-de">DE</button>
       <button class="tb-btn" id="tb-lang-es">ES</button>
+      <button class="tb-btn" id="tb-lang-no">NO</button>
+      <button class="tb-btn" id="tb-lang-he">HE</button>
       <button class="tb-btn" id="tb-share">⎘ Share</button>
       <span class="tb-share-ok" id="tb-share-ok">✓ Copied!</span>
     </div>
@@ -1243,7 +1247,7 @@
     } finally { clearTimeout(t); }
   }
 
-  // ---- Translations (EN / NL) ----
+  // ---- Translations (EN / NL / DE / ES / NO / HE) ----
   const T = {
     en:{
       bps_label:"BLOCKS PER SECOND",
@@ -1534,7 +1538,153 @@
       n_sec_annual:"anualizado",
       n_sec_mcap:"de capitalización",
       n_sec_note:"USD/día a mineros",
-    }
+    },
+    he:{
+      bps_label:"בלוקים לשנייה",
+      bps_small:"בלוקים מקבילים · GHOSTDAG BlockDAG",
+      bps_sub:"Kaspa מאשרת בלוקים רבים במקביל במקום בשרשרת אחת. כל ריבוע למטה הוא בלוק שהרשת יצרה זה עתה.",
+      dag_tips:"קצוות DAG כעת",
+      daa_score:"ציון DAA",
+      total_blocks:"סה״כ בלוקים",
+      consensus:"קונצנזוס",
+      circ_supply:"היצע במחזור",
+      hashrate:"קצב גיבוב",
+      price:"מחיר · USD",
+      block_reward:"תגמול בלוק",
+      next_reduction:"הפחתת התגמול הבאה",
+      difficulty:"קושי",
+      vol_24h:"נפח 24 שעות",
+      mcap_rank:"דירוג שווי שוק",
+      ath:"שיא כל הזמנים",
+      btc_price:"מחיר · BTC",
+      total_headers:"סה״כ כותרות",
+      median_time:"זמן בלוק חציוני",
+      emission:"הנפקה היום",
+      emrate:"קצב הנפקה חי",
+      empressure:"לחץ הנפקה",
+      range_24h:"טווח 24 שעות",
+      dev_activity:"פעילות מפתחים",
+      fng_crypto:"פחד ותאוות בצע · קריפטו",
+      fng_stocks:"פחד ותאוות בצע · מניות",
+      community:"פילוח ההיצע",
+      dash_views:"צפיות בלוח",
+      btc_dom:"דומיננטיות ביטקוין",
+      igra_tvl:"Igra L2 · TVL",
+      sec_budget:"תקציב אבטחה",
+      emission_curve:"עקומת הנפקה",
+      live_feed:"פיד בלוקים חי",
+      halving_calendar:"לוח הפחתות",
+      top_exc:"בורסות מובילות",
+      technical:"ניתוח טכני",
+      price_eur:"מחיר · EUR",
+      reddit:"גיל הרשת",
+      orphan:"בלוקים ליום",
+      blocktime:"נכרה היום",
+      roi:"תשואה על ההשקעה",
+      kaspa_unique:"מה מייחד את Kaspa?",
+      roi_bought:"נקנה",
+      roi_price:"מחיר אז",
+      roi_val:"$100 → היום",
+      roi_ret:"תשואה",
+      expand_more:"קרא עוד",
+      expand_less:"הצג פחות",
+      // notes
+      n_supply:"מתוך מקסימום ~28.7B KAS · השקה הוגנת, ללא הקצאה מוקדמת",
+      n_reward:"יורד מדי חודש (chromatic halving)",
+      n_halving:"התגמול יורד ל-{amt} KAS · chromatic halving",
+      n_difficulty:"קושי הרשת · עולה עם קצב הגיבוב, מתכוונן אוטומטית",
+      n_vol:"נסחר ב-24 השעות האחרונות · {ratio}% משווי השוק",
+      n_mcap_rank:"לפי שווי שוק · דירוג נמוך = אימוץ רחב יותר",
+      n_btc:"מול ביטקוין · עלייה = KAS עוקף את BTC",
+      n_headers:"כל הכותרות שנראו אי פעם · כולל בלוקים אדומים (לא נבחרים)",
+      n_median:"זמן חציוני של הרשת · אמור להיות קרוב לעכשיו",
+      n_emit:"KAS חדשים ליום · {pct}% אינפלציה שנתית",
+      n_fng:"שוק הקריפטו כולו",
+      n_fng_stock:"שוק המניות · CNN",
+      n_btcdom:"נתח BTC מהשוק הכולל · ETH {eth}% · עלייה = בריחה מסיכון",
+      n_github:"דחיפה אחרונה ל-kaspanet/rusty-kaspa · דרך GitHub API",
+      n_community:"הצבעות חיוביות · > 60% חיובי, < 40% שלילי",
+      n_minted:"{pct}% הונפקו",
+      n_today:"היום",
+      n_ago:"לפני {n} ימים",
+      n_sec_kas:"KAS ליום",
+      n_sec_annual:"בחישוב שנתי",
+      n_sec_mcap:"משווי השוק",
+      n_sec_note:"USD ליום לכורים",
+    },
+    no:{
+      bps_label:"BLOKKER PER SEKUND",
+      bps_small:"parallelle blokker · GHOSTDAG BlockDAG",
+      bps_sub:"Kaspa bekrefter mange blokker parallelt i stedet for i én enkelt kjede. Hver rute nedenfor er en blokk nettverket nettopp har produsert.",
+      dag_tips:"DAG-tips nå",
+      daa_score:"DAA-score",
+      total_blocks:"blokker totalt",
+      consensus:"konsensus",
+      circ_supply:"Sirkulerende forsyning",
+      hashrate:"Hashrate",
+      price:"Pris · USD",
+      block_reward:"Blokkbelønning",
+      next_reduction:"Neste belønningsreduksjon",
+      difficulty:"Vanskelighetsgrad",
+      vol_24h:"24t volum",
+      mcap_rank:"Rangering markedsverdi",
+      ath:"Rekordhøyde",
+      btc_price:"Pris · BTC",
+      total_headers:"Headere totalt",
+      median_time:"Median blokktid",
+      emission:"Utstedelse i dag",
+      emrate:"Utstedelsesrate live",
+      empressure:"Utstedelsespress",
+      range_24h:"24t spenn",
+      dev_activity:"Utvikleraktivitet",
+      fng_crypto:"Fear & Greed · Krypto",
+      fng_stocks:"Fear & Greed · Aksjer",
+      community:"Fordeling av forsyning",
+      dash_views:"Visninger av dashbordet",
+      btc_dom:"Bitcoin-dominans",
+      igra_tvl:"Igra L2 · TVL",
+      sec_budget:"Sikkerhetsbudsjett",
+      emission_curve:"Utstedelseskurve",
+      live_feed:"Live blokkstrøm",
+      halving_calendar:"Halveringskalender",
+      top_exc:"Største børser",
+      technical:"Teknisk analyse",
+      price_eur:"Pris · EUR",
+      reddit:"Nettverkets alder",
+      orphan:"Blokker per dag",
+      blocktime:"Utvunnet i dag",
+      roi:"Avkastning",
+      kaspa_unique:"Hva gjør Kaspa unik?",
+      roi_bought:"Kjøpt",
+      roi_price:"Pris da",
+      roi_val:"$100 → i dag",
+      roi_ret:"Avkastning",
+      expand_more:"Les mer",
+      expand_less:"Vis mindre",
+      // notes
+      n_supply:"av maks ~28,7 mrd. KAS · rettferdig lansering, ingen premine",
+      n_reward:"synker månedlig (chromatic halving)",
+      n_halving:"belønningen synker til {amt} KAS · chromatic halving",
+      n_difficulty:"nettverkets vanskelighetsgrad · stiger med hashrate, justeres automatisk",
+      n_vol:"omsatt siste 24t · {ratio}% av markedsverdi",
+      n_mcap_rank:"etter markedsverdi · lavere rangering = mer utbredt",
+      n_btc:"mot Bitcoin · stigende = KAS slår BTC",
+      n_headers:"alle headere noensinne · inkluderer røde (ikke-valgte) blokker",
+      n_median:"nettverkets mediantid · bør være nær nå",
+      n_emit:"nye KAS per dag · {pct}% årlig inflasjon",
+      n_fng:"hele kryptomarkedet",
+      n_fng_stock:"aksjemarkedet · CNN",
+      n_btcdom:"BTCs andel av totalmarkedet · ETH {eth}% · stigende = risk-off",
+      n_github:"siste push til kaspanet/rusty-kaspa · via GitHub API",
+      n_community:"positive stemmer · > 60% positivt, < 40% negativt",
+      n_minted:"{pct}% utstedt",
+      n_today:"i dag",
+      n_ago:"{n}d siden",
+      n_sec_kas:"KAS/dag",
+      n_sec_annual:"årlig",
+      n_sec_mcap:"av markedsverdi",
+      n_sec_note:"USD/dag til minere",
+    },
   };
 
   let currentLang = (navigator.language||"en").startsWith("nl") ? "nl" : "en";
@@ -1542,7 +1692,7 @@
   function applyLang(lang){
     currentLang = lang;
     localStorage.setItem("kaspadash-lang", lang);
-    ["en","nl","de","es"].forEach(l=>$("tb-lang-"+l).classList.toggle("active", lang===l));
+    ["en","nl","de","es","no","he"].forEach(l=>$("tb-lang-"+l).classList.toggle("active", lang===l));
     const t = T[lang];
 
     // 1) All elements with data-i18n — the core of the translation system.
@@ -1586,6 +1736,7 @@
 
     // 6) Document language
     document.documentElement.lang = lang;
+    document.documentElement.dir = lang==="he" ? "rtl" : "ltr";
   }
 
   // ---- Theme toggle ----
@@ -1607,9 +1758,9 @@
     });
     // language
     const savedLang = localStorage.getItem("kaspadash-lang") ||
-                      (()=>{ const b=(navigator.language||"en").slice(0,2); return ["nl","de","es"].includes(b)?b:"en"; })();
+                      (()=>{ const b=(navigator.language||"en").slice(0,2); if(b==="nb"||b==="nn") return "no"; if(b==="iw") return "he"; return ["nl","de","es","no","he"].includes(b)?b:"en"; })();
     applyLang(savedLang);
-    ["en","nl","de","es"].forEach(l=>$("tb-lang-"+l).addEventListener("click", ()=>applyLang(l)));
+    ["en","nl","de","es","no","he"].forEach(l=>$("tb-lang-"+l).addEventListener("click", ()=>applyLang(l)));
     // share
     $("tb-share").addEventListener("click", async ()=>{
       try{
@@ -3399,7 +3550,7 @@
     if(!btn || !content) return;
     btn.addEventListener("click", ()=>{
       const open = content.classList.toggle("open");
-      btn.textContent = (open ? "▼ " : "▶ ") + (currentLang==="nl" ? (open?"Minder tonen":"Meer lezen") : (open?"Read less":"Read more"));
+      btn.textContent = (open ? "▼ " : "▶ ") + (open ? (T[currentLang]||T.en).expand_less : (T[currentLang]||T.en).expand_more);
     });
   }
 
