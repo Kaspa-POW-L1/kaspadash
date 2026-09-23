@@ -94,7 +94,13 @@
   html.tv-mode{cursor:none}
   .stale-badge{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--amber);border:1px solid var(--amber);border-radius:99px;padding:1px 8px;margin-left:8px;vertical-align:middle;opacity:.85}
   /* ---- Outlook tab ---- */
-  .out-yes{color:var(--teal)} .out-no{color:var(--muted)}
+  .out-pills{display:flex;flex-wrap:wrap;gap:10px}
+  .out-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 8px;border:1px solid var(--line);border-radius:99px;background:var(--bg-2);font-size:14px;color:var(--text)}
+  .out-pill img,.out-pill .out-ini{width:22px;height:22px;border-radius:50%;flex:0 0 22px;object-fit:cover;background:var(--surface)}
+  .out-pill .out-ini{display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line)}
+  .out-pill .out-tag{font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:0 7px;margin-inline-start:2px}
+  .out-pill.hit{border-color:var(--teal);color:var(--teal);background:transparent}
+  .out-pill.hit .out-tag{color:var(--teal);border-color:var(--teal-dim)}
   .out-ms .out-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
   .out-ms .out-big{font-family:var(--mono);font-size:26px;font-weight:600}
   .out-ms .out-goal{font-size:13px;color:var(--muted)}
@@ -1048,7 +1054,7 @@
   </section>
 
   <section class="panel" data-tab="outlook" style="margin-top:16px">
-    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Exchanges <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Spot listings on ten major exchanges, detected live from CoinGecko's KAS markets (sorted by volume). "Futures only" means the exchange offers KAS derivatives but no spot trading. A very small listing outside CoinGecko's top markets could briefly show as "not yet".</span></span></h2>
+    <h2 style="margin:0 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Exchanges · not yet listed for spot <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Major exchanges where KAS can't be bought for spot yet. Checked live against CoinGecko's KAS markets on every visit — when one of them lists KAS it lights up here. "Futures" means the exchange already offers KAS derivatives. Exchanges that already list KAS are shown under Market.</span></span></h2>
     <div class="grid" id="out-exc" style="margin:0"></div>
     <div class="note" id="out-exc-note" style="font-size:12px;color:var(--muted)">loading…</div>
   </section>
@@ -1275,7 +1281,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.49.0";
+  const APP_VERSION = "v2.49.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2943,40 +2949,47 @@
       {s:"open", t:"US spot ETF for KAS"}
     ]
   };
-  // Ten major exchanges. id = CoinGecko market identifier; futures = derivatives-only today.
+  // Major exchanges where KAS isn't on spot yet. id = CoinGecko exchange/market identifier.
   const OUTLOOK_EXCHANGES = [
-    {name:"Binance",    id:["binance"],            futures:true},
-    {name:"Coinbase",   id:["gdax"],               futures:true},
-    {name:"OKX",        id:["okex"]},
-    {name:"Crypto.com", id:["crypto_com"]},
-    {name:"Upbit",      id:["upbit"]},
-    {name:"Kraken",     id:["kraken"]},
-    {name:"Bybit",      id:["bybit_spot"]},
-    {name:"Bitget",     id:["bitget"]},
-    {name:"Gate",       id:["gate"]},
-    {name:"KuCoin",     id:["kucoin"]}
+    {name:"Binance",    id:"binance",    futures:true},
+    {name:"Coinbase",   id:"gdax",       futures:true},
+    {name:"OKX",        id:"okex"},
+    {name:"Crypto.com", id:"crypto_com"},
+    {name:"Upbit",      id:"upbit"}
   ];
   const MILESTONES = [10e6, 25e6, 50e6, 100e6, 250e6, 500e6, 1e9];
   const msFmt = m => m>=1e9 ? "$"+(m/1e9)+"B" : "$"+(m/1e6)+"M";   // round milestone labels: $10M, $1B
 
+  // Exchange logos: CoinGecko's own images, fetched once and cached for a week.
+  const EXLOGO_KEY = "kaspadash-exlogos";
+  let exLogos = {};
+  try{ const c = JSON.parse(localStorage.getItem(EXLOGO_KEY)||"null"); if(c && Date.now()-c.t < 7*864e5) exLogos = c.logos||{}; }catch(_){}
+  async function loadExchangeLogos(){
+    if(OUTLOOK_EXCHANGES.every(e=>exLogos[e.id])) return;
+    try{
+      const list = await cgJSON(CG+"/exchanges?per_page=100&page=1");
+      if(!Array.isArray(list)) return;
+      list.forEach(x=>{ if(x && x.id && x.image && OUTLOOK_EXCHANGES.some(e=>e.id===x.id)) exLogos[x.id] = x.image; });
+      try{ localStorage.setItem(EXLOGO_KEY, JSON.stringify({t:Date.now(), logos:exLogos})); }catch(_){}
+      if(lastTickers) renderOutlookExchanges(lastTickers);
+    }catch(e){ /* logos are optional — names alone still work */ }
+  }
+  let lastTickers = null;
   function renderOutlookExchanges(tickers){
     const wrap = $("out-exc"); if(!wrap) return;
-    const vol = new Map();                       // identifier → 24h USD volume
-    tickers.forEach(t=>{
-      const id = t.market && t.market.identifier; if(!id) return;
-      vol.set(id, (vol.get(id)||0) + ((t.converted_volume && t.converted_volume.usd) || 0));
-    });
-    let listed = 0;
+    lastTickers = tickers;
+    const ids = new Set(tickers.map(t=>t.market && t.market.identifier).filter(Boolean));
+    let hits = 0;
     wrap.innerHTML = OUTLOOK_EXCHANGES.map(e=>{
-      const v = e.id.reduce((s,id)=> vol.has(id) ? (s||0)+vol.get(id) : s, null);
-      const yes = v !== null; if(yes) listed++;
-      const note = yes ? "spot · $"+compact(v)+" 24h" : (e.futures ? "futures only" : "no spot market");
-      return '<div class="tile"><div class="h"><span>'+esc(e.name)+'</span></div>'+
-             '<div class="v '+(yes?"out-yes":"out-no")+'" style="font-size:20px">'+(yes?"✓ Listed":"Not yet")+'</div>'+
-             '<div class="note">'+note+'</div></div>';
+      const hit = ids.has(e.id); if(hit) hits++;
+      const logo = exLogos[e.id]
+        ? '<img src="'+esc(exLogos[e.id])+'" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;out-ini&quot;>'+esc(e.name[0])+'</span>\'">'
+        : '<span class="out-ini">'+esc(e.name[0])+'</span>';
+      const tag = hit ? '<span class="out-tag">listed!</span>' : (e.futures ? '<span class="out-tag">futures</span>' : '');
+      return '<span class="out-pill'+(hit?" hit":"")+'">'+logo+(hit?"✓ ":"")+esc(e.name)+tag+'</span>';
     }).join("");
     const n = $("out-exc-note");
-    if(n) n.textContent = listed+" of "+OUTLOOK_EXCHANGES.length+" listed for spot trading · live via CoinGecko";
+    if(n) n.textContent = (hits ? hits+" newly listed! · " : "") + "checked live via CoinGecko · exchanges that already list KAS are under Market";
   }
 
   function renderMilestone(elId, value, label, extra){
@@ -3332,6 +3345,7 @@
       const tickers = (d && d.tickers) ? d.tickers : [];
       if(!tickers.length) throw new Error("empty");
       renderOutlookExchanges(tickers);
+      setTimeout(loadExchangeLogos, 4000);   // spaced out from the other CoinGecko calls
       const mcap = S.circ && S.price ? S.circ * S.price : null;
       const body = $("exc-body");
       if(!body) return;
