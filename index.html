@@ -885,12 +885,14 @@
       <div>
         <h2>KRC-20 growth</h2>
         <div class="cap">New tokens deployed per day (last 30). Total ever deployed: <span id="tok-total">–</span>.</div>
+        <div class="cap" style="margin-top:2px">New token launches have largely moved to Kaspa's L2 networks (such as Igra), where tokens are regular EVM tokens rather than KRC-20.<span id="tok-outage"></span></div>
       </div>
       <div style="display:flex;gap:22px">
         <div style="text-align:right"><div style="font-family:var(--mono);font-size:20px" id="tok-7d">–</div><div class="cap">last 7d</div></div>
         <div style="text-align:right"><div style="font-family:var(--mono);font-size:20px" id="tok-30d">–</div><div class="cap">last 30d</div></div>
       </div>
     </div>
+    <div style="font-family:var(--mono);font-size:10.5px;color:var(--muted);text-align:right;margin:6px 0 2px" id="tok-scale"></div>
     <svg id="chart-tok" viewBox="0 0 300 90" preserveAspectRatio="none" style="width:100%;height:90px;display:block"></svg>
     <div class="cap" id="tok-empty" style="display:none;margin-top:10px"></div>
   </section>
@@ -1276,7 +1278,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.50.1";
+  const APP_VERSION = "v2.50.2";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -2656,11 +2658,12 @@
   }
 
   // ---- KRC-20 token growth (bars) ----
-  function drawBars(svgId, pairs){
+  function drawBars(svgId, pairs, minScale){
     const svg=$(svgId); if(!svg) return;
     if(!pairs || !pairs.length){ svg.innerHTML=""; return; }
     const W=300,H=90,pad=4,n=pairs.length;
-    const max=Math.max.apply(null, pairs.map(p=>p.v).concat([1]));
+    // minScale keeps tiny numbers tiny: with minScale 20, one token/day is a short stub, not a full bar
+    const max=Math.max.apply(null, pairs.map(p=>p.v).concat([minScale||1]));
     const bw=(W-2*pad)/n;
     svg.innerHTML = pairs.map((p,i)=>{
       const h=(p.v/max)*(H-2*pad);
@@ -2688,9 +2691,14 @@
         const dt=new Date(today-i*864e5).toISOString().slice(0,10);
         series.push({label:dt, v: daily[dt]||0});
       }
-      drawBars("chart-tok", series);
+      const TOK_SCALE = 20;                       // full bar height = 20 new tokens per day
+      drawBars("chart-tok", series, TOK_SCALE);
+      const peak = Math.max(...series.map(p=>p.v));
+      $("tok-scale").textContent = "scale 0–"+Math.max(TOK_SCALE, peak)+" per day";
       const sum=k=>series.slice(-k).reduce((a,b)=>a+b.v,0);
       $("tok-7d").textContent = "+"+sum(7);
+      if(Date.now() < KRC20_INCIDENT_UNTIL)
+        $("tok-outage").textContent = " Recent days may be incomplete while the Kasplex indexer is offline after the 20 Sep exploit.";
       $("tok-30d").textContent = "+"+sum(30);
     }catch(e){
       $("tok-empty").style.display="block";
