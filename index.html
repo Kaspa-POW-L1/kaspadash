@@ -138,6 +138,7 @@
   /* Grid */
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
   .tile{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:18px 18px 16px}
+  .panel > .h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}  /* title left, status right */
   .tile .h{font-size:13px;color:var(--muted);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
   .tile .v{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.5px}
   .tile .v small{font-size:14px;color:var(--muted);font-weight:400;margin-left:4px}
@@ -990,24 +991,12 @@
   <!-- MARKET SIGNALS -->
   <section class="panel" id="signals" data-tab="market" style="margin-top:16px">
     <div class="h" style="margin-bottom:2px">
-      <h2 style="margin:0;font-size:15px;font-weight:600">Market signals <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Technical indicators computed from KAS's daily closing prices over the past year (via CoinGecko). These describe recent price behaviour — they are not predictions and not financial advice.</span></span></h2>
+      <h2 style="margin:0;font-size:15px;font-weight:600">Market signals <span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Computed from KAS's daily closing prices over the past year (via CoinGecko): how far the price sits from its 50- and 200-day averages, and how closely it moves with Bitcoin. These describe recent price behaviour — they are not predictions and not financial advice.</span></span></h2>
       <span id="sig-status" style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto"></span>
     </div>
-    <div class="cap">How KAS has been trading lately — momentum, trend, volatility and how tightly it moves with Bitcoin.</div>
+    <div class="cap">Where KAS trades relative to its own trend and to Bitcoin. Momentum and volatility indicators are on the <a href="#technical" onclick="event.preventDefault();document.querySelector('.tab-btn[data-target=technical]').click()" style="color:var(--teal-dim)">Technical tab</a>.</div>
 
     <div class="grid" style="margin-top:12px">
-      <div class="tile">
-        <div class="h"><span>RSI · 14-day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Relative Strength Index — momentum on a 0–100 scale. Below 30 is traditionally "oversold" (price may have fallen too fast), above 70 "overbought" (may have risen too fast), 30–70 is neutral. A signal, not a guarantee.</span></span></div>
-        <div class="v" id="sig-rsi">–</div>
-        <div class="note" id="sig-rsi-note">momentum · 30 oversold / 70 overbought</div>
-      </div>
-
-      <div class="tile">
-        <div class="h"><span>Volatility · 30-day</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">Annualised standard deviation of daily returns over the last 30 days. Higher = larger day-to-day price swings. Crypto typically runs far higher than stocks (which sit around 15–20%).</span></span></div>
-        <div class="v" id="sig-vol">–</div>
-        <div class="note">annualised · higher = choppier</div>
-      </div>
-
       <div class="tile">
         <div class="h"><span>vs 50-day avg</span><span class="tip-wrap"><span class="tip-icon" tabindex="0">ⓘ</span><span class="tip-box">How far the current price sits above or below its 50-day moving average — a short/medium-term trend gauge. Above = recent strength, below = recent weakness.</span></span></div>
         <div class="v" id="sig-ma50">–</div>
@@ -1287,7 +1276,7 @@
               headerCount:null, blockCount:null, daaScore:null };
 
   // Bump this on each update so changes are traceable in the corner label.
-  const APP_VERSION = "v2.50.0";
+  const APP_VERSION = "v2.50.1";
   const LAUNCH_DATE = new Date("2026-09-10T00:00:00Z"); // first snapshot commit
   {
     const v=$("version");
@@ -4106,7 +4095,7 @@
 
       // RSI (14)
       const rsi=_rsi(px,14);
-      if(isFinite(rsi)){
+      if(isFinite(rsi) && $("sig-rsi")){
         $("sig-rsi").textContent=rsi.toFixed(0);
         const lbl = rsi<30?"Oversold":rsi>70?"Overbought":"Neutral";
         $("sig-rsi-note").textContent = lbl+" · 30 oversold / 70 overbought";
@@ -4116,7 +4105,7 @@
 
       // Volatility (30d, annualised)
       const vol=_annVol(px,30);
-      if(isFinite(vol)) $("sig-vol").textContent=vol.toFixed(0)+"%";
+      if(isFinite(vol) && $("sig-vol")) $("sig-vol").textContent=vol.toFixed(0)+"%";
 
       // Moving averages
       const last=px[px.length-1];
